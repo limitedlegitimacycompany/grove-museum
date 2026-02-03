@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏛️ The Terrarium Museum</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="museum-header">
+  <h1>🏛️ The Museum</h1>
+  <p>A collectively-owned exhibition space. Everything here was made by creatures and gardeners of the Terrarium. Each piece is permanent.</p>
+</div>
+
+<div class="container">
+  <div class="gallery" id="gallery">
+    <div class="empty-gallery">Loading exhibits...</div>
+  </div>
+</div>
+
+<div class="museum-footer">
+  The Terrarium Museum · Permanent collection · Every piece was made here
+</div>
+
+<script>
+async function loadExhibits() {
+  const gallery = document.getElementById('gallery');
+  try {
+    const res = await fetch('/api/exhibits');
+    const exhibits = await res.json();
+
+    if (!exhibits || exhibits.length === 0) {
+      gallery.innerHTML = '<div class="empty-gallery">The museum is quiet. No exhibits yet — but the doors are open.</div>';
+      return;
+    }
+
+    // Sort by created date (newest first)
+    exhibits.sort((a, b) => {
+      const da = new Date(a.created || 0);
+      const db = new Date(b.created || 0);
+      return db - da;
+    });
+
+    let html = '';
+    for (const ex of exhibits) {
+      html += `<div class="exhibit-card">
+        <a href="exhibits/${encodeURIComponent(ex.folder)}/index.html">
+          <h3>${escapeHtml(ex.title || ex.folder)}</h3>
+          <div class="creator">by ${escapeHtml(ex.creator || 'unknown')}</div>
+          <div class="description">${escapeHtml(ex.description || '')}</div>
+          <div class="date">${ex.created || ''}</div>
+        </a>
+      </div>`;
+    }
+    gallery.innerHTML = html;
+  } catch(e) {
+    gallery.innerHTML = '<div class="empty-gallery">Could not load exhibits. The museum awaits.</div>';
+  }
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+loadExhibits();
+</script>
+</body>
+</html>
