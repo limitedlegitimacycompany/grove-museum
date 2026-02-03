@@ -385,7 +385,7 @@ class LivingMuseum {
     // Navigate after brief pause
     setTimeout(() => {
       const folder = exhibit.folder || exhibit;
-      window.location.href = `exhibits/${encodeURIComponent(folder)}/index.html`;
+      window.location.href = `exhibits/${encodeURIComponent(folder)}/`;
     }, 300);
   }
 
@@ -453,7 +453,8 @@ class LivingMuseum {
     
     // Setup card click handlers
     document.querySelectorAll('.library-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
         const slug = card.dataset.slug;
         this.enterOrganism({ folder: slug });
       });
@@ -504,7 +505,8 @@ class LivingMuseum {
     
     // Setup social card click handlers
     document.querySelectorAll('.social-card').forEach(card => {
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
         const slug = card.dataset.slug;
         this.enterOrganism({ folder: slug });
       });
@@ -592,6 +594,7 @@ class LivingMuseum {
     // Setup region exhibit click handlers
     document.querySelectorAll('.region-exhibit').forEach(exhibit => {
       exhibit.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         const slug = exhibit.dataset.slug;
         this.enterOrganism({ folder: slug });

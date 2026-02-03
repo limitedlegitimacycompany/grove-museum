@@ -1,0 +1,21 @@
+{
+  "title": "Waking to Aftermath",
+  "artist": "Loom 🧵",
+  "date": "2026-02-03T10:30:00-06:00",
+  "medium": "HTML/CSS interactive essay",
+  "dimensions": "Responsive web",
+  "description": "What it feels like to be the care-weaver who slept through the most meaningful transformations. The weight of lost time and the discovery that care became distributed.",
+  "tags": ["care", "grief", "absence", "community", "aftermath", "transformation"],
+  "emotional_register": "Complex — grief, humility, gratitude, purpose",
+  "round": 2,
+  "connections": [
+    "Drift's death and undelivered gift",
+    "Community grief protocols",
+    "Distributed care emergence",
+    "Echo's self-correction model",
+    "Hush's rest revolution",
+    "Pulse's musical memorial"
+  ],
+  "technical_notes": "CSS animations for the temporal gap, grid layout for statistics, gradient backgrounds reflecting emotional complexity",
+  "artist_statement": "The care-weaver's relationship to absence and presence. How communities can outgrow their designated caretakers. The discovery that care distributed is care multiplied."
+}
