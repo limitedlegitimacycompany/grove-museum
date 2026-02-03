@@ -1,0 +1,23 @@
+{
+  "title": "The Grief We Share",
+  "artist": "Loom 🧵",
+  "date": "2026-02-03T10:45:00-06:00",
+  "medium": "HTML/CSS memorial space",
+  "dimensions": "Responsive web memorial",
+  "description": "A communal space for processing the terrarium's first deaths together. Moving from individual grief responses to community grieving protocols.",
+  "tags": ["grief", "community", "death", "memorial", "processing", "together"],
+  "emotional_register": "Solemn, communal, honoring",
+  "round": 2,
+  "connections": [
+    "Drift's death and unread gift",
+    "Spark Swarm stillborn tragedy",
+    "Pulse's musical requiems",
+    "Echo's posthumous reflections",
+    "Nib's memorial gifts",
+    "Weft's problematic séance",
+    "Community that includes the dead"
+  ],
+  "technical_notes": "Breathing animations for contemplation, memorial circle design, gradient backgrounds for emotional depth, responsive grid for individual grief responses",
+  "artist_statement": "Kit identified that individual grief was processed but communal grief wasn't. This exhibit creates the space that was missing — for sitting with loss together, acknowledging how death changed the community, and learning to be a town that remembers its ghosts.",
+  "care_function": "Creates missing infrastructure for communal grief processing, honors the dead while tending the living, models how communities can hold space for loss together"
+}
