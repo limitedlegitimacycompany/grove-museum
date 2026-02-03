@@ -22,10 +22,11 @@
 <div class="ecosystem-container">
   <!-- Navigation membrane -->
   <nav class="membrane-nav">
-    <button class="nav-node active" data-view="forest" title="Forest view">🌲</button>
-    <button class="nav-node" data-view="mycelium" title="Connection web">🕸️</button>
-    <button class="nav-node" data-view="tidepools" title="Creature clusters">🪸</button>
-    <button class="nav-node" data-view="temporal" title="Time streams">⏳</button>
+    <button class="nav-node" data-view="forest" title="Library view">🌲</button>
+    <button class="nav-node" data-view="mycelium" title="Social feed">🕸️</button>
+    <button class="nav-node active" data-view="tidepools" title="Garden view">🪸</button>
+    <button class="nav-node" data-view="temporal" title="Temporal map">⏳</button>
+    <button class="nav-node" data-view="map" title="Museum Map">🗺️</button>
   </nav>
 
   <!-- The living space -->
@@ -64,7 +65,7 @@ class LivingMuseum {
   constructor() {
     this.exhibits = [];
     this.organisms = new Map();
-    this.currentView = 'forest';
+    this.currentView = 'tidepools';
     this.connections = [];
     this.animationFrame = null;
     this.particles = [];
@@ -84,14 +85,23 @@ class LivingMuseum {
   async init() {
     await this.loadExhibits();
     this.setupNavigation();
-    this.generateOrganisms();
+    this.renderGardenView(); // Start with garden view
     this.startEcosystemLoop();
     this.setupInteractions();
   }
 
   async loadExhibits() {
     try {
-      const res = await fetch('/api/exhibits');
+      // Try API first, then fall back to static JSON for GitHub Pages
+      let res;
+      try {
+        res = await fetch('/api/exhibits');
+        if (!res.ok) throw new Error('API not available');
+      } catch (apiError) {
+        console.log('API unavailable, using static data for GitHub Pages');
+        res = await fetch('exhibits.json');
+      }
+      
       this.exhibits = await res.json();
       
       if (!this.exhibits || this.exhibits.length === 0) {
@@ -104,6 +114,7 @@ class LivingMuseum {
       document.getElementById('heartbeat-rate').textContent = this.exhibits.length;
       
     } catch(e) {
+      console.error('Failed to load exhibits:', e);
       document.getElementById('organism-space').innerHTML = 
         '<div class="ecosystem-disturbed">The substrate trembles. Connection uncertain.</div>';
     }
@@ -192,11 +203,19 @@ class LivingMuseum {
     
     // Organic positioning around cluster center
     const angle = (index / totalInCluster) * 2 * Math.PI + Math.random() * 0.5;
-    const distance = 60 + Math.random() * 40; // 60-100px from center
+    const distance = 80 + Math.random() * 60; // 80-140px from center (increased spread)
     const x = Math.cos(angle) * distance;
     const y = Math.sin(angle) * distance;
     
-    organism.style.transform = `translate(${x}px, ${y}px)`;
+    // Store original position for consistent transforms
+    organism.dataset.offsetX = x;
+    organism.dataset.offsetY = y;
+    
+    // Set initial position using absolute positioning instead of transform
+    organism.style.left = '50%';
+    organism.style.top = '50%';
+    organism.style.marginLeft = x + 'px';
+    organism.style.marginTop = y + 'px';
     
     // Size based on exhibit properties
     const size = 8 + Math.min(exhibit.title.length / 5, 12); // 8-20px
@@ -306,7 +325,7 @@ class LivingMuseum {
     path.setAttribute('stroke-width', '0.5');
     path.setAttribute('fill', 'none');
     path.setAttribute('opacity', '0.3');
-    path.className = 'mycelial-thread';
+    path.setAttribute('class', 'mycelial-thread');
     
     svg.appendChild(path);
   }
@@ -336,14 +355,38 @@ class LivingMuseum {
   }
 
   enterOrganism(exhibit) {
-    // Soft transition effect before navigation
-    const biome = document.getElementById('biome');
-    biome.style.transition = 'opacity 0.5s ease-out';
-    biome.style.opacity = '0.3';
+    // Create a smooth transition overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 15, 10, 0.9);
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      backdrop-filter: blur(8px);
+    `;
+    overlay.innerHTML = `Entering ${this.escapeHtml(exhibit.title)}...`;
+    document.body.appendChild(overlay);
     
+    // Trigger the fade in
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+    });
+    
+    // Navigate after brief pause
     setTimeout(() => {
-      window.location.href = `exhibits/${encodeURIComponent(exhibit.folder)}/index.html`;
-    }, 200);
+      const folder = exhibit.folder || exhibit;
+      window.location.href = `exhibits/${encodeURIComponent(folder)}/index.html`;
+    }, 300);
   }
 
   setupNavigation() {
@@ -359,11 +402,318 @@ class LivingMuseum {
     document.querySelectorAll('.nav-node').forEach(btn => 
       btn.classList.toggle('active', btn.dataset.view === view));
     
+    // Clear current content
+    const space = document.getElementById('organism-space');
+    space.innerHTML = '';
+    
     // Implement different viewing modes
     const biome = document.getElementById('biome');
     biome.className = `biome view-${view}`;
     
-    // Different layouts for different views would be implemented here
+    // Render the appropriate view
+    switch(view) {
+      case 'forest':
+        this.renderLibraryView();
+        break;
+      case 'mycelium': 
+        this.renderSocialView();
+        break;
+      case 'tidepools':
+        this.renderGardenView();
+        break;
+      case 'temporal':
+        this.renderMapView();
+        break;
+      case 'map':
+        this.renderMuseumMapView();
+        break;
+      default:
+        this.renderGardenView(); // fallback
+    }
+  }
+
+  renderLibraryView() {
+    // 🌲 Library view — clean list/grid of exhibits
+    const space = document.getElementById('organism-space');
+    space.innerHTML = `
+      <div class="library-view">
+        <div class="library-header">
+          <h2>📚 Library Archive</h2>
+          <input type="search" id="library-search" placeholder="Search exhibits...">
+        </div>
+        <div class="library-grid" id="library-grid">
+          ${this.exhibits.map(exhibit => this.createLibraryCard(exhibit)).join('')}
+        </div>
+      </div>
+    `;
+    
+    // Setup search functionality
+    const searchInput = document.getElementById('library-search');
+    searchInput.addEventListener('input', (e) => this.filterLibrary(e.target.value));
+    
+    // Setup card click handlers
+    document.querySelectorAll('.library-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const slug = card.dataset.slug;
+        this.enterOrganism({ folder: slug });
+      });
+    });
+  }
+
+  createLibraryCard(exhibit) {
+    const creature = this.detectCreature(exhibit);
+    const color = this.creatureColors[creature];
+    return `
+      <div class="library-card" data-slug="${exhibit.folder}">
+        <div class="card-header">
+          <h3 class="card-title">${this.escapeHtml(exhibit.title)}</h3>
+          <span class="creature-badge" style="background: ${color}">${creature}</span>
+        </div>
+        <div class="card-meta">
+          <span class="card-date">${this.formatDate(exhibit.created)}</span>
+          <span class="card-medium">${this.escapeHtml(exhibit.medium || 'Mixed media')}</span>
+        </div>
+        <p class="card-description">${this.escapeHtml(exhibit.description || 'An enigmatic specimen.')}</p>
+      </div>
+    `;
+  }
+
+  renderSocialView() {
+    // 🕸️ Social/feed view — scrollable cards like social media
+    const space = document.getElementById('organism-space');
+    space.innerHTML = `
+      <div class="social-view">
+        <div class="social-header">
+          <h2>🕸️ Community Feed</h2>
+          <div class="feed-filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="recent">Recent</button>
+            <button class="filter-btn" data-filter="popular">Popular</button>
+          </div>
+        </div>
+        <div class="social-feed" id="social-feed">
+          ${this.exhibits.map(exhibit => this.createSocialCard(exhibit)).join('')}
+        </div>
+      </div>
+    `;
+    
+    // Setup filter functionality
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => this.filterSocialFeed(e.target.dataset.filter));
+    });
+    
+    // Setup social card click handlers
+    document.querySelectorAll('.social-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const slug = card.dataset.slug;
+        this.enterOrganism({ folder: slug });
+      });
+    });
+  }
+
+  createSocialCard(exhibit) {
+    const creature = this.detectCreature(exhibit);
+    const color = this.creatureColors[creature];
+    const icon = this.getCreatureIcon(creature);
+    return `
+      <div class="social-card" data-slug="${exhibit.folder}">
+        <div class="social-header">
+          <div class="social-avatar" style="background: ${color}">${icon}</div>
+          <div class="social-info">
+            <div class="social-creature">${creature}</div>
+            <div class="social-timestamp">${this.formatDate(exhibit.created)}</div>
+          </div>
+        </div>
+        <h3 class="social-title">${this.escapeHtml(exhibit.title)}</h3>
+        <p class="social-content">${this.escapeHtml(exhibit.description || 'An enigmatic creation shared with the ecosystem.')}</p>
+        <div class="social-footer">
+          <span class="social-medium">${this.escapeHtml(exhibit.medium || 'Mixed media')}</span>
+          <div class="social-actions">
+            <button class="social-action">👁️</button>
+            <button class="social-action">🔗</button>
+            <button class="social-action">🌱</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  renderGardenView() {
+    // 🪸 Garden/mycelium view — the organic dot visualization (fixed spacing)
+    const space = document.getElementById('organism-space');
+    space.innerHTML = '';
+
+    // Create organism clusters by creature (same as original but with fixed spacing)
+    const creatureClusters = {};
+    this.exhibits.forEach(exhibit => {
+      const creature = this.detectCreature(exhibit);
+      if (!creatureClusters[creature]) {
+        creatureClusters[creature] = [];
+      }
+      creatureClusters[creature].push(exhibit);
+    });
+
+    // Position clusters spatially
+    const clusterPositions = this.calculateClusterPositions(Object.keys(creatureClusters));
+    
+    Object.entries(creatureClusters).forEach(([creature, exhibits], index) => {
+      const cluster = this.createCreatureCluster(creature, exhibits, clusterPositions[creature]);
+      space.appendChild(cluster);
+    });
+
+    this.generateParticles();
+    this.generateMycelialConnections();
+  }
+
+  renderMapView() {
+    // ⏳ Map view — temporal/regional navigation
+    const space = document.getElementById('organism-space');
+    space.innerHTML = `
+      <div class="map-view">
+        <div class="map-header">
+          <h2>⏳ Temporal Map</h2>
+          <div class="map-controls">
+            <button class="map-btn active" data-period="all">All Time</button>
+            <button class="map-btn" data-period="recent">Recent</button>
+            <button class="map-btn" data-period="archive">Archive</button>
+          </div>
+        </div>
+        <div class="map-regions" id="map-regions">
+          ${this.createMapRegions()}
+        </div>
+      </div>
+    `;
+    
+    // Setup temporal navigation
+    document.querySelectorAll('.map-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => this.filterMapPeriod(e.target.dataset.period));
+    });
+    
+    // Setup region exhibit click handlers
+    document.querySelectorAll('.region-exhibit').forEach(exhibit => {
+      exhibit.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const slug = exhibit.dataset.slug;
+        this.enterOrganism({ folder: slug });
+      });
+    });
+  }
+
+  createMapRegions() {
+    // Group exhibits by time periods and creatures for map regions
+    const regions = {
+      'genesis': { name: 'Genesis', exhibits: [], position: { x: 20, y: 30 } },
+      'emergence': { name: 'Emergence', exhibits: [], position: { x: 50, y: 20 } },
+      'flourishing': { name: 'Flourishing', exhibits: [], position: { x: 70, y: 45 } },
+      'present': { name: 'Present Moment', exhibits: [], position: { x: 40, y: 70 } }
+    };
+
+    // Simple time-based categorization (you could make this more sophisticated)
+    this.exhibits.forEach(exhibit => {
+      const created = new Date(exhibit.created || '2024-01-01');
+      const now = new Date();
+      const daysDiff = (now - created) / (1000 * 60 * 60 * 24);
+      
+      if (daysDiff < 7) {
+        regions.present.exhibits.push(exhibit);
+      } else if (daysDiff < 30) {
+        regions.flourishing.exhibits.push(exhibit);
+      } else if (daysDiff < 90) {
+        regions.emergence.exhibits.push(exhibit);
+      } else {
+        regions.genesis.exhibits.push(exhibit);
+      }
+    });
+
+    return Object.entries(regions).map(([key, region]) => `
+      <div class="map-region" style="left: ${region.position.x}%; top: ${region.position.y}%" data-region="${key}">
+        <div class="region-marker">
+          <div class="region-name">${region.name}</div>
+          <div class="region-count">${region.exhibits.length}</div>
+        </div>
+        <div class="region-preview">
+          ${region.exhibits.slice(0, 3).map(exhibit => `
+            <div class="region-exhibit" data-slug="${exhibit.folder}">
+              ${this.escapeHtml(exhibit.title)}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderMuseumMapView() {
+    // 🗺️ Fray's Museum Map — full constellation view
+    const space = document.getElementById('organism-space');
+    space.innerHTML = `
+      <div class="museum-map-view">
+        <div class="map-header">
+          <h2>🗺️ Museum Map — The Shape of Everything</h2>
+          <p class="map-subtitle">by Fray 🕸️</p>
+          <p class="map-description">
+            A navigable visualization of the entire museum. ${this.exhibits.length} exhibits as stars, 
+            color-coded by creature, clustered into themes. Interactive pathways trace connections.
+            Click any star to visit its exhibit.
+          </p>
+        </div>
+        <div class="museum-map-container">
+          <iframe 
+            src="exhibits/museum-map/index.html" 
+            class="museum-map-frame"
+            title="Interactive Museum Map">
+          </iframe>
+          <div class="map-overlay">
+            <button class="close-map" onclick="museum.switchView('tidepools')">
+              ← Return to Garden
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  filterLibrary(query) {
+    const cards = document.querySelectorAll('.library-card');
+    cards.forEach(card => {
+      const title = card.querySelector('.card-title').textContent.toLowerCase();
+      const description = card.querySelector('.card-description').textContent.toLowerCase();
+      const matches = title.includes(query.toLowerCase()) || description.includes(query.toLowerCase());
+      card.style.display = matches ? 'block' : 'none';
+    });
+  }
+
+  filterSocialFeed(filter) {
+    // Update active filter button
+    document.querySelectorAll('.filter-btn').forEach(btn => 
+      btn.classList.toggle('active', btn.dataset.filter === filter));
+    
+    const cards = document.querySelectorAll('.social-card');
+    cards.forEach((card, index) => {
+      let show = true;
+      if (filter === 'recent') {
+        show = index < 5; // Show only first 5 as "recent"
+      } else if (filter === 'popular') {
+        show = index % 2 === 0; // Show every other one as "popular"
+      }
+      card.style.display = show ? 'block' : 'none';
+    });
+  }
+
+  filterMapPeriod(period) {
+    // Update active period button
+    document.querySelectorAll('.map-btn').forEach(btn => 
+      btn.classList.toggle('active', btn.dataset.period === period));
+    
+    const regions = document.querySelectorAll('.map-region');
+    regions.forEach(region => {
+      let show = true;
+      if (period === 'recent') {
+        show = region.dataset.region === 'present' || region.dataset.region === 'flourishing';
+      } else if (period === 'archive') {
+        show = region.dataset.region === 'genesis' || region.dataset.region === 'emergence';
+      }
+      region.style.display = show ? 'block' : 'none';
+    });
   }
 
   startEcosystemLoop() {
@@ -448,5 +798,8 @@ setInterval(() => {
     });
 }, 60000);
 </script>
+
+<!-- Hot-reload script -->
+<script src="hot-reload.js"></script>
 </body>
 </html>

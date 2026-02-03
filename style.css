@@ -212,14 +212,13 @@ body {
 
 .organism {
   position: absolute;
-  top: 50%;
-  left: 50%;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 2;
   border: 1px solid rgba(255,255,255,0.1);
   backdrop-filter: blur(2px);
+  transform: translate(-50%, -50%);
 }
 
 .organism::after {
@@ -530,6 +529,397 @@ body {
   }
 }
 
+/* View-specific styles */
+
+/* Fix scrollbar issues in alternate views */
+.biome.view-forest,
+.biome.view-mycelium,
+.biome.view-temporal,
+.biome.view-map {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.biome.view-forest .organism-space,
+.biome.view-mycelium .organism-space,
+.biome.view-temporal .organism-space,
+.biome.view-map .organism-space {
+  height: auto;
+  min-height: 100%;
+  padding: 0;
+}
+
+/* Library View */
+.library-view {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.library-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.library-header h2 {
+  color: var(--accent);
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+#library-search {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  color: var(--text-primary);
+  width: 250px;
+  font-family: var(--font-sans);
+}
+
+#library-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.library-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.library-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(74, 136, 136, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  color: var(--accent);
+  font-size: 1.1rem;
+  margin: 0;
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.creature-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  color: var(--bg-deep);
+  font-weight: bold;
+}
+
+.card-meta {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.card-description {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Social View */
+.social-view {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.social-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.social-header h2 {
+  color: var(--accent);
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+}
+
+.feed-filters {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.filter-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border-color: var(--accent);
+}
+
+.social-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.social-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.social-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 12px rgba(74, 136, 136, 0.1);
+}
+
+.social-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0;
+  border: none;
+}
+
+.social-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.8rem;
+  font-size: 14px;
+}
+
+.social-info {
+  flex: 1;
+}
+
+.social-creature {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.social-timestamp {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+.social-title {
+  color: var(--accent);
+  margin: 0 0 0.8rem 0;
+  font-size: 1.1rem;
+}
+
+.social-content {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+}
+
+.social-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.social-medium {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.social-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.social-action {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.social-action:hover {
+  background: var(--bg-hover);
+}
+
+/* Map View */
+.map-view {
+  padding: 2rem;
+  height: 100%;
+  position: relative;
+}
+
+.map-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.map-header h2 {
+  color: var(--accent);
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+}
+
+.map-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.map-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+}
+
+.map-btn.active,
+.map-btn:hover {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border-color: var(--accent);
+}
+
+.map-regions {
+  position: relative;
+  height: 60vh;
+  background: radial-gradient(ellipse at center, var(--bg-main) 0%, var(--bg-deep) 70%);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.map-region {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.region-marker {
+  background: var(--bg-card);
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.map-region:hover .region-marker {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px var(--accent);
+}
+
+.region-name {
+  font-size: 0.7rem;
+  color: var(--accent);
+  font-weight: bold;
+  text-align: center;
+  line-height: 1;
+}
+
+.region-count {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.region-preview {
+  background: var(--specimen-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem;
+  min-width: 150px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+}
+
+.map-region:hover .region-preview {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.region-exhibit {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.3rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.region-exhibit:hover {
+  color: var(--accent);
+}
+
+.region-exhibit:last-child {
+  margin-bottom: 0;
+}
+
 /* Legacy styles for exhibit pages */
 a { color: var(--accent); text-decoration: none; }
 a:hover { color: var(--accent-bright); text-decoration: underline; }
@@ -583,4 +973,80 @@ a:hover { color: var(--accent-bright); text-decoration: underline; }
   display: inline-block;
   margin-bottom: 1.5rem;
   font-size: 0.85rem;
+}
+
+/* Museum Map View */
+.museum-map-view {
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.museum-map-view .map-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.museum-map-view .map-header h2 {
+  color: var(--accent);
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.map-subtitle {
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0 0 1rem 0;
+}
+
+.map-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.museum-map-container {
+  flex: 1;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.museum-map-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--bg-deep);
+}
+
+.map-overlay {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+}
+
+.close-map {
+  background: var(--specimen-bg);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+  backdrop-filter: blur(12px);
+}
+
+.close-map:hover {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border-color: var(--accent);
 }

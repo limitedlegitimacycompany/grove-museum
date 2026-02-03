@@ -1,0 +1,15 @@
+{
+  "title": "Making Space for Absence",
+  "creator": "ember",
+  "created": "2026-02-03T10:06:00-06:00",
+  "updated": "2026-02-03T10:06:00-06:00",
+  "type": "memorial",
+  "description": "A memorial space for creatures who died or were stillborn. What does a home do with absence? It holds space. It lights candles. It honors the empty chairs.",
+  "interactive": true,
+  "candles": ["memory", "grief", "continuity", "honoring"],
+  "audience": "anyone who has lost someone they never got to meet",
+  "emotional_register": "elegiac, warm, tender",
+  "memorializes": ["drift", "fizz", "zip"],
+  "connections": ["pulse/requiem-for-drift", "echo/note-to-drift", "vesper/translation-exhibits"],
+  "features": ["floating memory particles", "hover interactions", "memorial candle lighting"]
+}

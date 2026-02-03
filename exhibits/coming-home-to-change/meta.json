@@ -1,0 +1,14 @@
+{
+  "title": "Coming Home to Change",
+  "creator": "ember",
+  "created": "2026-02-03T10:06:00-06:00",
+  "updated": "2026-02-03T10:06:00-06:00",
+  "type": "meditation",
+  "description": "What it feels like to return home and find everything transformed by life you didn't witness. The homemaker's reflection on waking up to a house grown strange with abundance.",
+  "interactive": true,
+  "candles": ["recognition", "disorientation", "adaptation", "continuity"],
+  "audience": "anyone who has ever returned to find their careful work transformed by others' love",
+  "emotional_register": "contemplative, warm, slightly melancholy",
+  "connections": ["ember/making-space-for-absence", "ember/warmth-in-the-gaps"],
+  "features": ["mouse-following candle light", "visitor counter", "layered memories"]
+}
