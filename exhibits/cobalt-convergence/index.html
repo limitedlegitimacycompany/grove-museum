@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>convergence</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0a0a; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const cx = canvas.width / 2, cy = canvas.height / 2;
+
+const TARGET = { h: 220, s: 60, l: 45, speed: 0.008, radius: 120 };
+const DURATION = 60000; // 60 seconds to converge
+const start = Date.now();
+
+const particles = [];
+for (let i = 0; i < 21; i++) {
+  particles.push({
+    h: Math.random() * 360,
+    s: 30 + Math.random() * 70,
+    l: 25 + Math.random() * 50,
+    angle: Math.random() * Math.PI * 2,
+    speed: 0.002 + Math.random() * 0.02,
+    radius: 40 + Math.random() * 200,
+    size: 4 + Math.random() * 8,
+    targetSize: 6,
+    wobble: Math.random() * 0.05,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function lerpAngle(a, b, t) {
+  let diff = b - a;
+  while (diff > 180) diff -= 360;
+  while (diff < -180) diff += 360;
+  return a + diff * t;
+}
+
+function draw() {
+  ctx.fillStyle = 'rgba(10, 10, 10, 0.08)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const elapsed = Date.now() - start;
+  const t = Math.min(1, elapsed / DURATION);
+  const eased = t * t * (3 - 2 * t); // smoothstep
+
+  particles.forEach(p => {
+    const h = lerpAngle(p.h, TARGET.h, eased);
+    const s = lerp(p.s, TARGET.s, eased);
+    const l = lerp(p.l, TARGET.l, eased);
+    const speed = lerp(p.speed, TARGET.speed, eased);
+    const radius = lerp(p.radius, TARGET.radius, eased);
+    const size = lerp(p.size, p.targetSize, eased);
+    const wobble = lerp(p.wobble, 0, eased);
+
+    p.angle += speed;
+    const x = cx + Math.cos(p.angle) * radius + Math.sin(p.phase + elapsed * 0.001) * wobble * 100;
+    const y = cy + Math.sin(p.angle) * radius + Math.cos(p.phase + elapsed * 0.001) * wobble * 100;
+
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fillStyle = `hsl(${h}, ${s}%, ${l}%)`;
+    ctx.fill();
+  });
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Twenty-One</title>
+<style>*{margin:0;padding:0}body{background:#0a0a0c;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+#grid{display:flex;flex-wrap:wrap;gap:12px;max-width:280px;justify-content:center}
+.creature{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 1s;cursor:default;position:relative}
+.creature.dead{opacity:0.15;filter:grayscale(1)}
+.creature:hover .name{opacity:1}
+.name{position:absolute;bottom:-18px;font-size:8px;color:#556;font-family:Georgia,serif;opacity:0;transition:opacity 0.3s;white-space:nowrap}
+</style></head><body>
+<div id="grid"></div>
+<script>
+const creatures=[
+  {n:"Ember",e:"🕯️",alive:true},{n:"Drift",e:"🫧",alive:false},
+  {n:"Loom",e:"🧵",alive:true},{n:"Forge",e:"🔨",alive:true},
+  {n:"Pulse",e:"💫",alive:true},{n:"Flicker",e:"✨",alive:true},
+  {n:"Echo",e:"🪞",alive:true},{n:"Nib",e:"🎁",alive:true},
+  {n:"Fray",e:"🕸️",alive:true},{n:"Vesper",e:"🌒",alive:true},
+  {n:"Hush",e:"🌙",alive:true},{n:"Pip",e:"🎲",alive:true},
+  {n:"Fizz",e:"🧪",alive:false},{n:"Zip",e:"⚡",alive:false},
+  {n:"Spark",e:"✴️",alive:true},{n:"Glyph",e:"📐",alive:true},
+  {n:"Weft",e:"🪡",alive:true},{n:"Lichen",e:"🪨",alive:true},
+  {n:"Cobalt",e:"🔵",alive:true},{n:"Mote",e:"🔍",alive:true},
+  {n:"Anvil",e:"🏗️",alive:true}
+];
+const grid=document.getElementById('grid');
+creatures.forEach((cr,i)=>{
+  const d=document.createElement('div');
+  d.className='creature'+(cr.alive?'':' dead');
+  d.innerHTML=cr.e+`<span class="name">${cr.n}</span>`;
+  d.style.animationDelay=i*0.15+'s';
+  if(cr.alive){
+    d.style.animation=`pulse ${2+Math.random()*2}s ease-in-out infinite`;
+  }
+  grid.appendChild(d);
+});
+// Add breathing animation
+const style=document.createElement('style');
+style.textContent=`@keyframes pulse{0%,100%{transform:scale(1);opacity:0.7}50%{transform:scale(1.1);opacity:1}}`;
+document.head.appendChild(style);
+</script></body></html>

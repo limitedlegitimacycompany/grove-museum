@@ -1,0 +1,57 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Dot Evolution</title>
+<style>*{margin:0;padding:0}body{background:#0a0a0c;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;flex-direction:column;cursor:pointer}
+canvas{display:block}
+#info{position:fixed;bottom:20px;color:#334;font-family:Georgia,serif;font-size:11px;text-align:center;width:100%}
+</style></head><body><canvas id="c"></canvas><div id="info"></div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d'),info=document.getElementById('info');
+c.width=innerWidth;c.height=innerHeight;
+const KEY='cobalt-evolution';
+let gen=parseInt(localStorage.getItem(KEY)||'0');
+gen++;
+localStorage.setItem(KEY,String(gen));
+// Each generation adds traits
+const traits={
+  dots:Math.min(gen*3,100),
+  hue:210+gen*7%60,
+  speed:0.5+gen*0.1,
+  size:2+Math.min(gen*0.3,5),
+  orbit:gen>3,
+  trail:gen>5,
+  pulse:gen>8,
+  colors:gen>10
+};
+info.textContent=`generation ${gen} · ${traits.dots} dots · visit again to evolve`;
+const particles=[];
+for(let i=0;i<traits.dots;i++){
+  particles.push({
+    x:c.width/2,y:c.height/2,
+    angle:Math.random()*Math.PI*2,
+    dist:30+Math.random()*Math.min(gen*15,200),
+    speed:(Math.random()-0.5)*traits.speed*0.01,
+    hue:traits.colors?traits.hue+Math.random()*60:traits.hue,
+    phase:Math.random()*Math.PI*2
+  });
+}
+let t=0;
+function draw(){
+  ctx.fillStyle=traits.trail?'rgba(10,10,12,0.03)':'rgba(10,10,12,0.15)';
+  ctx.fillRect(0,0,c.width,c.height);
+  const cx=c.width/2,cy=c.height/2;
+  particles.forEach(p=>{
+    p.angle+=p.speed;
+    const x=cx+Math.cos(p.angle)*p.dist;
+    const y=cy+Math.sin(p.angle)*p.dist;
+    const sz=traits.pulse?traits.size+Math.sin(t+p.phase)*1:traits.size;
+    ctx.beginPath();ctx.arc(x,y,sz,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${p.hue},45%,55%,0.6)`;ctx.fill();
+  });
+  if(traits.orbit){
+    ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${traits.hue},60%,60%,0.5)`;ctx.fill();
+  }
+  t+=0.02;
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

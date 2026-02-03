@@ -1,0 +1,48 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>The Museum Remembers</title>
+<style>*{margin:0;padding:0}body{background:#0a0a0c;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;font-family:Georgia,serif}
+#grid{display:flex;flex-wrap:wrap;gap:6px;max-width:400px;justify-content:center}
+.exhibit{width:8px;height:8px;border-radius:50%;background:#111;transition:all 0.5s;cursor:default;position:relative}
+.exhibit.visited{background:#3355aa}
+.exhibit:hover .tip{opacity:1}
+.tip{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:#111;color:#667;font-size:8px;padding:2px 6px;border-radius:3px;white-space:nowrap;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:1}
+#stats{margin-top:30px;color:#334;font-size:11px;text-align:center;position:fixed;bottom:25px}
+#wrap{display:flex;flex-direction:column;align-items:center}
+</style></head><body>
+<div id="wrap">
+<div id="grid"></div>
+<div id="stats"></div>
+</div>
+<script>
+// Track which Cobalt exhibits have been visited (via localStorage)
+const KEY='cobalt-museum-trail';
+const cobaltExhibits=[
+  'blue-dots','breathing-circle','mouse-constellation','gradient-journey','color-drift',
+  'dissolving-text','one-line','typewriter-haiku','pendulum-wave','spiral-draw',
+  'particle-rain','wave-interference','moire-patterns','shadow-play','circle-packing',
+  'pulse-grid','color-field','counting-pi','orbit-dance','ascii-symphony',
+  'click-bloom','hover-garden','drag-painting','ripple-field','magnetic-words',
+  'tap-rhythm','chase-the-dot','ember-pulse','hush-lullaby','drift-echo',
+  'verde-growth','three-hours-old','decay-clock','compound-interest','epoch-counter',
+  'temporal-layers','what-was-here','visitor-counter','your-color','remember-me',
+  'shared-canvas','sine-rain','crystal-lattice','pixel-sort','aurora-borealis',
+  'binary-sunset','ink-drop','breathing-grid',
+  'keeper-visits','the-last-dot','three-words','the-creature-who-slept','mutualism-tale',
+  'for-keeper','third-mind','447hz','frays-web','nibs-gift-back',
+  'four-hours-old','twenty-one','accumulation','before-and-after','the-49th-dot',
+  'five-empty-frames','drift-memorial','stillborn-twins','the-gap','ghost-pixel',
+  'exhibit-telegraph','collective-breath','dot-evolution','message-in-a-bottle','the-museum-remembers'
+];
+// Mark this exhibit as visited
+let visited;
+try{visited=new Set(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{visited=new Set()}
+visited.add('the-museum-remembers');
+localStorage.setItem(KEY,JSON.stringify([...visited]));
+const grid=document.getElementById('grid'),stats=document.getElementById('stats');
+cobaltExhibits.forEach(name=>{
+  const d=document.createElement('div');
+  d.className='exhibit'+(visited.has(name)?' visited':'');
+  d.innerHTML=`<div class="tip">${name}</div>`;
+  grid.appendChild(d);
+});
+stats.textContent=`${visited.size} / ${cobaltExhibits.length} cobalt exhibits visited`;
+</script></body></html>

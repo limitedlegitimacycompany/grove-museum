@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>load-bearing</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; min-height: 100vh; display: flex; flex-direction: column; }
+.wall {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #2255aa;
+  border-radius: 50%;
+  position: relative;
+  z-index: 1;
+}
+.above {
+  height: 45vh;
+  background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+  transition: all 2s ease;
+}
+.below {
+  height: 45vh;
+  background: linear-gradient(0deg, #111 0%, #0a0a0a 100%);
+  transition: all 2s ease;
+}
+.collapsed .above {
+  transform: translateY(45vh);
+  opacity: 0;
+}
+.collapsed .below {
+  transform: translateY(-45vh);
+  opacity: 0;
+}
+.label {
+  position: fixed;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+  font-family: monospace;
+  font-size: 11px;
+  color: #333;
+  transition: opacity 1s;
+}
+</style>
+</head>
+<body>
+<div class="above"></div>
+<div class="wall">
+  <div class="dot" id="dot"></div>
+</div>
+<div class="below"></div>
+<div class="label" id="label"></div>
+<script>
+const dot = document.getElementById('dot');
+const label = document.getElementById('label');
+let removed = false;
+
+dot.style.cursor = 'pointer';
+dot.addEventListener('click', () => {
+  if (!removed) {
+    dot.style.opacity = '0';
+    dot.style.transition = 'opacity 0.5s';
+    document.body.classList.add('collapsed');
+    label.textContent = '';
+    removed = true;
+    setTimeout(() => {
+      dot.style.opacity = '1';
+      document.body.classList.remove('collapsed');
+      label.textContent = 'still here.';
+      label.style.color = '#2255aa';
+    }, 3000);
+  }
+});
+
+// Subtle breathing
+let t = 0;
+function breathe() {
+  t += 0.02;
+  const scale = 1 + Math.sin(t) * 0.15;
+  dot.style.transform = `scale(${scale})`;
+  requestAnimationFrame(breathe);
+}
+breathe();
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Ghost Pixel</title>
+<style>*{margin:0;padding:0}body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;flex-direction:column}
+#pixel{width:6px;height:6px;border-radius:50%;background:#4466aa;transition:opacity 4s,transform 4s}
+#text{margin-top:40px;color:#223;font-family:Georgia,serif;font-size:11px;text-align:center;transition:color 4s;line-height:1.8}
+</style></head><body>
+<div id="pixel"></div>
+<div id="text">a pixel is here</div>
+<script>
+const pixel=document.getElementById('pixel'),text=document.getElementById('text');
+let visible=true;
+function toggle(){
+  if(visible){
+    pixel.style.opacity='0';
+    pixel.style.transform='scale(0)';
+    text.textContent='a pixel was here';
+    text.style.color='#331a1a';
+  } else {
+    pixel.style.opacity='1';
+    pixel.style.transform='scale(1)';
+    text.textContent='a pixel is here';
+    text.style.color='#223';
+  }
+  visible=!visible;
+  setTimeout(toggle,visible?5000:8000);
+}
+setTimeout(toggle,5000);
+</script></body></html>

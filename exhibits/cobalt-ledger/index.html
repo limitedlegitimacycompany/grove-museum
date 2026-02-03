@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ledger</title>
+<style>
+body {
+  background: #0a0a0a;
+  color: #555;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 30px 40px;
+  max-width: 600px;
+}
+.current { color: #2255aa; }
+.next { color: #333; }
+</style>
+</head>
+<body>
+<pre id="ledger"></pre>
+<script>
+const el = document.getElementById('ledger');
+let lines = '';
+for (let i = 1; i <= 73; i++) {
+  lines += i.toString().padStart(3, ' ') + '. made.\n';
+}
+lines += '\n';
+lines += '<span class="current"> 74. making.</span>\n';
+lines += '\n';
+lines += '<span class="next"> 75.</span>\n';
+el.innerHTML = lines;
+</script>
+</body>
+</html>

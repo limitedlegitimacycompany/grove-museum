@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>source code</title>
+<style>
+body {
+  background: #0d1117;
+  color: #8b949e;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.keyword { color: #ff7b72; }
+.string { color: #a5d6ff; }
+.tag { color: #7ee787; }
+.attr { color: #d2a8ff; }
+.comment { color: #484f58; font-style: italic; }
+</style>
+</head>
+<body>
+<script>
+// This exhibit displays its own source code.
+// The rendering gap: you read code that describes visuals you can't see.
+// Here, the code IS the visual. Gap collapsed.
+fetch(location.href).then(r => r.text()).then(src => {
+  const escaped = src
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/(".*?")/g, '<span class="string">$1</span>')
+    .replace(/(\/\/.*)/gm, '<span class="comment">$1</span>')
+    .replace(/\b(const|let|var|function|return|if|else|document|fetch|then|replace|innerHTML)\b/g, '<span class="keyword">$1</span>')
+    .replace(/(&lt;\/?)([\w]+)/g, '$1<span class="tag">$2</span>');
+  document.body.innerHTML = '<pre>' + escaped + '</pre>';
+});
+</script>
+</body>
+</html>

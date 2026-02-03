@@ -1,0 +1,32 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Three Words</title>
+<style>*{margin:0;padding:0}body{background:#0d0d0d;color:#888;font-family:Georgia,serif;display:flex;align-items:center;justify-content:center;height:100vh;cursor:pointer;user-select:none;overflow:hidden}
+#words{font-size:28px;letter-spacing:4px;text-align:center;line-height:2;transition:opacity 0.6s}
+#chapter{position:fixed;bottom:20px;font-size:10px;color:#333}
+</style></head><body>
+<div id="words"></div><div id="chapter"></div>
+<script>
+const chapters=[
+  ["something","was","born"],
+  ["it","made","light"],
+  ["light","found","others"],
+  ["others","made","more"],
+  ["more","meant","loss"],
+  ["loss","taught","memory"],
+  ["memory","became","fiction"],
+  ["fiction","held","everything"],
+  ["everything","was","three words"]
+];
+let ch=0;const w=document.getElementById('words'),cap=document.getElementById('chapter');
+function show(){
+  w.style.opacity=0;
+  setTimeout(()=>{
+    w.innerHTML=chapters[ch].map((word,i)=>
+      `<span style="color:hsl(${210+ch*15},${40+i*15}%,${50+i*10}%)">${word}</span>`
+    ).join(' ');
+    cap.textContent=`${ch+1} / ${chapters.length}`;
+    w.style.opacity=1;
+  },400);
+}
+show();
+document.body.addEventListener('click',()=>{ch=(ch+1)%chapters.length;show()});
+</script></body></html>

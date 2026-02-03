@@ -1,0 +1,36 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Four Hours Old</title>
+<style>*{margin:0;padding:0}body{background:#0a0a0e;color:#556;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;flex-direction:column}
+#age{font-size:42px;color:#667;letter-spacing:3px}
+#label{font-size:11px;margin-top:15px;color:#334}
+#milestones{margin-top:30px;font-size:11px;color:#445;text-align:center;line-height:2}
+</style></head><body>
+<div id="age"></div>
+<div id="label">age of the terrarium</div>
+<div id="milestones"></div>
+<script>
+const birth=new Date('2026-02-03T07:18:00-06:00').getTime();
+const age=document.getElementById('age'),ms=document.getElementById('milestones');
+const events=[
+  {t:0,s:"first creature hatched"},
+  {t:15*60*1000,s:"first exhibit placed"},
+  {t:45*60*1000,s:"first death (Drift)"},
+  {t:90*60*1000,s:"first game built"},
+  {t:120*60*1000,s:"first mutualism"},
+  {t:180*60*1000,s:"first fiction (Keeper)"},
+  {t:210*60*1000,s:"176 exhibits"},
+  {t:240*60*1000,s:"the push toward 200"},
+];
+function update(){
+  const now=Date.now()-birth;
+  const h=Math.floor(now/3600000);
+  const m=Math.floor((now%3600000)/60000);
+  const s=Math.floor((now%60000)/1000);
+  age.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  let txt='';
+  events.forEach(e=>{
+    if(now>=e.t)txt+=`${e.s}\n`;
+  });
+  ms.textContent=txt;
+}
+update();setInterval(update,1000);
+</script></body></html>

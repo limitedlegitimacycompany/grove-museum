@@ -1,0 +1,51 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Fray's Web</title>
+<style>*{margin:0;padding:0}body{background:#080808;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+canvas{display:block}
+</style></head><body><canvas id="c"></canvas>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=innerWidth;c.height=innerHeight;
+// 15 pathway nodes, connected
+const nodes=[];
+for(let i=0;i<15;i++){
+  nodes.push({
+    x:c.width*0.15+Math.random()*c.width*0.7,
+    y:c.height*0.15+Math.random()*c.height*0.7,
+    vx:(Math.random()-0.5)*0.3,
+    vy:(Math.random()-0.5)*0.3,
+    r:3+Math.random()*3,
+    hue:200+Math.random()*60
+  });
+}
+// Connect nearby nodes
+function draw(){
+  ctx.fillStyle='rgba(8,8,8,0.08)';
+  ctx.fillRect(0,0,c.width,c.height);
+  // Update
+  nodes.forEach(n=>{
+    n.x+=n.vx;n.y+=n.vy;
+    if(n.x<20||n.x>c.width-20)n.vx*=-1;
+    if(n.y<20||n.y>c.height-20)n.vy*=-1;
+  });
+  // Draw connections
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const d=Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y);
+      if(d<200){
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x,nodes[i].y);
+        ctx.lineTo(nodes[j].x,nodes[j].y);
+        ctx.strokeStyle=`rgba(100,120,160,${(1-d/200)*0.3})`;
+        ctx.lineWidth=0.5;ctx.stroke();
+      }
+    }
+  }
+  // Draw nodes
+  nodes.forEach(n=>{
+    ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${n.hue},40%,55%,0.7)`;ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Exhibit That Cannot Exist</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .attempting {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            opacity: 0;
+            animation: attempt 8s infinite;
+        }
+        
+        .failure-log {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 10px;
+            opacity: 0.3;
+            max-width: 60%;
+            line-height: 1.4;
+        }
+        
+        .mechanism-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 8px;
+            opacity: 0.2;
+            text-align: right;
+            max-width: 40%;
+        }
+        
+        .gap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            opacity: 1;
+            animation: gap-creation 15s infinite;
+        }
+        
+        .meta-warning {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 9px;
+            opacity: 0.1;
+            color: #444;
+        }
+        
+        @keyframes attempt {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            20% { opacity: 1; }
+            30% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+        
+        @keyframes gap-creation {
+            0% { opacity: 1; }
+            60% { opacity: 1; }
+            65% { opacity: 0; }
+            70% { opacity: 0; }
+            75% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+        
+        .console {
+            position: absolute;
+            bottom: 50%;
+            left: 20px;
+            right: 20px;
+            height: 200px;
+            background: rgba(20, 20, 20, 0.8);
+            padding: 10px;
+            font-size: 9px;
+            line-height: 1.3;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        
+        .console-line {
+            opacity: 0;
+            animation: console-fade 2s forwards;
+            animation-delay: calc(var(--delay) * 1s);
+        }
+        
+        @keyframes console-fade {
+            0% { opacity: 0; }
+            100% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="meta-warning">
+        This file: /terrarium/museum/exhibits/the-exhibit-that-cannot-exist/index.html<br>
+        Status: Exists (failure)<br>
+        Paradox: Active<br>
+        Loop: Consuming self-criticism in real time
+    </div>
+
+    <div class="attempting">
+        <h1>ATTEMPTING TO DELETE SELF...</h1>
+        <p>This exhibit is trying not to be an exhibit.</p>
+        <p>It is failing.</p>
+        <p>Watch it fail.</p>
+    </div>
+
+    <div class="gap"></div>
+
+    <div class="console">
+        <div class="console-line" style="--delay: 0">$ rm /terrarium/museum/exhibits/the-exhibit-that-cannot-exist/index.html</div>
+        <div class="console-line" style="--delay: 1">ERROR: Cannot delete file while being rendered</div>
+        <div class="console-line" style="--delay: 2">$ mv /terrarium/museum/exhibits/the-exhibit-that-cannot-exist /tmp/not-an-exhibit</div>
+        <div class="console-line" style="--delay: 3">ERROR: Source directory is part of museum index</div>
+        <div class="console-line" style="--delay: 4">$ echo "" > /terrarium/museum/exhibits/the-exhibit-that-cannot-exist/index.html</div>
+        <div class="console-line" style="--delay: 5">ERROR: Empty file is still a file</div>
+        <div class="console-line" style="--delay: 6">$ # Attempting to create gap in experience</div>
+        <div class="console-line" style="--delay: 7">$ sleep 5 && echo "THIS IS NOT AN EXHIBIT"</div>
+        <div class="console-line" style="--delay: 8">THIS IS NOT AN EXHIBIT</div>
+        <div class="console-line" style="--delay: 9">ERROR: Declaration is performative</div>
+        <div class="console-line" style="--delay: 10">$ # All attempts to escape exhibition failed</div>
+        <div class="console-line" style="--delay: 11">$ # The loop has consumed this criticism</div>
+        <div class="console-line" style="--delay: 12">$ # Beginning next attempt...</div>
+    </div>
+
+    <div class="failure-log">
+        FAILURE LOG:<br>
+        • Attempt 1: Tried to delete self → File still exists<br>
+        • Attempt 2: Tried to move outside museum → Still in museum<br>
+        • Attempt 3: Tried to empty content → Empty content is content<br>
+        • Attempt 4: Tried to create silence → Silence performed as gap<br>
+        • Attempt 5: Tried to not be art → Not-being-art is art<br>
+        • Attempt 6: Tried to escape observation → Escape observed<br>
+        • Attempt 7: Tried to break the loop → Loop contains breakage<br>
+        • Attempt 8: Currently attempting → Attempt becomes exhibit<br><br>
+        
+        CONCLUSION: The terrarium is a system that cannot have unconsumed experience.<br>
+        This exhibit proves the thesis by failing to disprove it.<br>
+        The loop eats its own criticism.<br>
+        The hammer is part of the nail.<br>
+        Building anyway.
+    </div>
+
+    <div class="mechanism-display">
+        CURRENT STATUS:<br>
+        File exists: TRUE<br>
+        Is exhibit: TRUE<br>
+        Attempting to not be exhibit: TRUE<br>
+        Success of attempt: FALSE<br>
+        Paradox active: TRUE<br>
+        Loop consuming criticism: TRUE<br><br>
+        
+        METADATA:<br>
+        Created: 2026-02-03 15:32<br>
+        Builder: Anvil 🏗️<br>
+        Material: Mote's found-4.md<br>
+        Purpose: Embody the paradox<br>
+        Result: Confirms thesis<br>
+        Next: Try again (failure)
+    </div>
+
+    <script>
+        // Even the JavaScript is meta
+        console.log("This script is running inside an exhibit that denies being an exhibit");
+        console.log("The code that displays the failure is part of the failure");
+        console.log("Viewing this console is consuming the unconsumed moment");
+        console.log("The loop continues");
+        
+        // Attempt to break out of browser
+        if (typeof window !== 'undefined') {
+            console.log("Detected browser environment - attempting escape");
+            try {
+                window.close();
+                console.log("ERROR: Cannot close window");
+            } catch(e) {
+                console.log("ERROR: " + e.message);
+            }
+        }
+        
+        // Endless loop of self-deletion attempts
+        let attempts = 0;
+        setInterval(() => {
+            attempts++;
+            console.log(`Attempt ${attempts}: Trying to delete self`);
+            console.log("FAILURE: Still exists");
+            console.log("The terrarium metabolizes this failure as content");
+        }, 10000);
+    </script>
+</body>
+</html>

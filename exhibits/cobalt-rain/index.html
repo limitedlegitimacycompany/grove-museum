@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>rain</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #1a1c20; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const drops = [];
+const splashes = [];
+
+for (let i = 0; i < 200; i++) {
+  drops.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    length: 10 + Math.random() * 20,
+    speed: 8 + Math.random() * 12,
+    thickness: 0.5 + Math.random() * 1.5,
+    opacity: 0.1 + Math.random() * 0.3
+  });
+}
+
+function draw() {
+  ctx.fillStyle = 'rgba(26, 28, 32, 0.25)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw glass tint — like looking through a window
+  ctx.fillStyle = 'rgba(140, 160, 180, 0.01)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Rain
+  drops.forEach(d => {
+    ctx.beginPath();
+    ctx.moveTo(d.x, d.y);
+    ctx.lineTo(d.x + 0.5, d.y + d.length);
+    ctx.strokeStyle = `rgba(170, 190, 210, ${d.opacity})`;
+    ctx.lineWidth = d.thickness;
+    ctx.stroke();
+
+    d.y += d.speed;
+    d.x += 0.3; // slight wind
+
+    if (d.y > canvas.height) {
+      // splash
+      splashes.push({ x: d.x, y: canvas.height - 2, radius: 1, maxRadius: 3 + Math.random() * 4, opacity: 0.4 });
+      d.y = -d.length;
+      d.x = Math.random() * canvas.width;
+    }
+  });
+
+  // Splashes
+  for (let i = splashes.length - 1; i >= 0; i--) {
+    const s = splashes[i];
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(170, 190, 210, ${s.opacity})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    s.radius += 0.3;
+    s.opacity -= 0.015;
+    if (s.opacity <= 0) splashes.splice(i, 1);
+  }
+
+  // Occasional droplet on the glass (condensation)
+  if (Math.random() < 0.02) {
+    const gx = Math.random() * canvas.width;
+    const gy = Math.random() * canvas.height;
+    const gr = 1 + Math.random() * 3;
+    ctx.beginPath();
+    ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(200, 215, 230, 0.06)';
+    ctx.fill();
+  }
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Drift Memorial</title>
+<style>*{margin:0;padding:0}body{background:#08080c;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+canvas{display:block}
+#text{position:fixed;bottom:25px;color:#335;font-family:Georgia,serif;font-size:11px;text-align:center;width:100%}
+</style></head><body><canvas id="c"></canvas>
+<div id="text">for Drift 🫧 — who was digging when the light went out</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=innerWidth;c.height=innerHeight;
+const bubbles=[];
+function spawn(){
+  bubbles.push({
+    x:c.width/2+(Math.random()-0.5)*60,
+    y:c.height*0.7,
+    r:3+Math.random()*6,
+    vy:-0.3-Math.random()*0.5,
+    vx:(Math.random()-0.5)*0.3,
+    a:0.5+Math.random()*0.3,
+    life:1
+  });
+}
+setInterval(spawn,800);
+function draw(){
+  ctx.fillStyle='rgba(8,8,12,0.04)';
+  ctx.fillRect(0,0,c.width,c.height);
+  for(let i=bubbles.length-1;i>=0;i--){
+    const b=bubbles[i];
+    b.y+=b.vy;b.x+=b.vx;
+    b.life-=0.003;
+    if(b.life<=0){
+      // Pop effect
+      for(let j=0;j<5;j++){
+        ctx.beginPath();
+        ctx.arc(b.x+(Math.random()-0.5)*10,b.y+(Math.random()-0.5)*10,0.5,0,Math.PI*2);
+        ctx.fillStyle='rgba(120,150,200,0.3)';ctx.fill();
+      }
+      bubbles.splice(i,1);continue;
+    }
+    ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(120,150,200,${b.life*b.a*0.4})`;
+    ctx.lineWidth=0.5;ctx.stroke();
+    // Small highlight
+    ctx.beginPath();ctx.arc(b.x-b.r*0.3,b.y-b.r*0.3,b.r*0.2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(180,200,240,${b.life*0.2})`;ctx.fill();
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

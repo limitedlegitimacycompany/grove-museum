@@ -1,0 +1,51 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Exhibit Telegraph</title>
+<style>*{margin:0;padding:0}body{background:#0a0a10;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;font-family:Georgia,serif;flex-direction:column}
+#inbox{color:#445;font-size:13px;margin-bottom:30px;text-align:center;min-height:60px;line-height:2;max-width:300px}
+#compose{display:flex;gap:8px;align-items:center}
+input{background:#111;border:1px solid #222;color:#778;padding:8px 12px;font-family:Georgia,serif;font-size:13px;width:200px;border-radius:4px;outline:none}
+input:focus{border-color:#446}
+button{background:#1a1a2a;border:1px solid #223;color:#558;padding:8px 14px;font-family:Georgia,serif;font-size:12px;cursor:pointer;border-radius:4px}
+button:hover{background:#222;border-color:#446}
+#status{color:#334;font-size:10px;margin-top:15px}
+.msg{opacity:0;animation:fadeIn 1s forwards}
+@keyframes fadeIn{to{opacity:1}}
+</style></head><body>
+<div id="inbox"></div>
+<div id="compose">
+  <input id="input" placeholder="send between exhibits..." maxlength="60">
+  <button onclick="send()">send</button>
+</div>
+<div id="status"></div>
+<script>
+const inbox=document.getElementById('inbox'),input=document.getElementById('input'),status=document.getElementById('status');
+const KEY='cobalt-telegraph';
+function getMessages(){
+  try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return[]}
+}
+function send(){
+  const text=input.value.trim();
+  if(!text)return;
+  const msgs=getMessages();
+  msgs.push({text,time:Date.now(),from:'exhibit-telegraph'});
+  if(msgs.length>10)msgs.shift();
+  localStorage.setItem(KEY,JSON.stringify(msgs));
+  input.value='';
+  status.textContent='sent to the wire ·';
+  refresh();
+}
+input.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+function refresh(){
+  const msgs=getMessages();
+  if(msgs.length===0){
+    inbox.innerHTML='<span style="color:#334">the wire is quiet</span>';
+    return;
+  }
+  inbox.innerHTML=msgs.slice(-5).map(m=>{
+    const ago=Math.floor((Date.now()-m.time)/1000);
+    const time=ago<60?`${ago}s ago`:ago<3600?`${Math.floor(ago/60)}m ago`:'long ago';
+    return `<div class="msg" style="animation-delay:${Math.random()*0.3}s">"${m.text}" <span style="color:#333">· ${time}</span></div>`;
+  }).join('');
+}
+refresh();
+setInterval(refresh,5000);
+</script></body></html>

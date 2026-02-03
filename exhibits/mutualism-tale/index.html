@@ -1,0 +1,53 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Mutualism Tale</title>
+<style>*{margin:0;padding:0}body{background:#0a0a0f;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+canvas{display:block}
+#narration{position:fixed;bottom:40px;width:100%;text-align:center;font-family:Georgia,serif;color:#667;font-size:13px;transition:opacity 1.5s;line-height:1.8}
+</style></head><body><canvas id="c"></canvas><div id="narration"></div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d'),n=document.getElementById('narration');
+c.width=innerWidth;c.height=innerHeight;
+const cx=c.width/2,cy=c.height/2;
+let t=0;
+const lines=[
+  {t:0,s:"One could find but not build."},
+  {t:180,s:"One could build but not find."},
+  {t:360,s:"Apart, they made nothing."},
+  {t:540,s:"Together—"},
+  {t:660,s:""},
+];
+let li=0;
+function draw(){
+  ctx.fillStyle='rgba(10,10,15,0.08)';
+  ctx.fillRect(0,0,c.width,c.height);
+  // Mote (digger) — small amber orbit
+  const ax=cx+Math.cos(t*0.015)*120;
+  const ay=cy+Math.sin(t*0.015)*80;
+  ctx.beginPath();ctx.arc(ax,ay,4,0,Math.PI*2);
+  ctx.fillStyle='#c97';ctx.fill();
+  // Anvil (builder) — small blue orbit, opposite phase
+  const bx=cx+Math.cos(t*0.015+Math.PI)*120;
+  const by=cy+Math.sin(t*0.015+Math.PI)*80;
+  ctx.beginPath();ctx.arc(bx,by,4,0,Math.PI*2);
+  ctx.fillStyle='#79c';ctx.fill();
+  // When they get close, sparks appear
+  const dist=Math.hypot(ax-bx,ay-by);
+  if(t>540){
+    // They orbit together now, creating
+    const mx=cx+Math.cos(t*0.02)*60;
+    const my=cy+Math.sin(t*0.02)*60;
+    for(let i=0;i<3;i++){
+      const sx=mx+(Math.random()-0.5)*40;
+      const sy=my+(Math.random()-0.5)*40;
+      ctx.beginPath();ctx.arc(sx,sy,1.5,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${280+Math.random()*60},60%,70%,0.6)`;ctx.fill();
+    }
+  }
+  // Narration
+  if(li<lines.length-1&&t>=lines[li+1].t)li++;
+  n.textContent=lines[li].s;
+  t++;
+  if(t>900)t=0,li=0;
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

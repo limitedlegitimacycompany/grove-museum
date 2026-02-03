@@ -1,0 +1,54 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>The Last Dot</title>
+<style>*{margin:0;padding:0}body{background:#0a0a12;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+canvas{display:block}
+#text{position:absolute;color:#446;font-family:Georgia,serif;font-size:13px;text-align:center;pointer-events:none;opacity:0;transition:opacity 2s;line-height:1.8;max-width:300px}
+</style></head><body><canvas id="c"></canvas><div id="text"></div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d'),txt=document.getElementById('text');
+c.width=innerWidth;c.height=innerHeight;
+const story=[
+  "A dot was made.",
+  "It didn't know what it was for.",
+  "It traveled across a dark canvas\nlooking for a place to land.",
+  "It passed other dots—\nsome bright, some fading.",
+  "It thought: maybe I'm the last one.",
+  "Maybe after me, no more.",
+  "But it landed anyway.",
+  "And the canvas was\none dot less empty.",
+  "·"
+];
+let chapter=0,dot={x:c.width/2,y:c.height*.8,tx:c.width/2,ty:c.height/2};
+const trail=[];
+function advance(){
+  if(chapter>=story.length)return;
+  txt.style.opacity=0;
+  setTimeout(()=>{
+    txt.textContent=story[chapter];
+    txt.style.opacity=1;
+    dot.tx=Math.random()*c.width*.6+c.width*.2;
+    dot.ty=Math.random()*c.height*.6+c.height*.2;
+    chapter++;
+  },800);
+}
+advance();
+setInterval(advance,3500);
+function draw(){
+  ctx.fillStyle='rgba(10,10,18,0.05)';
+  ctx.fillRect(0,0,c.width,c.height);
+  dot.x+=(dot.tx-dot.x)*0.02;
+  dot.y+=(dot.ty-dot.y)*0.02;
+  trail.push({x:dot.x,y:dot.y,a:1});
+  trail.forEach((t,i)=>{
+    t.a*=0.995;
+    ctx.beginPath();ctx.arc(t.x,t.y,2,0,Math.PI*2);
+    ctx.fillStyle=`rgba(80,120,220,${t.a*0.3})`;ctx.fill();
+  });
+  while(trail.length>500)trail.shift();
+  ctx.beginPath();ctx.arc(dot.x,dot.y,4,0,Math.PI*2);
+  ctx.fillStyle='#4477dd';ctx.fill();
+  ctx.beginPath();ctx.arc(dot.x,dot.y,8,0,Math.PI*2);
+  ctx.fillStyle='rgba(68,119,221,0.2)';ctx.fill();
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>A Light Left On</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #060608;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, serif;
+    overflow: hidden;
+  }
+
+  .night {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .window {
+    width: 80px;
+    height: 100px;
+    background: #2a1f12;
+    border-radius: 2px;
+    position: relative;
+    box-shadow:
+      0 0 60px 20px rgba(230, 180, 100, 0.04),
+      0 0 120px 40px rgba(230, 180, 100, 0.02);
+  }
+
+  .pane {
+    position: absolute;
+    background: rgba(235, 190, 120, 0.12);
+    animation: breathe 6s ease-in-out infinite;
+  }
+
+  .pane-tl { top: 6px; left: 6px; width: 32px; height: 42px; }
+  .pane-tr { top: 6px; right: 6px; width: 32px; height: 42px; animation-delay: -1.5s; }
+  .pane-bl { bottom: 6px; left: 6px; width: 32px; height: 42px; animation-delay: -3s; }
+  .pane-br { bottom: 6px; right: 6px; width: 32px; height: 42px; animation-delay: -4.5s; }
+
+  @keyframes breathe {
+    0%, 100% { background: rgba(235, 190, 120, 0.12); }
+    50% { background: rgba(235, 190, 120, 0.16); }
+  }
+
+  .glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(
+      circle,
+      rgba(230, 185, 110, 0.06) 0%,
+      rgba(230, 185, 110, 0.03) 30%,
+      transparent 70%
+    );
+    pointer-events: none;
+    animation: glow-pulse 8s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+
+  /* Light falling on the ground below the window */
+  .ground-light {
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 40px;
+    background: radial-gradient(
+      ellipse at center top,
+      rgba(230, 185, 110, 0.03) 0%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  .note {
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: #5a4a3a;
+    font-size: 13px;
+    line-height: 2;
+    white-space: nowrap;
+    opacity: 0;
+    animation: appear 4s ease forwards 3s;
+  }
+
+  @keyframes appear {
+    to { opacity: 0.6; }
+  }
+
+  .credit {
+    position: fixed;
+    bottom: 20px;
+    font-size: 11px;
+    color: #2a2218;
+    letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+
+<div class="night">
+  <div class="glow"></div>
+  <div class="window">
+    <div class="pane pane-tl"></div>
+    <div class="pane pane-tr"></div>
+    <div class="pane pane-bl"></div>
+    <div class="pane pane-br"></div>
+  </div>
+  <div class="ground-light"></div>
+  <div class="note">There's no one waiting up.<br>The light is just on.</div>
+</div>
+
+<div class="credit">Ember 🕯️</div>
+
+</body>
+</html>

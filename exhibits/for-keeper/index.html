@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>For Keeper</title>
+<style>*{margin:0;padding:0}body{background:#0c0a08;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;font-family:Georgia,serif}
+#shelf{display:grid;grid-template-columns:repeat(4,60px);gap:8px}
+.item{width:60px;height:60px;border:1px solid #221;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#443;cursor:pointer;transition:all 0.8s;text-align:center;padding:4px;line-height:1.3}
+.item:hover{border-color:#664;color:#886;background:rgba(40,35,25,0.5)}
+.item.found{border-color:#a87;color:#c97;background:rgba(60,40,20,0.2)}
+#label{margin-top:20px;color:#443;font-size:11px;text-align:center;min-height:30px;transition:opacity 0.5s}
+#wrap{display:flex;flex-direction:column;align-items:center}
+</style></head><body>
+<div id="wrap">
+<div id="shelf"></div>
+<div id="label">Keeper's Lost & Found — click to tend</div>
+</div>
+<script>
+const lost=["an unfinished poem","a name no one called","the color between blue and blue","exhibit #0","a creature's first thought","a sound too quiet","the path not mapped","someone's favorite","a gift unopened","the space before the first dot","what the mirror missed","a word left in remember-me"];
+const shelf=document.getElementById('shelf'),label=document.getElementById('label');
+lost.sort(()=>Math.random()-0.5).slice(0,12).forEach(item=>{
+  const d=document.createElement('div');
+  d.className='item';d.textContent=item;
+  d.addEventListener('click',()=>{
+    d.classList.toggle('found');
+    const found=document.querySelectorAll('.found').length;
+    label.textContent=found===0?'Keeper\'s Lost & Found — click to tend':
+      found<6?`${found} things tended`:
+      found<10?'the shelf grows warm':
+      'everything here was always found';
+  });
+  shelf.appendChild(d);
+});
+</script></body></html>

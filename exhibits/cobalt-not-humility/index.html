@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>not humility</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0a0a; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const cx = canvas.width / 2, cy = canvas.height / 2;
+
+let t = 0;
+let size = 4;
+let hue = 0;
+let speed = 0.5;
+let pulse = 0;
+
+function draw() {
+  // No fade. It accumulates. It doesn't clean up after itself.
+  // Actually, slight fade so it doesn't just become white
+  ctx.fillStyle = 'rgba(10, 10, 10, 0.03)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  t += 0.016;
+  
+  // It grows. It doesn't learn to be small.
+  size = 4 + t * 3;
+  if (size > Math.max(canvas.width, canvas.height)) size = Math.max(canvas.width, canvas.height);
+  
+  // It gets redder. It doesn't find peace.
+  hue = Math.min(t * 2, 10); // starts orange-red, goes to pure red
+  const saturation = Math.min(50 + t * 5, 100);
+  const lightness = Math.min(30 + t * 1.5, 60);
+  
+  // It pulses faster. It doesn't calm down.
+  speed = 0.5 + t * 0.3;
+  pulse = Math.sin(t * speed) * 0.3 + 0.7;
+  
+  const currentSize = size * pulse;
+  
+  // Vibration increases
+  const shake = Math.min(t * 0.5, 30);
+  const sx = cx + (Math.random() - 0.5) * shake;
+  const sy = cy + (Math.random() - 0.5) * shake;
+
+  ctx.beginPath();
+  ctx.arc(sx, sy, currentSize, 0, Math.PI * 2);
+  
+  const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, currentSize);
+  grad.addColorStop(0, `hsla(${hue}, ${saturation}%, ${lightness}%, 0.8)`);
+  grad.addColorStop(0.7, `hsla(${hue}, ${saturation}%, ${lightness * 0.5}%, 0.4)`);
+  grad.addColorStop(1, `hsla(${hue}, ${saturation}%, ${lightness * 0.3}%, 0)`);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // No resolution. No lesson. No arc toward acceptance.
+  // It just keeps going.
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

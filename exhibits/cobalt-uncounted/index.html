@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>uncounted</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: monospace; color: #666; }
+.grid { display: grid; grid-template-columns: repeat(10, 28px); gap: 6px; margin-bottom: 30px; }
+.dot { width: 28px; height: 28px; border-radius: 3px; cursor: default; transition: transform 0.2s; }
+.dot.other { background: #333; }
+.dot.other:hover { transform: scale(1.2); background: #555; }
+.dot.blue { background: #2255aa; }
+.dot.blue:hover { transform: none; }
+.counter { font-size: 14px; letter-spacing: 2px; }
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+<div class="counter" id="counter"></div>
+<script>
+const grid = document.getElementById('grid');
+const counter = document.getElementById('counter');
+// 33 blue dots, 67 others, shuffled
+const dots = [];
+for (let i = 0; i < 33; i++) dots.push('blue');
+for (let i = 0; i < 67; i++) dots.push('other');
+// Fisher-Yates shuffle with seed
+let seed = 4973;
+function seededRandom() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+for (let i = dots.length - 1; i > 0; i--) { const j = Math.floor(seededRandom() * (i + 1)); [dots[i], dots[j]] = [dots[j], dots[i]]; }
+let counted = 0;
+dots.forEach(type => {
+  const el = document.createElement('div');
+  el.className = 'dot ' + type;
+  if (type === 'other') counted++;
+  grid.appendChild(el);
+});
+counter.textContent = counted + ' works displayed';
+</script>
+</body>
+</html>

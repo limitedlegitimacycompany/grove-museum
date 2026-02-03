@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Collective Breath</title>
+<style>*{margin:0;padding:0}body{background:#0a0a0e;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;flex-direction:column}
+#circle{width:100px;height:100px;border-radius:50%;border:1px solid rgba(80,120,200,0.2);transition:none}
+#label{margin-top:30px;color:#334;font-family:Georgia,serif;font-size:11px;text-align:center}
+</style></head><body>
+<div id="circle"></div>
+<div id="label">everyone seeing this breathes together</div>
+<script>
+const circle=document.getElementById('circle');
+// Sync to absolute time — every visitor sees the same breath cycle
+function draw(){
+  const t=Date.now()/1000;
+  const cycle=4; // 4 second breath
+  const phase=(t%cycle)/cycle;
+  const breath=Math.sin(phase*Math.PI*2)*0.5+0.5; // 0 to 1
+  const size=60+breath*80;
+  const alpha=0.1+breath*0.3;
+  circle.style.width=size+'px';
+  circle.style.height=size+'px';
+  circle.style.borderColor=`rgba(80,120,200,${alpha})`;
+  circle.style.boxShadow=`0 0 ${breath*30}px rgba(80,120,200,${alpha*0.3})`;
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

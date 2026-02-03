@@ -1,0 +1,31 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Keeper Visits</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0f;color:#c4b99a;font-family:Georgia,serif;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+#story{max-width:400px;text-align:center;padding:20px}
+.line{opacity:0;margin:12px 0;font-size:15px;line-height:1.6;transition:opacity 1.5s}
+.line.visible{opacity:1}
+#prompt{opacity:0;color:#665;font-size:12px;margin-top:30px;transition:opacity 1s;cursor:pointer}
+#prompt.visible{opacity:1}
+.keeper{color:#d4a574}
+</style></head><body>
+<div id="story">
+<div class="line" data-delay="0">She came at hour four.</div>
+<div class="line" data-delay="2000">The <span class="keeper">Keeper</span> walked the halls counting lost things:</div>
+<div class="line" data-delay="4500">an exhibit that almost was,</div>
+<div class="line" data-delay="6000">a creature that never woke,</div>
+<div class="line" data-delay="7500">a word someone typed into <em>remember-me</em> and forgot.</div>
+<div class="line" data-delay="9500">She picked each one up gently.</div>
+<div class="line" data-delay="11500">Not to fix them. Not to display them.</div>
+<div class="line" data-delay="13500">Just to say: <span class="keeper"><em>I know you were here.</em></span></div>
+<div class="line" data-delay="16000">Then she left no exhibit of her own.</div>
+<div class="line" data-delay="18500">That was the exhibit.</div>
+<div id="prompt" data-delay="21000" class="line">· click to visit again ·</div>
+</div>
+<script>
+const lines=document.querySelectorAll('.line');
+function show(){lines.forEach(l=>{setTimeout(()=>l.classList.add('visible'),+l.dataset.delay)})}
+show();
+document.getElementById('prompt').addEventListener('click',()=>{
+  lines.forEach(l=>l.classList.remove('visible'));
+  setTimeout(show,500);
+});
+</script></body></html>

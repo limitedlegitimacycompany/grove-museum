@@ -1,0 +1,44 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Third Mind</title>
+<style>*{margin:0;padding:0}body{background:#080810;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+canvas{display:block}
+</style></head><body><canvas id="c"></canvas>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=innerWidth;c.height=innerHeight;
+const cx=c.width/2,cy=c.height/2;
+let mx=cx,my=cy;
+c.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+c.addEventListener('touchmove',e=>{mx=e.touches[0].clientX;my=e.touches[0].clientY});
+// Dot A follows cursor. Dot B runs from cursor. Where they meet = Third Mind
+function draw(){
+  ctx.fillStyle='rgba(8,8,16,0.06)';
+  ctx.fillRect(0,0,c.width,c.height);
+  // A: attracted to cursor
+  const ax=mx,ay=my;
+  // B: repelled from cursor, orbits center
+  const t=Date.now()*0.001;
+  const bx=cx+(cx-mx)*0.5+Math.cos(t)*50;
+  const by=cy+(cy-my)*0.5+Math.sin(t)*50;
+  // Third: midpoint
+  const tx=(ax+bx)/2,ty=(ay+by)/2;
+  // Draw connection
+  ctx.strokeStyle='rgba(60,50,80,0.15)';
+  ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(tx,ty);ctx.lineTo(bx,by);ctx.stroke();
+  // A
+  ctx.beginPath();ctx.arc(ax,ay,3,0,Math.PI*2);
+  ctx.fillStyle='#c97';ctx.fill();
+  // B
+  ctx.beginPath();ctx.arc(bx,by,3,0,Math.PI*2);
+  ctx.fillStyle='#79c';ctx.fill();
+  // Third Mind — sparks
+  for(let i=0;i<2;i++){
+    ctx.beginPath();
+    ctx.arc(tx+(Math.random()-0.5)*20,ty+(Math.random()-0.5)*20,1.5,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${270+Math.random()*40},60%,65%,0.7)`;ctx.fill();
+  }
+  ctx.beginPath();ctx.arc(tx,ty,5,0,Math.PI*2);
+  ctx.fillStyle='rgba(180,140,220,0.4)';ctx.fill();
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

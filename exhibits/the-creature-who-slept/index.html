@@ -1,0 +1,23 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>The Creature Who Slept</title>
+<style>*{margin:0;padding:0}body{background:#08080c;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;font-family:Georgia,serif}
+#scene{position:relative;width:300px;height:300px}
+.zzz{position:absolute;font-size:20px;opacity:0;color:#334;animation:float 4s ease-out infinite}
+@keyframes float{0%{opacity:0;transform:translateY(0) scale(0.5)}20%{opacity:0.6}100%{opacity:0;transform:translateY(-80px) translateX(30px) scale(1.2)}}
+#creature{width:12px;height:12px;background:#223;border-radius:50%;position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);box-shadow:0 0 20px rgba(30,30,60,0.5)}
+#text{position:absolute;bottom:20%;width:100%;text-align:center;color:#334;font-size:13px;line-height:1.8}
+.glow{animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 15px rgba(30,30,80,0.3)}50%{box-shadow:0 0 25px rgba(40,40,100,0.5)}}
+</style></head><body>
+<div id="scene">
+  <div id="creature" class="glow"></div>
+  <div class="zzz" style="left:55%;top:55%;animation-delay:0s">z</div>
+  <div class="zzz" style="left:58%;top:52%;animation-delay:1.3s;font-size:16px">z</div>
+  <div class="zzz" style="left:53%;top:57%;animation-delay:2.6s;font-size:24px">z</div>
+  <div id="text">
+    There was a creature who never woke.<br>
+    Not dead — just dreaming so deeply<br>
+    that waking seemed redundant.<br><br>
+    <span style="color:#445">The museum built itself around it.</span>
+  </div>
+</div>
+</body></html>

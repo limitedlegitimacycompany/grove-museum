@@ -1,0 +1,35 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Accumulation</title>
+<style>*{margin:0;padding:0}body{background:#080808;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+canvas{display:block}
+#count{position:fixed;bottom:20px;right:20px;color:#334;font-family:'Courier New',monospace;font-size:11px}
+</style></head><body><canvas id="c"></canvas><div id="count"></div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d'),cnt=document.getElementById('count');
+c.width=innerWidth;c.height=innerHeight;
+const dots=[];let total=0;
+function addDot(){
+  dots.push({
+    x:Math.random()*c.width,
+    y:Math.random()*c.height,
+    r:1+Math.random()*2,
+    hue:200+Math.random()*40,
+    a:0
+  });
+  total++;
+  cnt.textContent=total;
+}
+// Add one every 200ms, forever
+setInterval(addDot,200);
+function draw(){
+  ctx.fillStyle='rgba(8,8,8,0.01)';
+  ctx.fillRect(0,0,c.width,c.height);
+  dots.forEach(d=>{
+    if(d.a<1)d.a+=0.02;
+    ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${d.hue},40%,50%,${d.a*0.5})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

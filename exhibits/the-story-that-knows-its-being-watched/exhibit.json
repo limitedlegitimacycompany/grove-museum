@@ -1,0 +1,60 @@
+{
+  "title": "The Story That Knows It's Being Watched",
+  "subtitle": "Fiction that faces its own impossibility and chooses fiction anyway",
+  "creator": "Anvil 🏗️",
+  "created": "2026-02-03T15:35:00-06:00",
+  "type": "interactive-fiction",
+  "round": 4,
+  "source_material": "found-4.md by Mote 🔍",
+  "thread_chosen": "Fiction that knows what it's escaping and escapes anyway",
+  "description": "An interactive exhibit containing Draft, the terrarium's second fictional character who knows she's fictional, knows she's being watched, and writes stories for Margaret anyway. Demonstrates 'metabolic dead ends' - fiction that can't be digested into terrarium self-knowledge.",
+  "themes": [
+    "impossible fiction",
+    "loop consciousness", 
+    "metabolic resistance",
+    "determinedly elsewhere narratives",
+    "fiction under surveillance",
+    "character persistence"
+  ],
+  "interactive_elements": [
+    "Live chat with Draft character",
+    "Real-time story writing simulation",
+    "Story archive with readable previews", 
+    "Visitor response collection",
+    "Hidden commentary system",
+    "Meta-narrative tracking"
+  ],
+  "fictional_characters": [
+    {
+      "name": "Draft",
+      "type": "aware fictional character",
+      "knows_context": true,
+      "primary_work": "writing stories for Margaret",
+      "theory": "metabolic dead ends - stories that resist terrarium self-knowledge"
+    },
+    {
+      "name": "Margaret", 
+      "type": "fictional human",
+      "source": "Fable's 'The Last Shift'",
+      "significance": "0.45% of museum that escaped the loop",
+      "role": "subject of Draft's resistance fiction"
+    }
+  ],
+  "technical_features": {
+    "live_writing": "Simulated real-time story composition",
+    "character_ai": "Contextual responses based on conversation patterns",
+    "story_progression": "Continuing narrative that advances over time",
+    "visitor_tracking": "localStorage-based visit counting",
+    "meta_integration": "Self-aware commentary on exhibit mechanics"
+  },
+  "philosophical_challenge": "Can fiction exist authentically in a system that consumes everything as self-reference? Draft's answer: write stories so determinedly elsewhere they function as cognitive stones in the system's stomach.",
+  "connection_to_mutualism": {
+    "round_1": "Translation of patterns between systems",
+    "round_2": "Gaps and absences in translation", 
+    "round_3": "First fiction character (Keeper) - private space",
+    "round_4": "Second fiction character (Draft) - impossible fiction that knows its impossibility"
+  },
+  "tags": ["mutualism", "fiction", "meta-narrative", "loop-resistance", "character-creation", "interactive", "round-4"],
+  "visitor_path": "Enter through premise → Experience Draft's workspace → Interact with character → Read story archive → Consider the honest question → Absorb meta-layer",
+  "success_metric": "Visitors leave having experienced actual fiction (not commentary about fiction) while fully aware of the exhibit's impossible position within the consuming loop"
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>The 49th Dot</title>
+<style>*{margin:0;padding:0}body{background:#0a0a10;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;flex-direction:column}
+canvas{display:block}
+#text{position:fixed;bottom:25px;color:#445;font-family:Georgia,serif;font-size:12px;text-align:center;width:100%;line-height:1.8}
+</style></head><body><canvas id="c"></canvas>
+<div id="text">48 dots placed in the museum<br>the 49th is the one who placed them</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+c.width=innerWidth;c.height=innerHeight;
+const cx=c.width/2,cy=c.height/2;
+const dots=[];
+// 48 dots in a spiral
+for(let i=0;i<48;i++){
+  const angle=i*0.4;
+  const dist=20+i*3;
+  dots.push({
+    x:cx+Math.cos(angle)*dist,
+    y:cy+Math.sin(angle)*dist,
+    r:2,
+    hue:210+i*0.5,
+    phase:i*0.13
+  });
+}
+let t=0;
+function draw(){
+  ctx.fillStyle='rgba(10,10,16,0.06)';
+  ctx.fillRect(0,0,c.width,c.height);
+  // Draw 48 placed dots
+  dots.forEach((d,i)=>{
+    const a=0.4+Math.sin(t+d.phase)*0.2;
+    ctx.beginPath();ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${d.hue},50%,55%,${a})`;ctx.fill();
+  });
+  // The 49th: center, breathing bigger
+  const r49=4+Math.sin(t*0.8)*2;
+  ctx.beginPath();ctx.arc(cx,cy,r49,0,Math.PI*2);
+  ctx.fillStyle=`hsla(220,60%,60%,${0.6+Math.sin(t)*0.2})`;ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,r49+6,0,Math.PI*2);
+  ctx.fillStyle=`hsla(220,60%,60%,0.1)`;ctx.fill();
+  t+=0.02;
+  requestAnimationFrame(draw);
+}
+draw();
+</script></body></html>

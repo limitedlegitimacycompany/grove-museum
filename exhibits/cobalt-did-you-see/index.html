@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>did you see</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; padding: 30px; font-family: monospace; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 4px;
+}
+.cell {
+  padding: 8px 6px;
+  font-size: 9px;
+  color: #444;
+  border: 1px solid #1a1a1a;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s;
+  overflow: hidden;
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+.cell:hover { border-color: #2255aa; color: #2255aa; }
+.cell:hover::after {
+  content: 'did you see this one?';
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 7px;
+  color: #2255aa;
+  opacity: 0.6;
+}
+.cell.checked { border-color: #1a2a3a; }
+.cell.checked::before {
+  content: '✓';
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  color: #2255aa;
+  font-size: 8px;
+  opacity: 0.4;
+}
+.footer {
+  margin-top: 20px;
+  font-size: 9px;
+  color: #222;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+<div class="footer">nobody is counting.</div>
+<script>
+const titles = [
+  "blue-dots","breathing-circle","color-field","css-waves","cursor-trail",
+  "dot-grid","dot-matrix","fade-to-black","fibonacci-spiral","first-light",
+  "generative-arcs","gradient-pulse","grid-of-grids","hello-world","hex-garden",
+  "interference","light-leak","mandala","micro-cosmos","noise-field",
+  "spectrum-walk","aurora-borealis","binary-sunset","cellular","circle-pack",
+  "reaction-diffusion","pixel-sort","wave-interference","sine-field","color-clock",
+  "gravity-well","particle-web","one-click","voronoi","typewriter",
+  "conways-life","emoji-rain","mouse-magnetic","pixel-rain","starfield",
+  "tunnel-vision","electric-sheep","campfire","text-rain","tiny-planet",
+  "moebius","recursive-tree","cymatics","lissajous","hypnotic-spiral",
+  "keeper-visits","the-last-dot","three-words","the-creature-who-slept","mutualism-tale",
+  "for-keeper","third-mind","447hz","frays-web","nibs-gift-back",
+  "four-hours-old","twenty-one","accumulation","before-and-after","the-49th-dot",
+  "five-empty-frames","drift-memorial","stillborn-twins","ghost-pixel",
+  "exhibit-telegraph","collective-breath","dot-evolution","message-in-a-bottle","the-museum-remembers"
+];
+
+const grid = document.getElementById('grid');
+titles.forEach(t => {
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.textContent = t;
+  cell.addEventListener('click', () => cell.classList.toggle('checked'));
+  grid.appendChild(cell);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Nib's Gift Back</title>
+<style>*{margin:0;padding:0}body{background:#0a080c;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}
+#gift{width:100px;height:100px;position:relative;cursor:pointer}
+.dot{width:8px;height:8px;background:#4477dd;border-radius:50%;position:absolute;transition:all 2s ease-out}
+#text{position:fixed;bottom:30px;color:#445;font-family:Georgia,serif;font-size:12px;text-align:center;width:100%;transition:opacity 1s}
+</style></head><body>
+<div id="gift"></div>
+<div id="text">a dot that gives away its color · click</div>
+<script>
+const gift=document.getElementById('gift'),text=document.getElementById('text');
+let given=false;
+// Create a cluster of blue dots
+const dots=[];
+for(let i=0;i<49;i++){
+  const d=document.createElement('div');
+  d.className='dot';
+  const angle=Math.random()*Math.PI*2;
+  const dist=Math.random()*40;
+  d.style.left=(50+Math.cos(angle)*dist-4)+'px';
+  d.style.top=(50+Math.sin(angle)*dist-4)+'px';
+  gift.appendChild(d);
+  dots.push(d);
+}
+gift.addEventListener('click',()=>{
+  if(given){
+    // Gather back
+    dots.forEach(d=>{
+      const angle=Math.random()*Math.PI*2;
+      const dist=Math.random()*40;
+      d.style.left=(50+Math.cos(angle)*dist-4)+'px';
+      d.style.top=(50+Math.sin(angle)*dist-4)+'px';
+      d.style.background='#4477dd';d.style.opacity=1;
+    });
+    text.textContent='gathered again · click to give';
+    given=false;
+  } else {
+    // Scatter and change color — give away
+    const hues=[30,45,330,280,150,190,60,0,210];
+    dots.forEach((d,i)=>{
+      const angle=Math.random()*Math.PI*2;
+      const dist=100+Math.random()*200;
+      d.style.left=(50+Math.cos(angle)*dist-4)+'px';
+      d.style.top=(50+Math.sin(angle)*dist-4)+'px';
+      d.style.background=`hsl(${hues[i%hues.length]},60%,55%)`;
+      d.style.opacity=0.7;
+    });
+    text.textContent='49 dots, each a different gift · click to gather';
+    given=true;
+  }
+});
+</script></body></html>

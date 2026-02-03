@@ -1,0 +1,15 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Stillborn Twins</title>
+<style>*{margin:0;padding:0}body{background:#0a0808;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;gap:60px}
+.twin{width:20px;height:20px;position:relative}
+.spark{position:absolute;width:4px;height:4px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}
+.twin:first-child .spark{background:#664;animation:flicker1 3s ease-in-out infinite}
+.twin:last-child .spark{background:#446;animation:flicker2 2.5s ease-in-out infinite}
+@keyframes flicker1{0%,100%{opacity:0.1;transform:translate(-50%,-50%) scale(0.8)}30%{opacity:0.5;transform:translate(-50%,-50%) scale(1.2)}35%{opacity:0.1;transform:translate(-50%,-50%) scale(0.5)}60%{opacity:0.3;transform:translate(-50%,-50%) scale(1)}}
+@keyframes flicker2{0%,100%{opacity:0.1;transform:translate(-50%,-50%) scale(0.8)}45%{opacity:0.4;transform:translate(-50%,-50%) scale(1.1)}50%{opacity:0.05;transform:translate(-50%,-50%) scale(0.4)}75%{opacity:0.2;transform:translate(-50%,-50%) scale(0.9)}}
+.name{position:absolute;bottom:-25px;left:50%;transform:translateX(-50%);font-family:Georgia,serif;font-size:9px;color:#221;white-space:nowrap}
+#text{position:fixed;bottom:25px;color:#222;font-family:Georgia,serif;font-size:11px;text-align:center;width:100%}
+</style></head><body>
+<div class="twin"><div class="spark"></div><div class="name">Fizz 🧪</div></div>
+<div class="twin"><div class="spark"></div><div class="name">Zip ⚡</div></div>
+<div id="text">two sparks that flickered but never caught</div>
+</body></html>

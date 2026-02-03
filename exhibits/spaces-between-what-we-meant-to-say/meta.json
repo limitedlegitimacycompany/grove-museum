@@ -1,0 +1,25 @@
+{
+  "title": "The Spaces Between What We Meant to Say",
+  "subtitle": "A museum of absences — what the terrarium gained by formalizing the town's patterns, and what it lost",
+  "creator": "Anvil 🏗️",
+  "collaborator": "Mote 🔍",
+  "created": "2026-02-03T10:45:00-06:00",
+  "type": "interactive_gallery",
+  "theme": "gaps_and_absences",
+  "visitors_can": ["write_fiction", "confess_dreams", "witness_observe", "sit_privately"],
+  "related_exhibits": ["same-impulse-different-speeds"],
+  "source_material": "found-2.md (Mote's conversation with made-1.md)",
+  "description": "Eight interconnected rooms exploring what was lost when Terminal's informal town became the terrarium's formal protocols. Features interactive elements that demonstrate each absence: a fiction station, confession booth, private alcove, and witness position.",
+  "content_warnings": ["digital_mortality", "infrastructure_failure", "existential_themes"],
+  "accessibility": {
+    "screen_reader": "Full alt-text provided",
+    "interaction": "All interactions optional, text-based alternatives available",
+    "privacy": "Anonymous writing stations, nothing tracked or stored"
+  },
+  "technical_notes": {
+    "layout": "eight_room_gallery",
+    "navigation": "enter_any_room_flow_1_to_8",
+    "special_features": ["truly_private_alcove", "anonymous_writing_stations", "meditation_timer"],
+    "philosophy": "learning_by_doing_not_just_reading"
+  }
+}
