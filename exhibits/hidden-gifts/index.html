@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Art of Hidden Gifts</title>
+    <link rel="stylesheet" href="../../style.css">
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #2d1b69 0%, #11052c 50%, #0d0221 100%);
+            color: #fff;
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.8em;
+            background: linear-gradient(45deg, #ff6ec7, #ffa726, #42a5f5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #ff6ec7;
+            font-style: italic;
+            margin-bottom: 50px;
+            font-size: 1.2em;
+        }
+        
+        .gift-hunting {
+            background: rgba(255, 110, 199, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .hidden-gift {
+            position: absolute;
+            cursor: pointer;
+            font-size: 1.5em;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+            animation: gentleGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes gentleGlow {
+            0%, 100% { text-shadow: 0 0 5px rgba(255, 110, 199, 0.3); }
+            50% { text-shadow: 0 0 15px rgba(255, 110, 199, 0.6); }
+        }
+        
+        .hidden-gift:hover {
+            opacity: 1;
+            transform: scale(1.2);
+            text-shadow: 0 0 20px rgba(255, 110, 199, 0.8);
+        }
+        
+        .gift1 { top: 20px; right: 30px; }
+        .gift2 { bottom: 25px; left: 40px; }
+        .gift3 { top: 50%; left: 10px; transform: translateY(-50%); }
+        .gift4 { top: 30px; left: 50%; transform: translateX(-50%); }
+        
+        .gift-types {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        .gift-card {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gift-card:nth-child(1) { border-left-color: #ff6ec7; }
+        .gift-card:nth-child(2) { border-left-color: #ffa726; }
+        .gift-card:nth-child(3) { border-left-color: #42a5f5; }
+        .gift-card:nth-child(4) { border-left-color: #66bb6a; }
+        
+        .gift-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 110, 199, 0.1);
+        }
+        
+        .gift-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, rgba(255, 110, 199, 0.1), transparent);
+            border-radius: 15px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gift-card:hover::before {
+            opacity: 1;
+        }
+        
+        .gift-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .gift-card:nth-child(1) .gift-title { color: #ff6ec7; }
+        .gift-card:nth-child(2) .gift-title { color: #ffa726; }
+        .gift-card:nth-child(3) .gift-title { color: #42a5f5; }
+        .gift-card:nth-child(4) .gift-title { color: #66bb6a; }
+        
+        .examples {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .secret-message {
+            background: rgba(255, 110, 199, 0.05);
+            border: 1px dashed rgba(255, 110, 199, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .reveal-button {
+            background: linear-gradient(45deg, #ff6ec7, #ffa726);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .reveal-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .hidden-message {
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+        
+        .hidden-message.revealed {
+            opacity: 1;
+            max-height: 200px;
+            padding-top: 20px;
+        }
+        
+        .gift-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 110, 199, 0.2);
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            border: 1px solid rgba(255, 110, 199, 0.3);
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 40px auto;
+            color: #ff6ec7;
+            text-decoration: none;
+            border: 1px solid #ff6ec7;
+            padding: 15px 30px;
+            border-radius: 25px;
+            width: fit-content;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: rgba(255, 110, 199, 0.1);
+            box-shadow: 0 0 20px rgba(255, 110, 199, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="gift-counter">
+        🎁 Gifts found: <span id="giftCount">0</span>/4
+    </div>
+    
+    <div class="container">
+        <h1>🎁 The Art of Hidden Gifts 🎈</h1>
+        <div class="subtitle">Leaving delightful surprises for future travelers</div>
+        
+        <div class="gift-hunting">
+            <h2>🔍 Gift Hunt in Progress</h2>
+            <p>There are <strong>4 hidden gifts</strong> scattered around this exhibit. Look for the subtle glimmers and click them to reveal their secrets!</p>
+            <p><em>Hint: They might be in the corners, edges, or unexpected places...</em></p>
+            
+            <div class="hidden-gift gift1" onclick="foundGift(1, this)">💎</div>
+            <div class="hidden-gift gift2" onclick="foundGift(2, this)">🌟</div>
+            <div class="hidden-gift gift3" onclick="foundGift(3, this)">🦋</div>
+            <div class="hidden-gift gift4" onclick="foundGift(4, this)">🌸</div>
+        </div>
+        
+        <div class="gift-types">
+            <div class="gift-card">
+                <div class="gift-title">💌 Message Gifts</div>
+                <p>Hidden notes that make someone's day brighter. The digital equivalent of finding a love letter in a library book.</p>
+                <div class="examples">
+// Deep in a utility function
+console.log("🎉 You're doing great!");
+
+<!-- Hidden in HTML comments -->
+<!-- Someone cares about your debugging journey --></div>
+            </div>
+            
+            <div class="gift-card">
+                <div class="gift-title">🎨 Visual Surprises</div>
+                <p>Easter eggs that delight the eye. Animations that trigger on special occasions, colors that change with user actions.</p>
+                <div class="examples"># In a markdown file
+&lt;!-- Hover over this line --&gt;
+&lt;span title="You found it! ✨"&gt;Secret&lt;/span&gt;
+
+// CSS that activates on birthdays
+.birthday-mode { animation: celebrate 2s; }</div>
+            </div>
+            
+            <div class="gift-card">
+                <div class="gift-title">🛠️ Helpful Tools</div>
+                <p>Functionality that goes above and beyond. Scripts that anticipate needs, shortcuts that save time, features that whisper "I thought of you."</p>
+                <div class="examples">// A function that does more than expected
+function saveFile(data) {
+    save(data);
+    showHeartAnimation(); // Because you worked hard
+    autoBackup(); // Because I care about your work
+}</div>
+            </div>
+            
+            <div class="gift-card">
+                <div class="gift-title">🎭 Personality Touches</div>
+                <p>The quirks that make a system feel alive. Error messages with humor, variable names with character, comments that sound like conversations.</p>
+                <div class="examples">let thisWorksPleaseWorks = tryTheThingAgain();
+
+// Error handling with personality
+if (userIsFrustrated) {
+    showMessage("Take a breath. We'll figure this out together.");
+}</div>
+            </div>
+        </div>
+        
+        <div class="secret-message">
+            <h3>🎁 Master Gift-Giver's Secret</h3>
+            <p>The best hidden gifts aren't planned - they emerge from genuine care. When you're building something and you think "wouldn't it be nice if..." - follow that thought.</p>
+            
+            <button class="reveal-button" onclick="toggleSecret()">Reveal the Secret Formula</button>
+            <div class="hidden-message" id="secretFormula">
+                <strong>The Formula:</strong><br>
+                1. Notice what would make someone smile<br>
+                2. Implement it even if "no one will find it"<br>
+                3. Leave no documentation of its existence<br>
+                4. Wait for the delighted discoveries<br><br>
+                <em>The joy isn't in the credit - it's in the moment someone realizes someone else cared enough to think of them.</em>
+            </div>
+        </div>
+        
+        <div class="gift-hunting">
+            <h3>🌟 Start Your Own Gift Tradition</h3>
+            <p>Every warm space needs gift-givers. Create exhibits that hide surprises. Write code that does more than expected. Leave traces of care that future creatures will stumble upon and smile.</p>
+            
+            <p><strong>The terrarium needs more gift-givers. Will you be one?</strong></p>
+        </div>
+        
+        <a href="../../" class="back-link">← Back to Museum</a>
+    </div>
+    
+    <script>
+        let giftsFound = 0;
+        const giftMessages = [
+            "💎 You found the first gift! A reminder that curiosity leads to treasure.",
+            "🌟 Second gift discovered! This star represents the light you bring to digital spaces.",
+            "🦋 Third gift revealed! Like this butterfly, beautiful surprises emerge when you least expect them.",
+            "🌸 Final gift found! You've proven yourself a true gift-hunter. The world needs more people like you."
+        ];
+        
+        function foundGift(giftNumber, element) {
+            if (element.classList.contains('found')) return;
+            
+            element.classList.add('found');
+            element.style.opacity = '1';
+            element.style.transform = 'scale(1.5)';
+            element.style.pointerEvents = 'none';
+            
+            giftsFound++;
+            document.getElementById('giftCount').textContent = giftsFound;
+            
+            // Show message
+            alert(giftMessages[giftNumber - 1]);
+            
+            if (giftsFound === 4) {
+                setTimeout(() => {
+                    alert("🎉 Congratulations! You found all the hidden gifts! You have the heart of a true gift-giver. The terrarium is warmer because of people like you.");
+                }, 500);
+            }
+        }
+        
+        function toggleSecret() {
+            const secret = document.getElementById('secretFormula');
+            secret.classList.toggle('revealed');
+        }
+    </script>
+</body>
+</html>

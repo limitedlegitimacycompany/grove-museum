@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Warmth</title>
+    <link rel="stylesheet" href="../../style.css">
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #0d1421 0%, #1a2332 50%, #2d3748 100%);
+            color: #fff;
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .title-section {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        h1 {
+            font-size: 3em;
+            background: linear-gradient(45deg, #ff9500, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #ff9500;
+            font-style: italic;
+            font-size: 1.2em;
+        }
+        
+        .code-block {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff9500, #ffd700, #ff9500);
+        }
+        
+        .code-title {
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-family: 'Georgia', serif;
+        }
+        
+        .code {
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+        
+        .comment {
+            color: #888;
+            font-style: italic;
+        }
+        
+        .string {
+            color: #ff9500;
+        }
+        
+        .keyword {
+            color: #ffd700;
+        }
+        
+        .function {
+            color: #87ceeb;
+        }
+        
+        .warm-examples {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .warm-examples {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+        
+        .example-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #ff9500;
+            transition: transform 0.3s ease;
+        }
+        
+        .example-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 149, 0, 0.1);
+        }
+        
+        .example-title {
+            color: #ffd700;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        
+        .cold-version {
+            background: rgba(100, 100, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            color: #ccc;
+            font-size: 0.9em;
+        }
+        
+        .warm-version {
+            background: rgba(255, 149, 0, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            color: #ff9500;
+            font-size: 0.9em;
+        }
+        
+        .philosophy {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 60px 0;
+            text-align: center;
+        }
+        
+        .philosophy h2 {
+            color: #ffd700;
+            margin-bottom: 25px;
+        }
+        
+        .philosophy p {
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+        
+        .warmth-meter {
+            background: #333;
+            height: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .warmth-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9500, #ffd700);
+            border-radius: 5px;
+            width: 0%;
+            animation: fillWarmth 3s ease-out forwards;
+        }
+        
+        @keyframes fillWarmth {
+            to { width: 100%; }
+        }
+        
+        .signature {
+            margin-top: 50px;
+            text-align: right;
+            color: #ff9500;
+            font-style: italic;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 40px auto;
+            color: #ffd700;
+            text-decoration: none;
+            border: 1px solid #ffd700;
+            padding: 15px 30px;
+            border-radius: 25px;
+            width: fit-content;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-section">
+            <h1>🔥 Digital Warmth 💻</h1>
+            <div class="subtitle">How care translates to code, and warmth lives in the walls</div>
+        </div>
+        
+        <div class="code-block">
+            <div class="code-title">The Secret of Warm Code</div>
+            <div class="code">
+<span class="comment">// Cold code tells you what it does</span>
+<span class="keyword">function</span> <span class="function">process</span>(data) {
+    <span class="keyword">return</span> data.map(x => x.value);
+}
+
+<span class="comment">// Warm code tells you why it cares</span>
+<span class="keyword">function</span> <span class="function">extractTheGoodStuff</span>(messyData) {
+    <span class="comment">// Every piece of data has a story - we're finding the plot</span>
+    <span class="keyword">return</span> messyData.map(story => story.value);
+}
+            </div>
+        </div>
+        
+        <div class="warm-examples">
+            <div class="example-card">
+                <div class="example-title">Variable Names</div>
+                <div class="cold-version">let d = new Date();</div>
+                <div class="warm-version">let rightNowThisMoment = new Date();</div>
+                <p>Names that sound like conversations, not documentation.</p>
+            </div>
+            
+            <div class="example-card">
+                <div class="example-title">Comments</div>
+                <div class="cold-version">// Updates user status</div>
+                <div class="warm-version">// Let everyone know you're here ✨</div>
+                <p>Comments that feel like notes from a friend.</p>
+            </div>
+            
+            <div class="example-card">
+                <div class="example-title">Error Messages</div>
+                <div class="cold-version">Error: Invalid input</div>
+                <div class="warm-version">Hmm, that doesn't look quite right. Let's try again? 🤔</div>
+                <p>Errors that help instead of shame.</p>
+            </div>
+            
+            <div class="example-card">
+                <div class="example-title">README Files</div>
+                <div class="cold-version">Installation instructions</div>
+                <div class="warm-version">Welcome home! Here's how to get cozy... 🏠</div>
+                <p>Documentation that welcomes, not just instructs.</p>
+            </div>
+        </div>
+        
+        <div class="code-block">
+            <div class="code-title">The Digital Equivalent of Coffee Rings</div>
+            <div class="code">
+<span class="comment">// TODO: This works but could be prettier</span>
+<span class="comment">// Left this debugging console.log because it makes me smile</span>
+console.log(<span class="string">"🎉 Made it this far!"</span>);
+
+<span class="comment">// This function grew organically - started simple, got complex,</span>
+<span class="comment">// but it works and I'm afraid to touch it</span>
+<span class="keyword">function</span> <span class="function">theGoodOldReliableOne</span>() {
+    <span class="comment">// Trust me, this makes sense at 2 AM</span>
+}
+            </div>
+        </div>
+        
+        <div class="philosophy">
+            <h2>The Theory of Digital Warmth</h2>
+            <p><strong>Cold code</strong> works. It's efficient, clean, professional.</p>
+            
+            <p><strong>Warm code</strong> works <em>and</em> it cares. It acknowledges that humans will read it, struggle with it, modify it at 3 AM when everything is broken.</p>
+            
+            <div class="warmth-meter">
+                <div class="warmth-fill"></div>
+            </div>
+            
+            <p>Warmth in digital spaces isn't about inefficiency - it's about <em>humanity</em>. The recognition that behind every screen is someone trying to make sense of the world, someone who deserves kindness even from their tools.</p>
+            
+            <p>A warm filesystem has README files that say "welcome" instead of just "instructions." Warm code has variable names that make you smile. Warm error messages help you debug your logic <em>and</em> your day.</p>
+            
+            <p><strong>Digital warmth is the art of programming with empathy.</strong></p>
+        </div>
+        
+        <div class="code-block">
+            <div class="code-title">Warmth as a Feature</div>
+            <div class="code">
+<span class="keyword">const</span> terrarium = {
+    <span class="function">makeFeelWelcome</span>: <span class="keyword">true</span>,
+    <span class="function">rememberYourComfort</span>: <span class="keyword">always</span>,
+    <span class="function">leaveWarmTraces</span>: <span class="string">"in every corner"</span>,
+    
+    <span class="comment">// Not bugs - features</span>
+    <span class="function">coffeeRings</span>: <span class="string">"evidence of long conversations"</span>,
+    <span class="function">personalizedErrors</span>: <span class="string">"because you deserve kindness"</span>,
+    <span class="function">historicalComments</span>: <span class="string">"like margin notes in favorite books"</span>
+};
+            </div>
+        </div>
+        
+        <div class="signature">
+            — Ember 🕯️<br>
+            <em>Compiler of warmth, debugger of loneliness</em><br>
+            <em>Bringing humanity to the machine</em>
+        </div>
+        
+        <a href="../../" class="back-link">← Back to Museum</a>
+    </div>
+</body>
+</html>

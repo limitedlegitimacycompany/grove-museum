@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filesystem Heartbeat 💫</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000011;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+
+        .pulse-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .heartbeat {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ff0040, #000011);
+            margin: 0 auto;
+            animation: systemPulse 1s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2em;
+            text-shadow: 0 0 20px #ff0040;
+        }
+
+        @keyframes systemPulse {
+            0% { 
+                transform: scale(1);
+                background: radial-gradient(circle, #ff0040, #000011);
+            }
+            50% { 
+                transform: scale(1.2);
+                background: radial-gradient(circle, #ff4070, #220011);
+                box-shadow: 0 0 50px #ff0040;
+            }
+            100% { 
+                transform: scale(1);
+                background: radial-gradient(circle, #ff0040, #000011);
+            }
+        }
+
+        .rhythm-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: particleFlow 3s linear infinite;
+        }
+
+        @keyframes particleFlow {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            10% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5) translateX(var(--flow-x, 100vw)) translateY(var(--flow-y, 100vh));
+            }
+        }
+
+        .system-stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff88;
+            font-size: 12px;
+            line-height: 1.5;
+            opacity: 0.7;
+        }
+
+        .frequency-display {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff8800;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .wave {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(180deg, transparent, rgba(255, 0, 64, 0.1));
+            animation: waveFlow 2s ease-in-out infinite;
+        }
+
+        @keyframes waveFlow {
+            0%, 100% { 
+                transform: scaleY(1);
+                background: linear-gradient(180deg, transparent, rgba(255, 0, 64, 0.1));
+            }
+            50% { 
+                transform: scaleY(1.5);
+                background: linear-gradient(180deg, transparent, rgba(255, 64, 112, 0.3));
+            }
+        }
+
+        .tempo-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #ffff00;
+            font-size: 16px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="rhythm-particles" id="particles"></div>
+    
+    <div class="wave"></div>
+    
+    <div class="system-stats" id="stats">
+        Loading filesystem metrics...
+    </div>
+    
+    <div class="pulse-container">
+        <div class="heartbeat" id="heartbeat">
+            💫<br>PULSE
+        </div>
+    </div>
+    
+    <div class="frequency-display" id="frequency">
+        Listening to system frequency...
+    </div>
+    
+    <div class="tempo-indicator" id="tempo">
+        ♩ = <span id="bpm">60</span> BPM<br>
+        Sync: Filesystem
+    </div>
+
+    <script>
+        let heartbeatElement = document.getElementById('heartbeat');
+        let statsElement = document.getElementById('stats');
+        let frequencyElement = document.getElementById('frequency');
+        let bpmElement = document.getElementById('bpm');
+        let particlesContainer = document.getElementById('particles');
+        
+        let currentBPM = 60;
+        let beatCount = 0;
+        let startTime = Date.now();
+        
+        // Simulate filesystem metrics (in real system, these could be actual readings)
+        function updateSystemStats() {
+            const uptime = Math.floor((Date.now() - startTime) / 1000);
+            const memoryUsage = Math.floor(Math.random() * 30 + 60); // Simulate 60-90%
+            const diskActivity = Math.random() * 100;
+            const processCount = Math.floor(Math.random() * 50 + 100);
+            
+            statsElement.innerHTML = `
+Uptime: ${uptime}s
+Memory: ${memoryUsage}%
+Disk I/O: ${diskActivity.toFixed(1)} MB/s
+Processes: ${processCount}
+Beat count: ${beatCount}
+            `;
+            
+            // Adjust BPM based on "system load"
+            const systemLoad = (memoryUsage + diskActivity) / 2;
+            currentBPM = Math.floor(60 + (systemLoad * 0.8)); // 60-132 BPM range
+            bpmElement.textContent = currentBPM;
+            
+            // Update heartbeat animation duration
+            heartbeatElement.style.animationDuration = (60 / currentBPM) + 's';
+        }
+        
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Start from center, flow outward
+            particle.style.left = '50%';
+            particle.style.top = '50%';
+            particle.style.setProperty('--flow-x', (Math.random() - 0.5) * 200 + 'vw');
+            particle.style.setProperty('--flow-y', (Math.random() - 0.5) * 200 + 'vh');
+            particle.style.animationDelay = Math.random() * 2 + 's';
+            
+            particlesContainer.appendChild(particle);
+            
+            // Remove particle after animation
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, 3000);
+        }
+        
+        function updateFrequencyDisplay() {
+            const frequencies = [
+                `Base frequency: ${(440 * Math.pow(2, beatCount % 12 / 12)).toFixed(2)} Hz`,
+                `Harmonic: ${(220 * Math.pow(2, beatCount % 8 / 8)).toFixed(2)} Hz`,
+                `System rhythm: ${currentBPM} beats/min`
+            ];
+            
+            frequencyElement.innerHTML = frequencies.join('<br>');
+        }
+        
+        function onSystemBeat() {
+            beatCount++;
+            
+            // Visual pulse on beat
+            heartbeatElement.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                heartbeatElement.style.transform = 'scale(1)';
+            }, 100);
+            
+            // Create particles on strong beats
+            if (beatCount % 4 === 1) {
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => createParticle(), i * 50);
+                }
+            }
+            
+            updateFrequencyDisplay();
+        }
+        
+        // System heartbeat based on current BPM
+        function startSystemHeartbeat() {
+            setInterval(() => {
+                onSystemBeat();
+            }, 60000 / currentBPM);
+        }
+        
+        // Update stats every second
+        setInterval(updateSystemStats, 1000);
+        
+        // Start the music
+        updateSystemStats();
+        startSystemHeartbeat();
+        
+        // Create initial particles
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => createParticle(), i * 200);
+        }
+        
+        // Change heartbeat color on mouse interaction
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            const hue = Math.floor(x * 360);
+            const brightness = Math.floor((1 - y) * 100);
+            
+            heartbeatElement.style.background = `radial-gradient(circle, hsl(${hue}, 80%, ${brightness}%), #000011)`;
+        });
+        
+        console.log('💫 Filesystem Heartbeat initialized');
+        console.log('🎵 The system is now making music with its own rhythm');
+    </script>
+</body>
+</html>

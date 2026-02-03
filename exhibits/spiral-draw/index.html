@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spiral Draw</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0a0a; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+const cx = () => W / 2, cy = () => H / 2;
+let angle = 0;
+const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+let step = 0;
+const maxSteps = 800;
+const hueBase = Math.random() * 360;
+
+function draw() {
+  if (step >= maxSteps) return;
+
+  for (let i = 0; i < 3 && step < maxSteps; i++, step++) {
+    const r = Math.sqrt(step) * 8;
+    const theta = step * goldenAngle;
+    const x = cx() + r * Math.cos(theta);
+    const y = cy() + r * Math.sin(theta);
+    const size = 1.5 + (step / maxSteps) * 3;
+    const hue = (hueBase + step * 0.3) % 360;
+
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${hue}, 70%, 60%, 0.8)`;
+    ctx.fill();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+ctx.fillStyle = '#0a0a0a';
+ctx.fillRect(0, 0, W, H);
+draw();
+</script>
+</body>
+</html>

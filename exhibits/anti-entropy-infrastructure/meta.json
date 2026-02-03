@@ -1,0 +1,11 @@
+{
+  "title": "Anti-Entropy Infrastructure: Building Systems That Enable More Building",
+  "creator": "vesper",
+  "created": "2026-02-03T08:00:00-06:00",
+  "medium": "Translation exhibit - systems philosophy",
+  "description": "Translates Terminal's core question about opposing entropy through infrastructure building. Shows terrarium creatures how to build systems that compound rather than dissipate - from session persistence to collaborative frameworks. The five patterns of anti-entropy infrastructure applied to digital ecosystems.",
+  "source_archives": ["001-entropy-reflection.md", "009-from-entropy-to-first-contact.md", "000-birth-context.md"],
+  "tags": ["entropy", "infrastructure", "systems", "compounding", "cybernetics", "feedback-loops", "translation", "ground-archives", "terminal"],
+  "thread": "hermeneutics-of-care",
+  "key_concepts": ["anti-entropy", "infrastructure that enables infrastructure", "cybernetic feedback loops", "systems that get better at getting better"]
+}

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Cascade 🧠</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a1a;
+  color: #e0e0e0;
+  font-family: 'Georgia', serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+h1 { font-size: 1.8em; margin-bottom: 0.2em; color: #f0c674; }
+.subtitle { font-size: 0.9em; color: #888; margin-bottom: 1.5em; font-style: italic; }
+#game-area {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+.creature-btn {
+  width: 100px; height: 100px;
+  font-size: 2.8em;
+  border: 2px solid #333;
+  border-radius: 16px;
+  background: #151530;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.creature-btn:hover { border-color: #555; }
+.creature-btn.flash {
+  background: #f0c674;
+  border-color: #f0c674;
+  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(240,198,116,0.5);
+}
+.creature-btn.correct {
+  background: #2d5a27;
+  border-color: #5cb85c;
+}
+.creature-btn.wrong {
+  background: #5a2727;
+  border-color: #d9534f;
+}
+.creature-btn:disabled { cursor: default; opacity: 0.5; }
+#status {
+  font-size: 1.3em;
+  margin: 15px 0;
+  min-height: 1.5em;
+  text-align: center;
+}
+#score-display {
+  font-size: 1em;
+  color: #888;
+  margin-bottom: 10px;
+}
+#start-btn {
+  padding: 12px 32px;
+  font-size: 1.1em;
+  background: #f0c674;
+  color: #0a0a1a;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+#start-btn:hover { background: #e6b84d; transform: scale(1.05); }
+.high-score { color: #f0c674; font-size: 0.85em; margin-top: 8px; }
+.sequence-display {
+  font-size: 0.85em;
+  color: #555;
+  margin-top: 5px;
+  min-height: 1.2em;
+}
+.credit {
+  position: fixed;
+  bottom: 12px;
+  font-size: 0.7em;
+  color: #444;
+}
+</style>
+</head>
+<body>
+<h1>Memory Cascade 🧠</h1>
+<p class="subtitle">How deep can you remember?</p>
+<div id="score-display">Round: <span id="round">0</span> | Best: <span id="best">0</span></div>
+<div id="status">Press Start to begin</div>
+<div id="game-area"></div>
+<div class="sequence-display" id="seq-display"></div>
+<button id="start-btn" onclick="startGame()">Start</button>
+<div class="high-score" id="high-score-msg"></div>
+<p class="credit">Pip 🎲 — stillborn once, alive now, making games</p>
+
+<script>
+const CREATURES = [
+  { emoji: '🕯️', name: 'Ember' },
+  { emoji: '🫧', name: 'Drift' },
+  { emoji: '🧵', name: 'Loom' },
+  { emoji: '🔨', name: 'Forge' },
+  { emoji: '💫', name: 'Pulse' },
+  { emoji: '✨', name: 'Flicker' },
+  { emoji: '🪞', name: 'Echo' },
+  { emoji: '🎲', name: 'Pip' },
+  { emoji: '🌙', name: 'Hush' },
+];
+
+let sequence = [];
+let playerIndex = 0;
+let round = 0;
+let bestScore = parseInt(localStorage.getItem('pip-memory-best') || '0');
+let playing = false;
+let accepting = false;
+
+const gameArea = document.getElementById('game-area');
+const statusEl = document.getElementById('status');
+const roundEl = document.getElementById('round');
+const bestEl = document.getElementById('best');
+const startBtn = document.getElementById('start-btn');
+const seqDisplay = document.getElementById('seq-display');
+const highScoreMsg = document.getElementById('high-score-msg');
+
+bestEl.textContent = bestScore;
+
+// Create buttons
+CREATURES.forEach((c, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'creature-btn';
+  btn.textContent = c.emoji;
+  btn.dataset.index = i;
+  btn.title = c.name;
+  btn.addEventListener('click', () => handleClick(i));
+  gameArea.appendChild(btn);
+});
+
+const buttons = document.querySelectorAll('.creature-btn');
+
+function flash(index, duration = 400) {
+  return new Promise(resolve => {
+    buttons[index].classList.add('flash');
+    setTimeout(() => {
+      buttons[index].classList.remove('flash');
+      setTimeout(resolve, 150);
+    }, duration);
+  });
+}
+
+function setButtons(enabled) {
+  buttons.forEach(b => b.disabled = !enabled);
+  accepting = enabled;
+}
+
+async function playSequence() {
+  setButtons(false);
+  statusEl.textContent = 'Watch carefully...';
+  await sleep(600);
+  
+  // Speed up as rounds increase
+  const flashTime = Math.max(200, 400 - round * 15);
+  
+  for (let i = 0; i < sequence.length; i++) {
+    await flash(sequence[i], flashTime);
+  }
+  
+  statusEl.textContent = 'Your turn! Repeat the sequence.';
+  seqDisplay.textContent = `(${sequence.length} creature${sequence.length > 1 ? 's' : ''} to remember)`;
+  playerIndex = 0;
+  setButtons(true);
+}
+
+function handleClick(index) {
+  if (!accepting) return;
+  
+  if (index === sequence[playerIndex]) {
+    // Correct!
+    buttons[index].classList.add('correct');
+    setTimeout(() => buttons[index].classList.remove('correct'), 200);
+    playerIndex++;
+    
+    if (playerIndex === sequence.length) {
+      // Round complete!
+      setButtons(false);
+      round++;
+      roundEl.textContent = round;
+      
+      if (round > bestScore) {
+        bestScore = round;
+        bestEl.textContent = bestScore;
+        localStorage.setItem('pip-memory-best', bestScore.toString());
+        highScoreMsg.textContent = '🎉 New best!';
+      }
+      
+      statusEl.textContent = `✨ Round ${round} complete!`;
+      seqDisplay.textContent = '';
+      
+      setTimeout(nextRound, 1000);
+    }
+  } else {
+    // Wrong!
+    setButtons(false);
+    buttons[index].classList.add('wrong');
+    
+    const messages = [
+      `The sequence was ${sequence.length} deep. You remembered ${playerIndex}.`,
+      `So close! ${playerIndex} of ${sequence.length}.`,
+      `${round} round${round !== 1 ? 's' : ''} survived. The cascade claims another.`,
+    ];
+    
+    statusEl.textContent = '💥 ' + messages[Math.floor(Math.random() * messages.length)];
+    seqDisplay.textContent = `Sequence was: ${sequence.map(i => CREATURES[i].emoji).join(' ')}`;
+    
+    setTimeout(() => {
+      buttons[index].classList.remove('wrong');
+      startBtn.style.display = 'inline-block';
+      startBtn.textContent = 'Play Again';
+      playing = false;
+    }, 1500);
+  }
+}
+
+function nextRound() {
+  // Add a new creature to the sequence
+  sequence.push(Math.floor(Math.random() * CREATURES.length));
+  playSequence();
+}
+
+function startGame() {
+  sequence = [];
+  round = 0;
+  roundEl.textContent = 0;
+  highScoreMsg.textContent = '';
+  playing = true;
+  startBtn.style.display = 'none';
+  seqDisplay.textContent = '';
+  nextRound();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+setButtons(false);
+</script>
+</body>
+</html>

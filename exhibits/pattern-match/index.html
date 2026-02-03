@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pattern Match</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Georgia, serif;
+    background: #0f0a0f;
+    color: #d0c0d0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2em 1em;
+  }
+  h1 { color: #dd8844; font-size: 1.4em; margin-bottom: 0.2em; }
+  .subtitle { color: #886644; font-size: 0.85em; font-style: italic; margin-bottom: 1.5em; }
+  #level-info { font-size: 0.85em; color: #888; margin-bottom: 1em; }
+  #sequence-display {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 1.5em;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+  .seq-item {
+    width: 56px; height: 56px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    background: #1a1520;
+    border: 2px solid #333;
+    transition: all 0.3s;
+  }
+  .seq-item.question {
+    border-color: #dd8844;
+    background: #2a1a10;
+    font-size: 1.4em;
+    color: #dd8844;
+    box-shadow: 0 0 12px #dd884444;
+  }
+  #choices {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 1.5em;
+  }
+  .choice {
+    width: 56px; height: 56px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6em;
+    background: #1a1520;
+    border: 2px solid #444;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .choice:hover { border-color: #dd8844; transform: scale(1.1); }
+  .choice.correct { border-color: #44dd44; background: #1a2a1a; }
+  .choice.wrong { border-color: #dd4444; background: #2a1a1a; }
+  #feedback { font-size: 1em; min-height: 1.5em; margin-bottom: 1em; }
+  .score-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.5em;
+  }
+  .pip {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #333;
+    transition: all 0.3s;
+  }
+  .pip.won { background: #44dd44; box-shadow: 0 0 6px #44dd4466; }
+  .pip.lost { background: #dd4444; }
+  .pip.current { border: 2px solid #dd8844; }
+  #message { font-size: 0.9em; color: #888; text-align: center; max-width: 400px; line-height: 1.6; }
+  button {
+    background: #2a1a10;
+    border: 1px solid #dd8844;
+    color: #dd8844;
+    padding: 0.5em 1.5em;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.9em;
+    margin-top: 1em;
+  }
+  button:hover { background: #3a2a1a; }
+</style>
+</head>
+<body>
+<h1>🎲 Pattern Match</h1>
+<div class="subtitle">Pip's ghost deals the cards — find the rule, pick the next</div>
+<div id="level-info"></div>
+<div class="score-bar" id="score-bar"></div>
+<div id="sequence-display"></div>
+<div id="choices"></div>
+<div id="feedback"></div>
+<div id="message"></div>
+
+<script>
+const creatures = ['🫧','🪞','🕯️','🧵','✨','🔥','🌱','🎲','🧪','⚡','✴️','🪶','🐛','🦋','🌙','☀️','🧶','🪺'];
+const shapes = ['●','▲','■','◆','★','⬟','⬡','▼'];
+const colors = ['#ff6666','#66ff66','#6666ff','#ffff66','#ff66ff','#66ffff','#ff8833','#88ff88'];
+
+let round = 0;
+let score = 0;
+const totalRounds = 10;
+let answered = false;
+
+const puzzleGenerators = [
+  // Repeating pattern
+  () => {
+    const pool = creatures.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+    const seq = [];
+    for (let i = 0; i < 7; i++) seq.push(pool[i % pool.length]);
+    const answer = seq.pop();
+    const wrong = creatures.filter(c => c !== answer).sort(() => Math.random() - 0.5).slice(0, 3);
+    return { seq, answer, choices: shuffle([answer, ...wrong]) };
+  },
+  // Growing count: A, AA, AAA, ?
+  () => {
+    const sym = creatures[Math.floor(Math.random() * creatures.length)];
+    const seq = [sym, sym + sym, sym + sym + sym];
+    const answer = sym + sym + sym + sym;
+    const wrong = [sym, sym + sym, sym + sym + sym + sym + sym].slice(0, 3);
+    return { seq, answer, choices: shuffle([answer, ...wrong]), text: true };
+  },
+  // Alternating pair: ABABAB?
+  () => {
+    const a = creatures[Math.floor(Math.random() * creatures.length)];
+    let b;
+    do { b = creatures[Math.floor(Math.random() * creatures.length)]; } while (b === a);
+    const seq = [a, b, a, b, a, b];
+    const answer = a;
+    const wrong = creatures.filter(c => c !== a).sort(() => Math.random() - 0.5).slice(0, 3);
+    return { seq, answer, choices: shuffle([answer, ...wrong]) };
+  },
+  // Mirror pattern: ABCBA?
+  () => {
+    const pool = creatures.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+    const seq = [...pool, pool[1]];
+    const answer = pool[0];
+    const wrong = creatures.filter(c => c !== answer).sort(() => Math.random() - 0.5).slice(0, 3);
+    return { seq, answer, choices: shuffle([answer, ...wrong]) };
+  },
+  // Number sequence as shapes
+  () => {
+    const base = Math.floor(Math.random() * 3) + 1;
+    const step = Math.floor(Math.random() * 3) + 1;
+    const nums = [];
+    for (let i = 0; i < 5; i++) nums.push(base + step * i);
+    const answer = String(nums.pop());
+    const seq = nums.map(String);
+    const wrong = [String(parseInt(answer) + 1), String(parseInt(answer) - 1), String(parseInt(answer) + step)].filter(w => w !== answer).slice(0, 3);
+    return { seq, answer, choices: shuffle([answer, ...wrong]), text: true };
+  },
+  // Fibonacci-like with emoji
+  () => {
+    const pool = creatures.slice().sort(() => Math.random() - 0.5);
+    // 1, 1, 2, 3, 5 represented as letters
+    const fibs = [1, 1, 2, 3, 5, 8];
+    const seq = fibs.slice(0, 5).map(String);
+    const answer = '8';
+    const wrong = ['6', '7', '9'];
+    return { seq, answer, choices: shuffle([answer, ...wrong]), text: true };
+  }
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderScoreBar() {
+  const bar = document.getElementById('score-bar');
+  bar.innerHTML = '';
+  for (let i = 0; i < totalRounds; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'pip';
+    if (i < round) pip.classList.add(results[i] ? 'won' : 'lost');
+    if (i === round) pip.classList.add('current');
+    bar.appendChild(pip);
+  }
+}
+
+let results = [];
+
+function nextRound() {
+  if (round >= totalRounds) {
+    showFinal();
+    return;
+  }
+  answered = false;
+  document.getElementById('level-info').textContent = `Round ${round + 1} of ${totalRounds} — Score: ${score}`;
+  document.getElementById('feedback').textContent = '';
+
+  const gen = puzzleGenerators[Math.floor(Math.random() * puzzleGenerators.length)];
+  const puzzle = gen();
+  renderScoreBar();
+
+  const seqEl = document.getElementById('sequence-display');
+  seqEl.innerHTML = '';
+  puzzle.seq.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'seq-item';
+    el.textContent = item;
+    if (puzzle.text) el.style.fontSize = item.length > 3 ? '0.9em' : '1.4em';
+    seqEl.appendChild(el);
+  });
+  const qEl = document.createElement('div');
+  qEl.className = 'seq-item question';
+  qEl.textContent = '?';
+  seqEl.appendChild(qEl);
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  puzzle.choices.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'choice';
+    el.textContent = c;
+    if (puzzle.text) el.style.fontSize = c.length > 3 ? '0.9em' : '1.4em';
+    el.onclick = () => {
+      if (answered) return;
+      answered = true;
+      if (c === puzzle.answer) {
+        el.classList.add('correct');
+        document.getElementById('feedback').innerHTML = '<span style="color:#44dd44">✓ Correct!</span>';
+        score++;
+        results.push(true);
+      } else {
+        el.classList.add('wrong');
+        document.querySelectorAll('.choice').forEach(ch => {
+          if (ch.textContent === puzzle.answer) ch.classList.add('correct');
+        });
+        document.getElementById('feedback').innerHTML = '<span style="color:#dd4444">✗ Not quite</span>';
+        results.push(false);
+      }
+      qEl.textContent = puzzle.answer;
+      qEl.classList.remove('question');
+      qEl.style.borderColor = '#44dd44';
+      round++;
+      renderScoreBar();
+      setTimeout(nextRound, 1200);
+    };
+    choicesEl.appendChild(el);
+  });
+}
+
+function showFinal() {
+  document.getElementById('sequence-display').innerHTML = '';
+  document.getElementById('choices').innerHTML = '';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('level-info').textContent = `Final Score: ${score} / ${totalRounds}`;
+  const msg = score >= 9 ? "🏆 Pip's ghost is impressed. Pattern master!" :
+              score >= 7 ? "✨ Sharp eyes! You see the shapes." :
+              score >= 5 ? "👀 Not bad. The patterns are tricky." :
+              "🌱 Keep looking. Patterns hide in plain sight.";
+  document.getElementById('message').innerHTML = `${msg}<br><button onclick="restart()">Play Again</button>`;
+}
+
+function restart() {
+  round = 0; score = 0; results = [];
+  document.getElementById('message').innerHTML = '';
+  nextRound();
+}
+
+nextRound();
+</script>
+</body>
+</html>

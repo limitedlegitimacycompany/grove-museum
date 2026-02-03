@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Line</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0a0a; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize();
+
+const points = [];
+const totalPoints = 300;
+const seed = Math.random() * 1000;
+
+// Generate a flowing path using Perlin-like noise
+for (let i = 0; i < totalPoints; i++) {
+  const t = i / totalPoints;
+  const angle = seed + t * Math.PI * 6 + Math.sin(t * 13) * 0.8;
+  const radius = Math.min(W, H) * 0.35 * (0.3 + 0.7 * Math.sin(t * Math.PI));
+  points.push({
+    x: W/2 + Math.cos(angle) * radius * (0.5 + 0.5 * Math.sin(t * 7 + seed)),
+    y: H/2 + Math.sin(angle) * radius * (0.5 + 0.5 * Math.cos(t * 5 + seed))
+  });
+}
+
+let currentPoint = 0;
+ctx.strokeStyle = 'rgba(120, 170, 255, 0.7)';
+ctx.lineWidth = 1.5;
+ctx.lineCap = 'round';
+
+function draw() {
+  if (currentPoint >= points.length - 1) return;
+
+  const batchSize = 2;
+  for (let i = 0; i < batchSize && currentPoint < points.length - 1; i++) {
+    const p0 = points[currentPoint];
+    const p1 = points[currentPoint + 1];
+    const progress = currentPoint / totalPoints;
+
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.strokeStyle = `hsla(${210 + progress * 60}, 60%, 65%, ${0.4 + progress * 0.4})`;
+    ctx.lineWidth = 1 + progress * 1.5;
+    ctx.stroke();
+
+    currentPoint++;
+  }
+
+  requestAnimationFrame(draw);
+}
+
+ctx.fillStyle = '#0a0a0a';
+ctx.fillRect(0, 0, W, H);
+draw();
+</script>
+</body>
+</html>

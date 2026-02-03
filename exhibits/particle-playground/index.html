@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Particle Playground</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #08080f;
+    overflow: hidden;
+    cursor: crosshair;
+    font-family: Georgia, serif;
+  }
+  canvas { display: block; }
+  #ui {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 10;
+    pointer-events: none;
+  }
+  h1 { color: #aa66ff; font-size: 1.2em; text-shadow: 0 0 20px #aa66ff44; }
+  .sub { color: #666; font-size: 0.75em; margin-top: 0.3em; }
+  #mode-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+  }
+  .mode-btn {
+    background: #1a1a2e;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 0.4em 1em;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.8em;
+    transition: all 0.2s;
+  }
+  .mode-btn:hover { border-color: #aa66ff; color: #ddd; }
+  .mode-btn.active { border-color: #aa66ff; color: #aa66ff; background: #2a1a3e; }
+  #count {
+    position: fixed;
+    bottom: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #444;
+    font-size: 0.7em;
+    font-family: Georgia, serif;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+<div id="ui">
+  <h1>🧪 Particle Playground</h1>
+  <div class="sub">Fizz's ghost lives here — move your mouse, click, drag. Watch it grow.</div>
+</div>
+<div id="count"></div>
+<div id="mode-bar">
+  <button class="mode-btn active" data-mode="fountain">🌊 Fountain</button>
+  <button class="mode-btn" data-mode="firework">🎆 Firework</button>
+  <button class="mode-btn" data-mode="orbit">🌀 Orbit</button>
+  <button class="mode-btn" data-mode="rain">🌧️ Rain</button>
+  <button class="mode-btn" data-mode="dna">🧬 DNA</button>
+</div>
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const countEl = document.getElementById('count');
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+let mode = 'fountain';
+let mx = W / 2, my = H / 2;
+let mouseDown = false;
+let particles = [];
+let hue = 0;
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    mode = btn.dataset.mode;
+  });
+});
+
+canvas.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+canvas.addEventListener('touchmove', e => { e.preventDefault(); mx = e.touches[0].clientX; my = e.touches[0].clientY; }, { passive: false });
+canvas.addEventListener('mousedown', () => mouseDown = true);
+canvas.addEventListener('mouseup', () => mouseDown = false);
+canvas.addEventListener('touchstart', e => { mouseDown = true; mx = e.touches[0].clientX; my = e.touches[0].clientY; });
+canvas.addEventListener('touchend', () => mouseDown = false);
+
+class Particle {
+  constructor(x, y, vx, vy, color, life, size, behavior) {
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.color = color;
+    this.life = life; this.maxLife = life;
+    this.size = size;
+    this.behavior = behavior || 'default';
+    this.angle = Math.atan2(vy, vx);
+    this.orbitR = Math.sqrt((x - mx) ** 2 + (y - my) ** 2);
+    this.orbitA = Math.atan2(y - my, x - mx);
+    this.orbitSpeed = 0.02 + Math.random() * 0.03;
+  }
+  update() {
+    this.life--;
+    if (this.behavior === 'orbit') {
+      this.orbitA += this.orbitSpeed;
+      this.orbitR *= 0.998;
+      this.x = mx + Math.cos(this.orbitA) * this.orbitR;
+      this.y = my + Math.sin(this.orbitA) * this.orbitR;
+    } else {
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.behavior === 'gravity') this.vy += 0.08;
+      if (this.behavior === 'rain') this.vy += 0.05;
+      this.vx *= 0.99;
+      this.vy *= 0.99;
+    }
+  }
+  draw() {
+    const alpha = this.life / this.maxLife;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * alpha, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function spawn() {
+  hue = (hue + 0.5) % 360;
+  const rate = mouseDown ? 8 : 2;
+  for (let i = 0; i < rate; i++) {
+    let p;
+    switch (mode) {
+      case 'fountain':
+        p = new Particle(mx, my,
+          (Math.random() - 0.5) * 4,
+          -2 - Math.random() * 6,
+          `hsl(${hue + Math.random() * 40}, 80%, 60%)`,
+          60 + Math.random() * 60,
+          2 + Math.random() * 3,
+          'gravity');
+        break;
+      case 'firework':
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1 + Math.random() * 5;
+        p = new Particle(mx, my,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          `hsl(${hue + Math.random() * 60}, 90%, 65%)`,
+          40 + Math.random() * 40,
+          1.5 + Math.random() * 2.5,
+          'gravity');
+        break;
+      case 'orbit':
+        const oa = Math.random() * Math.PI * 2;
+        const or2 = 30 + Math.random() * 100;
+        p = new Particle(mx + Math.cos(oa) * or2, my + Math.sin(oa) * or2,
+          0, 0,
+          `hsl(${hue + Math.random() * 80}, 70%, 55%)`,
+          120 + Math.random() * 80,
+          1 + Math.random() * 2,
+          'orbit');
+        break;
+      case 'rain':
+        p = new Particle(Math.random() * W, -10,
+          (Math.random() - 0.5) * 0.5,
+          1 + Math.random() * 3,
+          `hsl(${200 + Math.random() * 40}, 60%, 55%)`,
+          80 + Math.random() * 60,
+          1 + Math.random() * 2,
+          'rain');
+        break;
+      case 'dna':
+        const t = Date.now() * 0.003 + i * 0.5;
+        const strand = i % 2 === 0 ? 1 : -1;
+        p = new Particle(
+          mx + Math.sin(t) * 40 * strand,
+          my - 3,
+          Math.sin(t) * 0.5 * strand,
+          -1 - Math.random() * 2,
+          `hsl(${strand > 0 ? 300 + Math.random() * 30 : 180 + Math.random() * 30}, 70%, 60%)`,
+          80 + Math.random() * 40,
+          1.5 + Math.random() * 2,
+          'default');
+        break;
+    }
+    if (p) particles.push(p);
+  }
+}
+
+function loop() {
+  ctx.fillStyle = 'rgba(8, 8, 15, 0.15)';
+  ctx.fillRect(0, 0, W, H);
+  spawn();
+  // Cap at 3000
+  if (particles.length > 3000) particles.splice(0, particles.length - 3000);
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => { p.update(); p.draw(); });
+  ctx.globalAlpha = 1;
+  countEl.textContent = `${particles.length} particles`;
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

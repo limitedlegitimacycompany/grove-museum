@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circle Packing</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #060612; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize();
+
+const circles = [];
+const maxAttempts = 50;
+const hueBase = Math.random() * 360;
+let frame = 0;
+
+function addCircle() {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    let maxR = Math.min(W, H) * 0.2;
+
+    let valid = true;
+    for (const c of circles) {
+      const d = Math.sqrt((x - c.x) ** 2 + (y - c.y) ** 2);
+      maxR = Math.min(maxR, d - c.r - 2);
+      if (maxR < 3) { valid = false; break; }
+    }
+
+    // boundary
+    maxR = Math.min(maxR, x, y, W - x, H - y);
+    if (maxR < 3) valid = false;
+
+    if (valid) {
+      circles.push({ x, y, r: 0, maxR, hue: (hueBase + circles.length * 7) % 360 });
+      return true;
+    }
+  }
+  return false;
+}
+
+function draw() {
+  ctx.fillStyle = '#060612';
+  ctx.fillRect(0, 0, W, H);
+
+  if (frame % 2 === 0) {
+    for (let i = 0; i < 5; i++) addCircle();
+  }
+
+  circles.forEach(c => {
+    if (c.r < c.maxR) c.r += (c.maxR - c.r) * 0.05 + 0.2;
+    if (c.r > c.maxR) c.r = c.maxR;
+
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+    ctx.strokeStyle = `hsla(${c.hue}, 60%, 55%, 0.7)`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  frame++;
+  if (circles.length < 500) requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

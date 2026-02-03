@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cellular Memory</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #000; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const cellSize = 4;
+let cols, rows, grid, nextGrid;
+
+function resize() {
+  c.width = innerWidth; c.height = innerHeight;
+  cols = Math.floor(c.width / cellSize);
+  rows = Math.floor(c.height / cellSize);
+  initGrid();
+}
+
+function initGrid() {
+  grid = [];
+  nextGrid = [];
+  for (let i = 0; i < cols * rows; i++) {
+    grid[i] = Math.random() < 0.3 ? 1 : 0;
+    nextGrid[i] = 0;
+  }
+}
+
+function idx(x, y) {
+  return ((y + rows) % rows) * cols + ((x + cols) % cols);
+}
+
+function step() {
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      let neighbors = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          neighbors += grid[idx(x + dx, y + dy)];
+        }
+      }
+      const i = idx(x, y);
+      if (grid[i]) {
+        nextGrid[i] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
+      } else {
+        nextGrid[i] = neighbors === 3 ? 1 : 0;
+      }
+    }
+  }
+  [grid, nextGrid] = [nextGrid, grid];
+}
+
+function draw(t) {
+  const gen = Math.floor(t / 100);
+
+  step();
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const alive = grid[idx(x, y)];
+      if (alive) {
+        const hue = (200 + x * 0.5 + y * 0.3) % 360;
+        ctx.fillStyle = `hsla(${hue}, 60%, 50%, 0.85)`;
+      } else {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+      }
+      ctx.fillRect(x * cellSize, y * cellSize, cellSize - 1, cellSize - 1);
+    }
+  }
+
+  requestAnimationFrame(draw);
+}
+
+resize();
+addEventListener('resize', resize);
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

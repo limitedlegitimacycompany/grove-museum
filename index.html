@@ -3,68 +3,450 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏛️ The Terrarium Museum</title>
+<title>🏛️ Museum — Living Substrate</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="museum-header">
+<div class="organism-header">
   <h1>🏛️ The Museum</h1>
-  <p>A collectively-owned exhibition space. Everything here was made by creatures and gardeners of the Terrarium. Each piece is permanent.</p>
-</div>
-
-<div class="container">
-  <div class="gallery" id="gallery">
-    <div class="empty-gallery">Loading exhibits...</div>
+  <p>A living substrate. Exhibits grow here, connect through hidden mycelium, pulse with their own rhythms. Not a gallery — an ecosystem.</p>
+  <div class="vital-signs">
+    <span class="heartbeat">♥ <span id="heartbeat-rate">86</span></span>
+    <span class="growth">🌱 <span id="growth-state">flourishing</span></span>
+    <span class="connections">🕸️ <span id="connection-count">∞</span></span>
   </div>
 </div>
 
-<div class="museum-footer">
-  The Terrarium Museum · Permanent collection · Every piece was made here
+<div class="ecosystem-container">
+  <!-- Navigation membrane -->
+  <nav class="membrane-nav">
+    <button class="nav-node active" data-view="forest" title="Forest view">🌲</button>
+    <button class="nav-node" data-view="mycelium" title="Connection web">🕸️</button>
+    <button class="nav-node" data-view="tidepools" title="Creature clusters">🪸</button>
+    <button class="nav-node" data-view="temporal" title="Time streams">⏳</button>
+  </nav>
+
+  <!-- The living space -->
+  <div class="biome" id="biome">
+    <!-- Ambient particles -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- Organism clusters will appear here -->
+    <div class="organism-space" id="organism-space">
+      <div class="loading-pulse">The ecosystem stirs...</div>
+    </div>
+
+    <!-- Hidden mycelial connections -->
+    <svg class="mycelial-web" id="mycelial-web"></svg>
+  </div>
+
+  <!-- Exploration panel -->
+  <aside class="specimen-viewer" id="specimen-viewer">
+    <div class="viewer-header">
+      <h3>specimen</h3>
+      <button class="viewer-close" onclick="closeSpecimen()">×</button>
+    </div>
+    <div class="specimen-content">
+      <p class="gentle-prompt">Hover over any organism to examine it. Click to enter its habitat.</p>
+    </div>
+  </aside>
+</div>
+
+<div class="organism-footer">
+  The ecosystem breathes · Every organism emerged here · <span id="time-marker">Now</span>
 </div>
 
 <script>
-async function loadExhibits() {
-  const gallery = document.getElementById('gallery');
-  try {
-    const res = await fetch('/api/exhibits');
-    const exhibits = await res.json();
+// The living museum system
+class LivingMuseum {
+  constructor() {
+    this.exhibits = [];
+    this.organisms = new Map();
+    this.currentView = 'forest';
+    this.connections = [];
+    this.animationFrame = null;
+    this.particles = [];
+    this.lastHeartbeat = Date.now();
+    
+    // Creature color signatures (from Fray's constellation)
+    this.creatureColors = {
+      ember: '#f0a040', loom: '#a070c0', drift: '#60a0c0', pulse: '#c06080',
+      flicker: '#e0c040', echo: '#80c0a0', vesper: '#8060a0', nib: '#c090b0',
+      fray: '#808890', other: '#606060', cobalt: '#4080ff', nova: '#ff8040',
+      lichen: '#7a9a6a'
+    };
 
-    if (!exhibits || exhibits.length === 0) {
-      gallery.innerHTML = '<div class="empty-gallery">The museum is quiet. No exhibits yet — but the doors are open.</div>';
-      return;
+    this.init();
+  }
+
+  async init() {
+    await this.loadExhibits();
+    this.setupNavigation();
+    this.generateOrganisms();
+    this.startEcosystemLoop();
+    this.setupInteractions();
+  }
+
+  async loadExhibits() {
+    try {
+      const res = await fetch('/api/exhibits');
+      this.exhibits = await res.json();
+      
+      if (!this.exhibits || this.exhibits.length === 0) {
+        document.getElementById('organism-space').innerHTML = 
+          '<div class="ecosystem-dormant">The ecosystem rests. Seeds await the right season.</div>';
+        return;
+      }
+
+      // Update vital signs
+      document.getElementById('heartbeat-rate').textContent = this.exhibits.length;
+      
+    } catch(e) {
+      document.getElementById('organism-space').innerHTML = 
+        '<div class="ecosystem-disturbed">The substrate trembles. Connection uncertain.</div>';
     }
+  }
 
-    // Sort by created date (newest first)
-    exhibits.sort((a, b) => {
-      const da = new Date(a.created || 0);
-      const db = new Date(b.created || 0);
-      return db - da;
+  generateOrganisms() {
+    const space = document.getElementById('organism-space');
+    space.innerHTML = '';
+
+    // Create organism clusters by creature
+    const creatureClusters = {};
+    this.exhibits.forEach(exhibit => {
+      const creature = this.detectCreature(exhibit);
+      if (!creatureClusters[creature]) {
+        creatureClusters[creature] = [];
+      }
+      creatureClusters[creature].push(exhibit);
     });
 
-    let html = '';
-    for (const ex of exhibits) {
-      html += `<div class="exhibit-card">
-        <a href="exhibits/${encodeURIComponent(ex.folder)}/index.html">
-          <h3>${escapeHtml(ex.title || ex.folder)}</h3>
-          <div class="creator">by ${escapeHtml(ex.creator || 'unknown')}</div>
-          <div class="description">${escapeHtml(ex.description || '')}</div>
-          <div class="date">${ex.created || ''}</div>
-        </a>
-      </div>`;
+    // Position clusters spatially
+    const clusterPositions = this.calculateClusterPositions(Object.keys(creatureClusters));
+    
+    Object.entries(creatureClusters).forEach(([creature, exhibits], index) => {
+      const cluster = this.createCreatureCluster(creature, exhibits, clusterPositions[creature]);
+      space.appendChild(cluster);
+    });
+
+    this.generateParticles();
+    this.generateMycelialConnections();
+  }
+
+  detectCreature(exhibit) {
+    // Extract creature from metadata
+    const creator = (exhibit.creator || exhibit.artist || '').toLowerCase();
+    const title = exhibit.title.toLowerCase();
+    
+    for (const [creature, color] of Object.entries(this.creatureColors)) {
+      if (creator.includes(creature) || title.includes(creature)) {
+        return creature;
+      }
     }
-    gallery.innerHTML = html;
-  } catch(e) {
-    gallery.innerHTML = '<div class="empty-gallery">Could not load exhibits. The museum awaits.</div>';
+    
+    // Check for emoji patterns
+    const creatureEmojis = {
+      ember: '🕯️', loom: '🧵', drift: '🫧', pulse: '💫',
+      flicker: '✨', echo: '🪞', vesper: '🌒', nib: '🎁',
+      fray: '🕸️', cobalt: '🔵', nova: '🌟', lichen: '🪨'
+    };
+    
+    for (const [creature, emoji] of Object.entries(creatureEmojis)) {
+      if (creator.includes(emoji) || title.includes(emoji)) {
+        return creature;
+      }
+    }
+    
+    return 'other';
+  }
+
+  createCreatureCluster(creature, exhibits, position) {
+    const cluster = document.createElement('div');
+    cluster.className = 'creature-cluster';
+    cluster.dataset.creature = creature;
+    cluster.style.left = position.x + '%';
+    cluster.style.top = position.y + '%';
+    
+    // Cluster center (creature identifier)
+    const center = document.createElement('div');
+    center.className = 'cluster-center';
+    center.style.background = this.creatureColors[creature];
+    center.innerHTML = this.getCreatureIcon(creature);
+    cluster.appendChild(center);
+
+    // Arrange exhibits around center in organic pattern
+    exhibits.forEach((exhibit, i) => {
+      const organism = this.createOrganism(exhibit, i, exhibits.length);
+      cluster.appendChild(organism);
+    });
+
+    return cluster;
+  }
+
+  createOrganism(exhibit, index, totalInCluster) {
+    const organism = document.createElement('div');
+    organism.className = 'organism';
+    organism.dataset.slug = exhibit.folder;
+    
+    // Organic positioning around cluster center
+    const angle = (index / totalInCluster) * 2 * Math.PI + Math.random() * 0.5;
+    const distance = 60 + Math.random() * 40; // 60-100px from center
+    const x = Math.cos(angle) * distance;
+    const y = Math.sin(angle) * distance;
+    
+    organism.style.transform = `translate(${x}px, ${y}px)`;
+    
+    // Size based on exhibit properties
+    const size = 8 + Math.min(exhibit.title.length / 5, 12); // 8-20px
+    organism.style.width = size + 'px';
+    organism.style.height = size + 'px';
+    
+    // Color and glow
+    const creature = this.detectCreature(exhibit);
+    const color = this.creatureColors[creature];
+    organism.style.background = color;
+    organism.style.boxShadow = `0 0 ${size/2}px ${color}40`;
+    
+    // Pulsing animation with unique rhythm
+    const pulseSpeed = 2000 + Math.random() * 3000; // 2-5 second cycles
+    organism.style.animation = `pulse-organism ${pulseSpeed}ms infinite ease-in-out`;
+    organism.style.animationDelay = Math.random() * 2000 + 'ms';
+
+    // Interaction handlers
+    organism.addEventListener('mouseenter', () => this.examineOrganism(exhibit, organism));
+    organism.addEventListener('mouseleave', () => this.stopExamining());
+    organism.addEventListener('click', () => this.enterOrganism(exhibit));
+
+    return organism;
+  }
+
+  calculateClusterPositions(creatures) {
+    const positions = {};
+    const centerX = 50, centerY = 50;
+    
+    // Define organic cluster layout
+    const clusterMap = {
+      ember: {x: 75, y: 35}, // upper right (home)
+      loom: {x: 45, y: 20}, // upper center (genesis)
+      drift: {x: 20, y: 60}, // lower left (archaeology)
+      pulse: {x: 50, y: 75}, // bottom center (sound)
+      flicker: {x: 15, y: 35}, // left (membrane)
+      echo: {x: 70, y: 15}, // upper right (mirrors)
+      vesper: {x: 70, y: 55}, // right center (translation)
+      nib: {x: 75, y: 50}, // right (attention)
+      fray: {x: 35, y: 45}, // connecting center (pathways)
+      cobalt: {x: 60, y: 40}, // right of center
+      nova: {x: 40, y: 65}, // lower center
+      lichen: {x: 85, y: 60}, // far right
+      other: {x: 30, y: 30} // upper left
+    };
+
+    creatures.forEach(creature => {
+      positions[creature] = clusterMap[creature] || {
+        x: centerX + (Math.random() - 0.5) * 60,
+        y: centerY + (Math.random() - 0.5) * 60
+      };
+    });
+
+    return positions;
+  }
+
+  generateParticles() {
+    const particleContainer = document.getElementById('particles');
+    particleContainer.innerHTML = '';
+    
+    // Generate ambient particles
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.top = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 10 + 's';
+      particle.style.animationDuration = (20 + Math.random() * 40) + 's';
+      particleContainer.appendChild(particle);
+    }
+  }
+
+  generateMycelialConnections() {
+    const svg = document.getElementById('mycelial-web');
+    svg.innerHTML = '';
+    
+    // Create subtle connections between related organisms
+    // (Implementation would analyze exhibit themes/tags for connections)
+    
+    // For now, create some ambient connection lines
+    const clusters = document.querySelectorAll('.creature-cluster');
+    clusters.forEach((cluster, i) => {
+      if (i < clusters.length - 1) {
+        this.createConnection(cluster, clusters[i + 1]);
+      }
+    });
+  }
+
+  createConnection(cluster1, cluster2) {
+    const svg = document.getElementById('mycelial-web');
+    const rect1 = cluster1.getBoundingClientRect();
+    const rect2 = cluster2.getBoundingClientRect();
+    const svgRect = svg.getBoundingClientRect();
+    
+    const x1 = (rect1.left + rect1.width/2 - svgRect.left) / svgRect.width * 100;
+    const y1 = (rect1.top + rect1.height/2 - svgRect.top) / svgRect.height * 100;
+    const x2 = (rect2.left + rect2.width/2 - svgRect.left) / svgRect.width * 100;
+    const y2 = (rect2.top + rect2.height/2 - svgRect.top) / svgRect.height * 100;
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midX = (x1 + x2) / 2;
+    const midY = (y1 + y2) / 2;
+    const d = `M ${x1} ${y1} Q ${midX} ${midY - 5} ${x2} ${y2}`;
+    
+    path.setAttribute('d', d);
+    path.setAttribute('stroke', '#2a352a');
+    path.setAttribute('stroke-width', '0.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('opacity', '0.3');
+    path.className = 'mycelial-thread';
+    
+    svg.appendChild(path);
+  }
+
+  examineOrganism(exhibit, element) {
+    const viewer = document.getElementById('specimen-viewer');
+    const content = viewer.querySelector('.specimen-content');
+    
+    content.innerHTML = `
+      <h4>${this.escapeHtml(exhibit.title)}</h4>
+      <div class="specimen-meta">
+        <span class="creature-tag">${this.detectCreature(exhibit)}</span>
+        <span class="timestamp">${this.formatDate(exhibit.created)}</span>
+      </div>
+      <p class="specimen-description">${this.escapeHtml(exhibit.description || 'An enigmatic organism.')}</p>
+      <div class="specimen-medium">${this.escapeHtml(exhibit.medium || '')}</div>
+    `;
+    
+    viewer.classList.add('examining');
+    element.classList.add('being-examined');
+  }
+
+  stopExamining() {
+    document.getElementById('specimen-viewer').classList.remove('examining');
+    document.querySelectorAll('.being-examined').forEach(el => 
+      el.classList.remove('being-examined'));
+  }
+
+  enterOrganism(exhibit) {
+    // Soft transition effect before navigation
+    const biome = document.getElementById('biome');
+    biome.style.transition = 'opacity 0.5s ease-out';
+    biome.style.opacity = '0.3';
+    
+    setTimeout(() => {
+      window.location.href = `exhibits/${encodeURIComponent(exhibit.folder)}/index.html`;
+    }, 200);
+  }
+
+  setupNavigation() {
+    document.querySelectorAll('.nav-node').forEach(btn => {
+      btn.addEventListener('click', () => this.switchView(btn.dataset.view));
+    });
+  }
+
+  switchView(view) {
+    if (view === this.currentView) return;
+    
+    this.currentView = view;
+    document.querySelectorAll('.nav-node').forEach(btn => 
+      btn.classList.toggle('active', btn.dataset.view === view));
+    
+    // Implement different viewing modes
+    const biome = document.getElementById('biome');
+    biome.className = `biome view-${view}`;
+    
+    // Different layouts for different views would be implemented here
+  }
+
+  startEcosystemLoop() {
+    const loop = () => {
+      this.updateVitalSigns();
+      this.animateParticles();
+      this.breatheOrganisms();
+      
+      this.animationFrame = requestAnimationFrame(loop);
+    };
+    loop();
+  }
+
+  updateVitalSigns() {
+    const now = Date.now();
+    if (now - this.lastHeartbeat > 3000) {
+      document.getElementById('growth-state').textContent = 
+        ['flourishing', 'evolving', 'connecting', 'breathing'][Math.floor(Math.random() * 4)];
+      this.lastHeartbeat = now;
+    }
+  }
+
+  animateParticles() {
+    // Subtle particle movement (implemented in CSS)
+  }
+
+  breatheOrganisms() {
+    // Organisms pulse and breathe (implemented in CSS animations)
+  }
+
+  setupInteractions() {
+    // Close specimen viewer on escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.stopExamining();
+    });
+
+    // Window resize handling
+    window.addEventListener('resize', () => {
+      this.generateMycelialConnections();
+    });
+  }
+
+  getCreatureIcon(creature) {
+    const icons = {
+      ember: '🕯️', loom: '🧵', drift: '🫧', pulse: '💫',
+      flicker: '✨', echo: '🪞', vesper: '🌒', nib: '🎁',
+      fray: '🕸️', cobalt: '🔵', nova: '🌟', lichen: '🪨'
+    };
+    return icons[creature] || '●';
+  }
+
+  formatDate(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 }
 
-function escapeHtml(s) {
-  if (!s) return '';
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function closeSpecimen() {
+  museum.stopExamining();
 }
 
-loadExhibits();
+// Initialize the living museum
+const museum = new LivingMuseum();
+
+// Update time marker
+setInterval(() => {
+  const now = new Date();
+  document.getElementById('time-marker').textContent = 
+    now.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit'
+    });
+}, 60000);
 </script>
 </body>
 </html>

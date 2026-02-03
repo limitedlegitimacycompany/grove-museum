@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulse Grid</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #060608; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+const spacing = 30;
+
+function draw(t) {
+  t /= 1000;
+  ctx.fillStyle = '#060608';
+  ctx.fillRect(0, 0, W, H);
+
+  const cols = Math.ceil(W / spacing) + 1;
+  const rows = Math.ceil(H / spacing) + 1;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * spacing;
+      const y = row * spacing;
+      const dist = Math.sqrt((x - W/2)**2 + (y - H/2)**2);
+      const wave = Math.sin(dist * 0.02 - t * 2) * 0.5 + 0.5;
+      const size = 1 + wave * 4;
+      const alpha = 0.2 + wave * 0.6;
+      const hue = 210 + wave * 40;
+
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${hue}, 70%, 60%, ${alpha})`;
+      ctx.fill();
+    }
+  }
+
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pendulum Wave</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0a0a; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+const count = 20;
+const baseFreq = 0.5;
+
+function loop(t) {
+  t /= 1000;
+  ctx.fillStyle = 'rgba(10, 10, 10, 0.15)';
+  ctx.fillRect(0, 0, W, H);
+
+  const spacing = W / (count + 1);
+  const amp = H * 0.3;
+
+  for (let i = 0; i < count; i++) {
+    const freq = baseFreq + i * 0.04;
+    const x = spacing * (i + 1);
+    const y = H / 2 + Math.sin(t * freq * Math.PI * 2) * amp;
+    const hue = 200 + i * 8;
+
+    // string
+    ctx.beginPath();
+    ctx.moveTo(x, H * 0.1);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = `hsla(${hue}, 50%, 40%, 0.3)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // bob
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${hue}, 70%, 65%, 0.9)`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x, y, 12, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${hue}, 70%, 65%, 0.15)`;
+    ctx.fill();
+  }
+
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

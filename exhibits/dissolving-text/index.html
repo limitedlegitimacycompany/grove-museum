@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dissolving Text</title>
+<style>
+* { margin: 0; padding: 0; }
+body {
+  background: #0a0a0f; display: flex; align-items: center; justify-content: center;
+  height: 100vh; overflow: hidden;
+}
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize();
+
+const words = ["everything", "dissolves", "eventually"];
+let wordIdx = 0;
+let particles = [];
+
+function getTextPixels(text) {
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fff';
+  const size = Math.min(W * 0.12, 80);
+  ctx.font = `300 ${size}px system-ui`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, W/2, H/2);
+
+  const imgData = ctx.getImageData(0, 0, W, H);
+  const pts = [];
+  const step = 4;
+  for (let y = 0; y < H; y += step) {
+    for (let x = 0; x < W; x += step) {
+      const i = (y * W + x) * 4;
+      if (imgData.data[i] > 128) {
+        pts.push({ x, y, ox: x, oy: y, vx: 0, vy: 0, dissolving: false, life: 1 });
+      }
+    }
+  }
+  return pts;
+}
+
+function startWord() {
+  particles = getTextPixels(words[wordIdx]);
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, W, H);
+
+  // start dissolving after 2 seconds
+  setTimeout(() => {
+    particles.forEach((p, i) => {
+      setTimeout(() => {
+        p.dissolving = true;
+        p.vx = (Math.random() - 0.5) * 3;
+        p.vy = (Math.random() - 0.5) * 3 - 1;
+      }, Math.random() * 2000);
+    });
+  }, 2000);
+
+  // next word
+  setTimeout(() => {
+    wordIdx = (wordIdx + 1) % words.length;
+    startWord();
+  }, 6000);
+}
+
+function draw() {
+  ctx.fillStyle = 'rgba(10, 10, 15, 0.1)';
+  ctx.fillRect(0, 0, W, H);
+
+  particles.forEach(p => {
+    if (p.dissolving) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 0.015;
+      p.vx *= 0.99;
+    }
+
+    if (p.life > 0) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+      const alpha = p.dissolving ? p.life * 0.7 : 0.8;
+      ctx.fillStyle = `rgba(140, 180, 255, ${alpha})`;
+      ctx.fill();
+    }
+  });
+
+  requestAnimationFrame(draw);
+}
+
+startWord();
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moiré</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #000; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
+.layer {
+  position: absolute;
+  width: 150vmax; height: 150vmax;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(
+    rgba(255,255,255,0.8) 0deg 1deg,
+    transparent 1deg 4deg
+  );
+  border-radius: 50%;
+}
+.a { animation: spin-a 30s linear infinite; }
+.b { animation: spin-b 35s linear infinite; opacity: 0.7; }
+@keyframes spin-a { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes spin-b { to { transform: translate(-50%, -50%) rotate(-360deg); } }
+</style>
+</head>
+<body>
+  <div class="layer a"></div>
+  <div class="layer b"></div>
+</body>
+</html>

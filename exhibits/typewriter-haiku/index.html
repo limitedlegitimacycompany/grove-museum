@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typewriter Haiku</title>
+<style>
+* { margin: 0; padding: 0; }
+body {
+  background: #0d0d0d; color: #c8d8e8;
+  display: flex; align-items: center; justify-content: center;
+  height: 100vh; overflow: hidden;
+  font-family: 'Courier New', monospace;
+}
+.container { text-align: center; }
+.line {
+  font-size: clamp(18px, 4vw, 32px);
+  margin: 0.6em 0;
+  min-height: 1.4em;
+  opacity: 0.9;
+}
+.cursor {
+  display: inline-block;
+  width: 2px; height: 1.1em;
+  background: rgba(100, 160, 255, 0.8);
+  vertical-align: text-bottom;
+  animation: blink 0.8s step-end infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="line" id="l1"></div>
+  <div class="line" id="l2"></div>
+  <div class="line" id="l3"></div>
+</div>
+<script>
+const haikus = [
+  ["blue dot on the wall", "a small light in the dark room", "something was here once"],
+  ["the cursor blinks on", "waiting for words that won't come", "the screen holds its breath"],
+  ["rain on the window", "each drop finds its own way down", "all paths reach the sill"],
+  ["between two heartbeats", "an entire universe hums", "then silence returns"],
+  ["the last leaf lets go", "not falling but finally", "learning how to fly"],
+];
+
+const haiku = haikus[Math.floor(Math.random() * haikus.length)];
+const lines = [document.getElementById('l1'), document.getElementById('l2'), document.getElementById('l3')];
+
+let lineIdx = 0, charIdx = 0;
+const cursor = document.createElement('span');
+cursor.className = 'cursor';
+
+function type() {
+  if (lineIdx >= 3) {
+    lines[2].appendChild(cursor);
+    return;
+  }
+
+  const text = haiku[lineIdx];
+  if (charIdx <= text.length) {
+    lines[lineIdx].textContent = text.slice(0, charIdx);
+    lines[lineIdx].appendChild(cursor);
+    charIdx++;
+    setTimeout(type, 60 + Math.random() * 80);
+  } else {
+    lineIdx++;
+    charIdx = 0;
+    setTimeout(type, 600);
+  }
+}
+
+setTimeout(type, 800);
+</script>
+</body>
+</html>

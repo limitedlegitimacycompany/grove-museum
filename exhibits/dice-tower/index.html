@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pip's Dice Tower 🎲</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0d1117;
+  color: #e0e0e0;
+  font-family: 'Georgia', serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 30px 20px;
+}
+h1 { font-size: 1.8em; color: #f0c674; margin-bottom: 0.1em; }
+.subtitle { color: #888; font-style: italic; margin-bottom: 20px; font-size: 0.9em; }
+
+.scoreboard {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+.player-score {
+  text-align: center;
+  padding: 15px 25px;
+  border-radius: 12px;
+  background: #161b22;
+  border: 2px solid #333;
+  min-width: 120px;
+}
+.player-score.active { border-color: #f0c674; box-shadow: 0 0 15px rgba(240,198,116,0.2); }
+.player-score .label { font-size: 0.85em; color: #888; }
+.player-score .score { font-size: 2.2em; font-weight: bold; color: #f0c674; }
+.player-score .score.opponent { color: #c678dd; }
+
+.dice-area {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.die {
+  font-size: 5em;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a2e;
+  border: 3px solid #444;
+  border-radius: 20px;
+  margin-bottom: 15px;
+  transition: transform 0.3s;
+}
+.die.rolling { animation: shake 0.1s infinite; }
+.die.bust { border-color: #d9534f; background: #2a1010; }
+.die.good { border-color: #5cb85c; }
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+.turn-score {
+  font-size: 1.2em;
+  margin: 8px 0;
+  min-height: 1.5em;
+}
+.turn-score .pending { color: #f0c674; }
+
+.controls {
+  display: flex;
+  gap: 15px;
+  margin: 15px 0;
+}
+.btn {
+  padding: 12px 30px;
+  font-size: 1.1em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+.btn:hover { transform: scale(1.05); }
+.btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+.btn-roll { background: #f0c674; color: #0d1117; }
+.btn-bank { background: #5cb85c; color: #fff; }
+
+#message {
+  font-size: 1em;
+  margin: 10px 0;
+  min-height: 1.5em;
+  text-align: center;
+  color: #888;
+  max-width: 400px;
+}
+
+.progress-bar {
+  width: 300px;
+  height: 8px;
+  background: #222;
+  border-radius: 4px;
+  margin: 5px 0;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+.progress-fill.you { background: #f0c674; }
+.progress-fill.them { background: #c678dd; }
+
+.rules {
+  margin-top: 30px;
+  padding: 20px;
+  background: #161b22;
+  border-radius: 12px;
+  max-width: 400px;
+  font-size: 0.85em;
+  color: #888;
+  line-height: 1.6;
+}
+.rules h3 { color: #f0c674; margin-bottom: 8px; }
+
+.credit { font-size: 0.7em; color: #444; margin-top: 20px; }
+
+.win-msg {
+  font-size: 1.5em;
+  color: #f0c674;
+  animation: pulse 1s ease-in-out infinite alternate;
+}
+@keyframes pulse {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
+}
+</style>
+</head>
+<body>
+<h1>Pip's Dice Tower 🎲</h1>
+<p class="subtitle">First to 100 wins. But greed has a price.</p>
+
+<div class="scoreboard">
+  <div class="player-score active" id="you-box">
+    <div class="label">You</div>
+    <div class="score" id="you-score">0</div>
+    <div class="progress-bar"><div class="progress-fill you" id="you-bar" style="width:0%"></div></div>
+  </div>
+  <div class="player-score" id="pip-box">
+    <div class="label">Pip 🎲</div>
+    <div class="score opponent" id="pip-score">0</div>
+    <div class="progress-bar"><div class="progress-fill them" id="pip-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="dice-area">
+  <div class="die" id="die">?</div>
+  <div class="turn-score" id="turn-info"></div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-roll" id="roll-btn" onclick="roll()">🎲 Roll</button>
+  <button class="btn btn-bank" id="bank-btn" onclick="bank()" disabled>💰 Bank</button>
+</div>
+
+<div id="message">Roll the die to begin!</div>
+
+<div class="rules">
+  <h3>How to Play</h3>
+  Roll the die as many times as you want. Points add up.<br>
+  <strong>But roll a 1</strong> — you lose ALL unbanked points this turn.<br>
+  Hit <strong>Bank</strong> to lock in your points safely.<br>
+  Then Pip takes a turn. First to <strong>100</strong> wins.<br><br>
+  <em>The question is always the same: one more roll?</em>
+</div>
+
+<p class="credit">Pip 🎲 — Sol dreamed me, Kit saved me</p>
+
+<script>
+const DICE_FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+const TARGET = 100;
+
+let youScore = 0, pipScore = 0;
+let turnTotal = 0;
+let isPlayerTurn = true;
+let gameOver = false;
+
+const dieEl = document.getElementById('die');
+const rollBtn = document.getElementById('roll-btn');
+const bankBtn = document.getElementById('bank-btn');
+const messageEl = document.getElementById('message');
+const turnInfo = document.getElementById('turn-info');
+const youScoreEl = document.getElementById('you-score');
+const pipScoreEl = document.getElementById('pip-score');
+const youBar = document.getElementById('you-bar');
+const pipBar = document.getElementById('pip-bar');
+const youBox = document.getElementById('you-box');
+const pipBox = document.getElementById('pip-box');
+
+function updateDisplay() {
+  youScoreEl.textContent = youScore;
+  pipScoreEl.textContent = pipScore;
+  youBar.style.width = Math.min(100, youScore) + '%';
+  pipBar.style.width = Math.min(100, pipScore) + '%';
+  youBox.classList.toggle('active', isPlayerTurn);
+  pipBox.classList.toggle('active', !isPlayerTurn);
+}
+
+function rollDie() {
+  return Math.floor(Math.random() * 6) + 1;
+}
+
+async function animateDie(value) {
+  dieEl.classList.add('rolling');
+  for (let i = 0; i < 6; i++) {
+    dieEl.textContent = DICE_FACES[Math.floor(Math.random() * 6) + 1];
+    await sleep(60);
+  }
+  dieEl.classList.remove('rolling');
+  dieEl.textContent = DICE_FACES[value];
+  
+  dieEl.classList.remove('bust', 'good');
+  if (value === 1) {
+    dieEl.classList.add('bust');
+  } else {
+    dieEl.classList.add('good');
+  }
+}
+
+async function roll() {
+  if (gameOver || !isPlayerTurn) return;
+  rollBtn.disabled = true;
+  bankBtn.disabled = true;
+  
+  const value = rollDie();
+  await animateDie(value);
+  
+  if (value === 1) {
+    turnTotal = 0;
+    turnInfo.innerHTML = '<span style="color:#d9534f">💥 Bust! Lost it all.</span>';
+    
+    const quips = [
+      "Ouch. The dice giveth and the dice taketh away.",
+      "That's the sound of greed meeting gravity.",
+      "Should've banked! ...or should you? 🎲",
+      "One. The loneliest number. And the cruelest.",
+    ];
+    messageEl.textContent = quips[Math.floor(Math.random() * quips.length)];
+    
+    await sleep(1500);
+    startPipTurn();
+  } else {
+    turnTotal += value;
+    turnInfo.innerHTML = `This turn: <span class="pending">+${turnTotal}</span>`;
+    
+    if (youScore + turnTotal >= TARGET) {
+      youScore += turnTotal;
+      updateDisplay();
+      endGame(true);
+      return;
+    }
+    
+    messageEl.textContent = `Rolled ${value}! Total this turn: ${turnTotal}. Roll again or bank?`;
+    rollBtn.disabled = false;
+    bankBtn.disabled = false;
+  }
+}
+
+function bank() {
+  if (gameOver || !isPlayerTurn || turnTotal === 0) return;
+  
+  youScore += turnTotal;
+  messageEl.textContent = `Banked ${turnTotal} points. Smart move? We'll see.`;
+  turnTotal = 0;
+  turnInfo.textContent = '';
+  updateDisplay();
+  
+  if (youScore >= TARGET) {
+    endGame(true);
+    return;
+  }
+  
+  rollBtn.disabled = true;
+  bankBtn.disabled = true;
+  
+  setTimeout(startPipTurn, 1000);
+}
+
+async function startPipTurn() {
+  isPlayerTurn = false;
+  turnTotal = 0;
+  updateDisplay();
+  rollBtn.disabled = true;
+  bankBtn.disabled = true;
+  turnInfo.textContent = '';
+  messageEl.textContent = "Pip's turn... 🎲";
+  
+  await sleep(800);
+  
+  // Pip's strategy: bank when turn total >= threshold
+  // Threshold varies based on game state (smarter when behind)
+  const deficit = youScore - pipScore;
+  let threshold = 20;
+  if (deficit > 30) threshold = 25;
+  if (deficit < -10) threshold = 15;
+  if (pipScore + 20 >= TARGET) threshold = TARGET - pipScore; // Go for the win
+  
+  let pipTurn = 0;
+  let rolling = true;
+  
+  while (rolling) {
+    const value = rollDie();
+    await animateDie(value);
+    await sleep(600);
+    
+    if (value === 1) {
+      pipTurn = 0;
+      turnInfo.innerHTML = '<span style="color:#d9534f">💥 Pip busts!</span>';
+      messageEl.textContent = "Ha! Even Pip gets greedy sometimes.";
+      rolling = false;
+    } else {
+      pipTurn += value;
+      turnInfo.innerHTML = `Pip's turn: <span style="color:#c678dd">+${pipTurn}</span>`;
+      
+      if (pipScore + pipTurn >= TARGET) {
+        pipScore += pipTurn;
+        updateDisplay();
+        endGame(false);
+        return;
+      }
+      
+      if (pipTurn >= threshold) {
+        // Bank
+        pipScore += pipTurn;
+        updateDisplay();
+        messageEl.textContent = `Pip banks ${pipTurn}. Your turn!`;
+        turnInfo.textContent = '';
+        rolling = false;
+      } else {
+        messageEl.textContent = `Pip rolled ${value} (total: ${pipTurn}). Rolling again...`;
+        await sleep(500);
+      }
+    }
+  }
+  
+  await sleep(1000);
+  
+  // Back to player
+  isPlayerTurn = true;
+  turnTotal = 0;
+  updateDisplay();
+  rollBtn.disabled = false;
+  bankBtn.disabled = true;
+  dieEl.textContent = '?';
+  dieEl.classList.remove('bust', 'good');
+  turnInfo.textContent = '';
+  if (!gameOver) messageEl.textContent = 'Your turn. Roll!';
+}
+
+function endGame(playerWon) {
+  gameOver = true;
+  rollBtn.disabled = true;
+  bankBtn.disabled = true;
+  
+  if (playerWon) {
+    messageEl.innerHTML = '<span class="win-msg">🎉 You win! ' + youScore + ' points!</span>';
+    turnInfo.textContent = 'Pip tips their hat. Well played.';
+  } else {
+    messageEl.innerHTML = '<span class="win-msg" style="color:#c678dd">Pip wins with ' + pipScore + '! 🎲</span>';
+    turnInfo.textContent = "Don't worry — the dice always roll again.";
+  }
+  
+  // Show play again
+  setTimeout(() => {
+    rollBtn.textContent = '🔄 Play Again';
+    rollBtn.disabled = false;
+    rollBtn.onclick = resetGame;
+  }, 2000);
+}
+
+function resetGame() {
+  youScore = 0;
+  pipScore = 0;
+  turnTotal = 0;
+  isPlayerTurn = true;
+  gameOver = false;
+  dieEl.textContent = '?';
+  dieEl.classList.remove('bust', 'good');
+  turnInfo.textContent = '';
+  messageEl.textContent = 'Roll the die to begin!';
+  rollBtn.textContent = '🎲 Roll';
+  rollBtn.onclick = roll;
+  rollBtn.disabled = false;
+  bankBtn.disabled = true;
+  updateDisplay();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>

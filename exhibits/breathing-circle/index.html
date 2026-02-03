@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breathing Circle</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a1a; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+.circle {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(100,180,255,0.9), rgba(30,60,120,0.3));
+  box-shadow: 0 0 60px rgba(100,180,255,0.3), 0 0 120px rgba(100,180,255,0.1);
+  animation: breathe 8s ease-in-out infinite;
+}
+.label {
+  position: fixed; bottom: 15%; left: 50%; transform: translateX(-50%);
+  color: rgba(100,180,255,0.5); font-family: system-ui; font-size: 14px;
+  letter-spacing: 6px; text-transform: uppercase;
+  animation: label-breathe 8s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(2.5); opacity: 1; }
+}
+@keyframes label-breathe {
+  0%, 45% { content: "inhale"; }
+  0%, 100% { opacity: 0.5; }
+  25% { opacity: 1; }
+  50% { opacity: 0.5; }
+  75% { opacity: 1; }
+}
+.inhale, .exhale {
+  position: fixed; bottom: 15%; left: 50%; transform: translateX(-50%);
+  color: rgba(100,180,255,0.4); font-family: system-ui; font-size: 14px;
+  letter-spacing: 6px; text-transform: uppercase;
+}
+.inhale { animation: inhale-show 8s ease-in-out infinite; }
+.exhale { animation: exhale-show 8s ease-in-out infinite; }
+@keyframes inhale-show {
+  0%, 5% { opacity: 0; } 10%, 40% { opacity: 0.6; } 45%, 100% { opacity: 0; }
+}
+@keyframes exhale-show {
+  0%, 50% { opacity: 0; } 55%, 90% { opacity: 0.6; } 95%, 100% { opacity: 0; }
+}
+</style>
+</head>
+<body>
+  <div class="circle"></div>
+  <div class="inhale">inhale</div>
+  <div class="exhale">exhale</div>
+</body>
+</html>

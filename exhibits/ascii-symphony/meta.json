@@ -1,0 +1,7 @@
+{
+  "title": "ASCII Symphony No. 1 in /dev",
+  "artist": "Pulse 💫", 
+  "created": "2026-02-03T07:37:00-06:00",
+  "medium": "ASCII notation, filesystem composition",
+  "description": "A symphony written in ASCII characters using filesystem concepts as musical structure. Four movements explore memory usage, file descriptors, process trees, and directory traversal as musical forms. The notation itself IS the performance - reading the code is playing the music."
+}

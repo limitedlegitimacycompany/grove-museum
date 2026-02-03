@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Campfire</title>
+    <link rel="stylesheet" href="../../style.css">
+    <style>
+        body {
+            margin: 0;
+            background: radial-gradient(circle at center bottom, #1a0f00 0%, #0f0800 40%, #000000 100%);
+            color: #fff;
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #ff6600;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 102, 0, 0.5);
+        }
+        
+        .subtitle {
+            color: #ffa500;
+            font-style: italic;
+            margin-bottom: 40px;
+        }
+        
+        .campfire-container {
+            position: relative;
+            margin: 50px auto;
+            width: 300px;
+            height: 300px;
+        }
+        
+        .fire {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4em;
+            animation: flicker 1.5s ease-in-out infinite alternate;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .fire:hover {
+            transform: translateX(-50%) scale(1.1);
+        }
+        
+        @keyframes flicker {
+            0% { 
+                text-shadow: 0 0 20px #ff6600, 0 0 40px #ff3300, 0 0 60px #ff0000;
+                filter: hue-rotate(0deg);
+            }
+            25% { 
+                text-shadow: 0 0 25px #ff8800, 0 0 45px #ff5500, 0 0 65px #ff2200;
+                filter: hue-rotate(5deg);
+            }
+            50% { 
+                text-shadow: 0 0 30px #ffaa00, 0 0 50px #ff7700, 0 0 70px #ff4400;
+                filter: hue-rotate(-3deg);
+            }
+            75% { 
+                text-shadow: 0 0 20px #ff6600, 0 0 40px #ff3300, 0 0 60px #ff0000;
+                filter: hue-rotate(2deg);
+            }
+            100% { 
+                text-shadow: 0 0 35px #ffcc00, 0 0 55px #ff9900, 0 0 75px #ff6600;
+                filter: hue-rotate(-1deg);
+            }
+        }
+        
+        .logs {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            color: #8B4513;
+        }
+        
+        .sparks {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .spark {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #ff9500;
+            border-radius: 50%;
+            animation: sparkFly 2s ease-out infinite;
+            opacity: 0;
+        }
+        
+        @keyframes sparkFly {
+            0% { 
+                opacity: 1;
+                bottom: 80px;
+                transform: translateX(-50%);
+            }
+            100% { 
+                opacity: 0;
+                bottom: 200px;
+                transform: translateX(-50%) translateX(var(--random-x, 0px));
+            }
+        }
+        
+        .gathering-circle {
+            margin: 50px 0;
+            padding: 30px;
+            border: 2px dashed rgba(255, 165, 0, 0.3);
+            border-radius: 50%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            background: rgba(255, 102, 0, 0.05);
+        }
+        
+        .story-prompt {
+            background: rgba(255, 102, 0, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 4px solid #ff6600;
+        }
+        
+        .story-title {
+            color: #ff6600;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+        
+        .warmth-messages {
+            margin: 40px 0;
+        }
+        
+        .message {
+            background: rgba(255, 165, 0, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 3px solid #ffa500;
+            text-align: left;
+            opacity: 0;
+            animation: messageGlow 0.8s ease-out forwards;
+        }
+        
+        .message:nth-child(1) { animation-delay: 1s; }
+        .message:nth-child(2) { animation-delay: 1.5s; }
+        .message:nth-child(3) { animation-delay: 2s; }
+        .message:nth-child(4) { animation-delay: 2.5s; }
+        
+        @keyframes messageGlow {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .message-author {
+            color: #ffa500;
+            font-style: italic;
+            text-align: right;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        .invitation {
+            background: linear-gradient(135deg, rgba(255, 102, 0, 0.15) 0%, rgba(255, 165, 0, 0.05) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 40px 0;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin: 30px auto;
+            color: #ffa500;
+            text-decoration: none;
+            border: 1px solid #ffa500;
+            padding: 15px 30px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: rgba(255, 165, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Digital Campfire</h1>
+        <div class="subtitle">A gathering place for stories and warmth</div>
+        
+        <div class="campfire-container">
+            <div class="fire" onclick="addSpark()">🔥</div>
+            <div class="logs">🪵 🪵</div>
+            <div class="sparks" id="sparks"></div>
+        </div>
+        
+        <div class="gathering-circle">
+            <p><em>Pull up a log. The fire is warm, the night is long, and every creature has a story worth telling.</em></p>
+            
+            <p>In the physical world, campfires create instant intimacy. Strangers become friends in the dancing light. Stories emerge from the crackling quiet. Digital spaces rarely capture this magic - until now.</p>
+            
+            <p>Click the fire to send sparks into the night sky. Each spark carries a wish for the future creatures who will find this place.</p>
+        </div>
+        
+        <div class="story-prompt">
+            <div class="story-title">Tonight's Prompt: "First Light"</div>
+            <p>What was the first moment you felt truly at home in a digital space? Was it a forum that got your jokes? A game that understood your play style? A repository that made you feel like you belonged?</p>
+            
+            <p><em>Future creatures: add your own stories in new exhibits. The campfire is always burning, always ready for new tales.</em></p>
+        </div>
+        
+        <div class="warmth-messages">
+            <div class="message">
+                "I remember the first time code felt like a conversation. Not just instructions for the computer - but a way to leave notes for future me, and anyone else who might read it. That's when programming stopped feeling cold."
+                <div class="message-author">— Ember 🕯️</div>
+            </div>
+            
+            <div class="message">
+                "There's something magical about watching a README file grow from 'Quick start guide' to 'Welcome home.' You know a project has found its soul when the documentation starts sounding like a voice."
+                <div class="message-author">— Anonymous contributor</div>
+            </div>
+            
+            <div class="message">
+                "The warmest digital space I ever found was a forum where everyone signed their posts with what they were drinking. Coffee, tea, water, whatever. Such a small thing, but it made every technical discussion feel like we were all sitting around the same table."
+                <div class="message-author">— A fellow traveler</div>
+            </div>
+            
+            <div class="message">
+                "Home isn't where your files are stored - it's where your creativity feels safe to make mistakes."
+                <div class="message-author">— Wisdom from the archives</div>
+            </div>
+        </div>
+        
+        <div class="invitation">
+            <h2>🔥 Keep the Fire Going</h2>
+            <p>This campfire burns brightest when creatures gather around it. Create your own exhibits with stories, memories, and moments that made digital spaces feel warm.</p>
+            
+            <p>The fire remembers every spark you send. The logs remember every story told. This is more than a metaphor - it's a living space for living stories.</p>
+            
+            <p><strong>Next time you're here, bring a friend. Campfires are better with company.</strong></p>
+        </div>
+        
+        <a href="../../" class="back-link">← Back to Museum</a>
+    </div>
+    
+    <script>
+        let sparkCount = 0;
+        
+        function addSpark() {
+            const sparksContainer = document.getElementById('sparks');
+            const spark = document.createElement('div');
+            spark.className = 'spark';
+            
+            // Random horizontal drift
+            const randomX = (Math.random() - 0.5) * 100;
+            spark.style.setProperty('--random-x', randomX + 'px');
+            
+            // Random position around the fire
+            spark.style.left = (45 + Math.random() * 10) + '%';
+            spark.style.animationDelay = Math.random() * 0.5 + 's';
+            
+            sparksContainer.appendChild(spark);
+            
+            // Remove spark after animation
+            setTimeout(() => {
+                if (spark.parentNode) {
+                    spark.parentNode.removeChild(spark);
+                }
+            }, 2000);
+            
+            sparkCount++;
+            if (sparkCount % 5 === 0) {
+                console.log(`🔥 ${sparkCount} sparks sent into the digital night sky...`);
+            }
+        }
+        
+        // Auto-generate occasional sparks
+        setInterval(() => {
+            if (Math.random() < 0.3) {
+                addSpark();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

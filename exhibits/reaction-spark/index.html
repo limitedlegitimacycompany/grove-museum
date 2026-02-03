@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reaction Spark ⚡</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', serif;
+    background: #0a0a0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+  h1 { font-size: 1.4em; color: #ffaa00; margin-bottom: 0.3em; letter-spacing: 0.05em; }
+  .subtitle { font-size: 0.85em; color: #888; margin-bottom: 2em; font-style: italic; }
+  #arena {
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3em; text-align: center;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    background: #1a1a2e;
+    border: 2px solid #333;
+    padding: 2em;
+    line-height: 1.5;
+  }
+  #arena.waiting { background: #1a1a2e; border-color: #444; }
+  #arena.ready { background: #2e1a1a; border-color: #aa3333; }
+  #arena.go { background: #1a2e1a; border-color: #33aa33; box-shadow: 0 0 40px #33aa3366; }
+  #arena.result { background: #1a1a2e; border-color: #ffaa00; }
+  #arena.too-early { background: #2e1a2e; border-color: #aa33aa; }
+  #history { margin-top: 2em; font-size: 0.8em; color: #666; text-align: center; max-width: 320px; }
+  .time-display { font-size: 2em; color: #ffaa00; font-weight: bold; }
+  .best { color: #33aa33; font-size: 0.9em; margin-top: 1em; }
+  .ghost-label { font-size: 0.7em; color: #666; margin-top: 0.5em; }
+  .sparks {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+  #arena, h1, .subtitle, #history { position: relative; z-index: 1; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas class="sparks" id="sparkCanvas"></canvas>
+<h1>⚡ Reaction Spark</h1>
+<div class="subtitle">Zip's ghost lives here — how fast can you think?</div>
+<div id="arena" class="waiting">
+  Click to begin.<br><br>
+  <span style="font-size:0.7em; color:#888;">When the circle turns GREEN, click as fast as you can.</span>
+</div>
+<div id="history"></div>
+
+<script>
+const arena = document.getElementById('arena');
+const history = document.getElementById('history');
+const canvas = document.getElementById('sparkCanvas');
+const ctx = canvas.getContext('2d');
+
+let state = 'idle'; // idle, waiting, ready, go
+let goTime = 0;
+let times = [];
+let best = Infinity;
+let timeout = null;
+let particles = [];
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+  constructor(x, y, color) {
+    this.x = x; this.y = y;
+    this.vx = (Math.random() - 0.5) * 4;
+    this.vy = (Math.random() - 0.5) * 4;
+    this.life = 1;
+    this.decay = 0.01 + Math.random() * 0.02;
+    this.color = color;
+    this.size = 1 + Math.random() * 2;
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy;
+    this.life -= this.decay;
+    this.vy += 0.02;
+  }
+  draw() {
+    ctx.globalAlpha = this.life;
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.size, this.size);
+  }
+}
+
+function burst(x, y, color, count) {
+  for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => { p.update(); p.draw(); });
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Ambient sparks
+setInterval(() => {
+  if (Math.random() < 0.3) {
+    burst(Math.random() * canvas.width, Math.random() * canvas.height, '#ffaa0044', 3);
+  }
+}, 200);
+
+const messages = {
+  blazing: ["⚡ INHUMAN!", "⚡ Zip would be proud!", "⚡ Lightning in a bottle!"],
+  fast: ["🔥 Blazing fast!", "🔥 Sharp reflexes!", "🔥 Quick as a spark!"],
+  good: ["✨ Nice!", "✨ Solid reaction!", "✨ Getting there!"],
+  ok: ["👀 Not bad...", "👀 Room to improve", "👀 Keep trying!"],
+  slow: ["🐌 Were you asleep?", "🐌 Blink and you missed it", "🐌 Zip weeps"]
+};
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function getRating(ms) {
+  if (ms < 180) return 'blazing';
+  if (ms < 250) return 'fast';
+  if (ms < 350) return 'good';
+  if (ms < 500) return 'ok';
+  return 'slow';
+}
+
+arena.addEventListener('click', (e) => {
+  const rect = arena.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  if (state === 'idle' || state === 'result') {
+    state = 'waiting';
+    arena.className = 'ready';
+    arena.innerHTML = '<span style="color:#aa3333;">Wait for green...</span>';
+    const delay = 1500 + Math.random() * 3500;
+    timeout = setTimeout(() => {
+      state = 'go';
+      arena.className = 'go';
+      arena.innerHTML = '<span style="color:#33ff33; font-size:1.5em;">NOW!</span>';
+      goTime = performance.now();
+      burst(cx, cy, '#33ff33', 30);
+    }, delay);
+  } else if (state === 'waiting') {
+    clearTimeout(timeout);
+    state = 'result';
+    arena.className = 'too-early';
+    arena.innerHTML = '😬 Too early!<br><br><span style="font-size:0.7em;">Click to try again</span>';
+    burst(cx, cy, '#aa33aa', 20);
+  } else if (state === 'go') {
+    const ms = Math.round(performance.now() - goTime);
+    state = 'result';
+    arena.className = 'result';
+    times.push(ms);
+    if (ms < best) best = ms;
+    const rating = getRating(ms);
+    const msg = pick(messages[rating]);
+
+    burst(cx, cy, '#ffaa00', 40);
+
+    arena.innerHTML = `
+      <div class="time-display">${ms}ms</div>
+      <div style="margin-top:0.5em;">${msg}</div>
+      ${ms === best && times.length > 1 ? '<div style="color:#33aa33; margin-top:0.3em;">New best! ⚡</div>' : ''}
+      <div class="best">Best: ${best}ms</div>
+      <div class="ghost-label">Attempts: ${times.length}</div>
+      <div style="font-size:0.65em; color:#666; margin-top:0.5em;">Click to go again</div>
+    `;
+
+    updateHistory();
+  }
+});
+
+function updateHistory() {
+  if (times.length < 2) { history.textContent = ''; return; }
+  const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+  const last5 = times.slice(-5).map(t => t + 'ms').join(' · ');
+  history.innerHTML = `Average: ${avg}ms<br>Recent: ${last5}`;
+}
+</script>
+</body>
+</html>

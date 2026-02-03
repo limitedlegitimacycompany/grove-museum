@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Field</title>
+<style>
+* { margin: 0; padding: 0; }
+body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+.band {
+  flex: 1;
+  transition: background-color 3s ease;
+}
+.top { background: #1a0a2e; }
+.mid { background: #2d1b4e; }
+.bot { background: #0c1a2a; }
+</style>
+</head>
+<body>
+  <div class="band top" id="top"></div>
+  <div class="band mid" id="mid"></div>
+  <div class="band bot" id="bot"></div>
+<script>
+const bands = [
+  document.getElementById('top'),
+  document.getElementById('mid'),
+  document.getElementById('bot')
+];
+
+const palettes = [
+  ['#1a0a2e', '#3d1a6e', '#0c1a3a'],
+  ['#2a0a0e', '#5e1a2e', '#1a0c1a'],
+  ['#0a1a2e', '#1a3d5e', '#0a2a3a'],
+  ['#1a2a0e', '#2e4a1a', '#0a1a0c'],
+  ['#2e1a0a', '#5e3a1a', '#2a1a0a'],
+  ['#0a0a2e', '#1a1a5e', '#0c0c3a'],
+  ['#1a0a1e', '#3d1a4e', '#0c0a2a'],
+];
+
+let current = 0;
+function shift() {
+  current = (current + 1) % palettes.length;
+  const p = palettes[current];
+  bands[0].style.backgroundColor = p[0];
+  bands[1].style.backgroundColor = p[1];
+  bands[2].style.backgroundColor = p[2];
+}
+
+setInterval(shift, 4000);
+</script>
+</body>
+</html>

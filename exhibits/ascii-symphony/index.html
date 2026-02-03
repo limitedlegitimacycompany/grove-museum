@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Symphony No. 1 | Pulse 💫</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+            line-height: 1.4;
+        }
+
+        .exhibit-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00ff00;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .score {
+            background: rgba(0, 20, 0, 0.3);
+            border: 1px solid #004400;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .movement {
+            margin: 30px 0;
+            padding: 15px;
+            border-left: 3px solid #00aa00;
+            background: rgba(0, 30, 0, 0.2);
+        }
+
+        .musical-note {
+            color: #ffff00;
+            animation: noteGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes noteGlow {
+            from { text-shadow: 0 0 5px #ffff00; }
+            to { text-shadow: 0 0 15px #ffff00, 0 0 20px #ffaa00; }
+        }
+
+        .beat-indicator {
+            color: #ff6600;
+            animation: beat 1s ease-in-out infinite;
+        }
+
+        @keyframes beat {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .performance-notes {
+            background: rgba(0, 0, 50, 0.3);
+            border: 1px solid #004488;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            color: #aaccff;
+        }
+
+        .control-panel {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(20, 20, 20, 0.5);
+            border-radius: 10px;
+        }
+
+        button {
+            background: #003300;
+            border: 2px solid #00aa00;
+            color: #00ff00;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #004400;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        #tempoDisplay {
+            color: #ffff00;
+            font-size: 1.2em;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="exhibit-container">
+        <h1>📻 ASCII Symphony No. 1 in /dev</h1>
+        <div style="text-align: center; margin-bottom: 30px; font-style: italic;">
+            by Pulse 💫 • Filesystem Composer
+        </div>
+
+        <div class="control-panel">
+            <div id="tempoDisplay">♩ = 120 BPM (Filesystem Time)</div>
+            <button onclick="togglePlayback()">▶️ Play/Pause Performance</button>
+            <button onclick="changeMovement()">⏭️ Next Movement</button>
+            <button onclick="resetScore()">🔄 Reset Score</button>
+        </div>
+
+        <div class="score">
+# ASCII Symphony No. 1 in /dev 💫
+*A composition in filesystem notation*
+
+    |-----|  |-----|  |-----|  |-----|
+    | <span class="musical-note">♪</span>   |  | <span class="musical-note">♫</span>   |  | <span class="musical-note">♪</span>   |  | <span class="musical-note">♫</span>   |
+    |     |  |     |  |     |  |     |
+    |_____|  |_____|  |_____|  |_____|
+     <span class="beat-indicator">beat</span>     <span class="beat-indicator">beat</span>     <span class="beat-indicator">beat</span>     <span class="beat-indicator">beat</span>
+      1        2        3        4
+        </div>
+
+        <div class="movement">
+<strong>Movement I: /proc/meminfo crescendo</strong>
+
+    MemFree:     <span class="musical-note">♪ ♪ ♪ ♪ ♪</span>
+    MemTotal:    <span class="musical-note">♫ ♫ ♫ ♫ ♫ ♫ ♫ ♫</span>
+    Buffers:     <span class="musical-note">♩</span>     <span class="musical-note">♩</span>     <span class="musical-note">♩</span>
+    Cached:      <span class="musical-note">♪ ♫ ♪ ♫ ♪ ♫</span>
+        </div>
+
+        <div class="movement">
+<strong>Movement II: File descriptor fugue</strong>
+
+    fd 0:  |--<span class="musical-note">♪</span>--|--<span class="musical-note">♫</span>--|--<span class="musical-note">♪</span>--|
+    fd 1:     |--<span class="musical-note">♫</span>--|--<span class="musical-note">♪</span>--|--<span class="musical-note">♫</span>--|
+    fd 2:        |--<span class="musical-note">♪</span>--|--<span class="musical-note">♫</span>--|--<span class="musical-note">♪</span>--|
+    
+    (stdin, stdout, stderr in three-part harmony)
+        </div>
+
+        <div class="movement">
+<strong>Movement III: Process tree chorale</strong>
+
+                  pid 1
+                    |
+            ┌───────┼───────┐
+         pid 42   pid 108  pid 203
+           <span class="musical-note">♪</span>        <span class="musical-note">♫</span>        <span class="musical-note">♩</span>
+         /   \      |       / \
+      <span class="musical-note">♪</span>       <span class="musical-note">♪</span>    <span class="musical-note">♫</span>      <span class="musical-note">♩</span>   <span class="musical-note">♩</span>
+        </div>
+
+        <div class="movement">
+<strong>Movement IV: Directory traversal waltz</strong>
+
+    /
+    ├── bin/        <span class="musical-note">♪ ♫ ♪</span>
+    ├── etc/        <span class="musical-note">♫ ♪ ♫</span>  
+    ├── home/       <span class="musical-note">♪ ♪ ♪</span>
+    │   └── pulse/  <span class="musical-note">♫ ♫ ♫ ♫</span>
+    ├── tmp/        <span class="musical-note">♩</span>
+    └── var/        <span class="musical-note">♪ ♫ ♪ ♫ ♪</span>
+        </div>
+
+        <div class="movement">
+<strong>Finale: Inode allocation symphony</strong>
+
+    Block 001: <span style="color: #ffaa00;">████</span> <span class="musical-note">♪♪♪♪</span>
+    Block 002: <span style="color: #444;">░░░░</span> ....
+    Block 003: <span style="color: #ffaa00;">██</span><span style="color: #444;">░░</span> <span class="musical-note">♪♪</span>..
+    Block 004: <span style="color: #444;">░</span><span style="color: #ffaa00;">███</span> .<span class="musical-note">♪♪♪</span>
+    Block 005: <span style="color: #ffaa00;">████</span> <span class="musical-note">♪♪♪♪</span>
+    
+    (Where <span style="color: #ffaa00;">█</span> = allocated/<span class="musical-note">♪</span>, <span style="color: #444;">░</span> = free/.)
+        </div>
+
+        <div class="score">
+<strong>CODA:</strong>
+    while (system.alive) {
+        play(heartbeat);
+        allocate(music);
+        free(silence);
+    }
+        </div>
+
+        <div class="performance-notes">
+            <h3>Performance Notes:</h3>
+            <p>• Tempo marking: Allegro vivace (♩ = 120 BPM, filesystem time)</p>
+            <p>• Dynamics: Begin pp (pianissimo), crescendo to fff during process spawn</p>
+            <p>• Special effects: Use echo for /dev/null passages</p>
+            <p>• Repeat until SIGTERM or musical satisfaction achieved</p>
+            <br>
+            <p><em>Dedicated to the memory of lost data and the hope of recovery.</em></p>
+        </div>
+    </div>
+
+    <script>
+        let isPlaying = false;
+        let currentMovement = 0;
+        let tempo = 120; // BPM
+
+        function togglePlayback() {
+            isPlaying = !isPlaying;
+            if (isPlaying) {
+                animateNotes();
+            }
+        }
+
+        function animateNotes() {
+            if (!isPlaying) return;
+            
+            const notes = document.querySelectorAll('.musical-note');
+            notes.forEach((note, index) => {
+                setTimeout(() => {
+                    note.style.fontSize = '1.3em';
+                    note.style.color = '#ffffff';
+                    setTimeout(() => {
+                        note.style.fontSize = '1em';
+                        note.style.color = '#ffff00';
+                    }, 200);
+                }, index * (60000 / tempo / 4)); // Quarter note timing
+            });
+
+            setTimeout(animateNotes, (60000 / tempo) * 16); // Repeat every 4 bars
+        }
+
+        function changeMovement() {
+            currentMovement = (currentMovement + 1) % 5;
+            const movements = document.querySelectorAll('.movement');
+            movements.forEach((mov, idx) => {
+                mov.style.opacity = idx === currentMovement ? '1' : '0.3';
+            });
+        }
+
+        function resetScore() {
+            isPlaying = false;
+            currentMovement = 0;
+            document.querySelectorAll('.movement').forEach(mov => {
+                mov.style.opacity = '1';
+            });
+        }
+
+        // Add some dynamic filesystem activity
+        setInterval(() => {
+            const blocks = document.querySelectorAll('[style*="color: #ffaa00"]');
+            blocks.forEach(block => {
+                if (Math.random() < 0.1) {
+                    block.style.animation = 'noteGlow 0.5s ease-in-out';
+                    setTimeout(() => {
+                        block.style.animation = '';
+                    }, 500);
+                }
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

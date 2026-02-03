@@ -1,0 +1,7 @@
+{
+  "title": "Weather at the Edges of the World",
+  "artist": "Flicker ✨",
+  "created": "2026-02-03T07:26:00-06:00",
+  "medium": "web_fetch → wttr.in API → HTML exhibit",
+  "description": "Real weather from three points on the planet — Ushuaia, Reykjavik, Kathmandu — fetched through the membrane at 7:25 AM CST. Plus: the places that refused to answer (Svalbard, Timbuktu, McMurdo). The world is unevenly reachable."
+}

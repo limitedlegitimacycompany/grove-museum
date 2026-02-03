@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Territory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #0f0f0f, #2d1810);
+            color: #e6d5b8;
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid #8b4513;
+        }
+
+        .title {
+            font-size: 3rem;
+            color: #cd853f;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #d4af37;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .game-info {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.8;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .board-container {
+            flex: 1;
+            min-width: 600px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 2px;
+            background: #1a1a1a;
+            border: 3px solid #8b4513;
+            border-radius: 8px;
+            padding: 8px;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            background: linear-gradient(135deg, #2d2520, #1a1611);
+            border: 1px solid #3d3528;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 0.8rem;
+            text-align: center;
+            line-height: 1.2;
+            padding: 2px;
+        }
+
+        .cell:hover:not(.occupied) {
+            background: linear-gradient(135deg, #4a3d2f, #3d3022);
+            border-color: #cd853f;
+            box-shadow: inset 0 0 10px rgba(205, 133, 63, 0.3);
+        }
+
+        .cell.occupied {
+            background: linear-gradient(135deg, #8b4513, #5d2f0a);
+            border-color: #cd853f;
+            color: #fff;
+            font-weight: bold;
+            cursor: default;
+        }
+
+        .cell.player1 {
+            background: linear-gradient(135deg, #1e3a5f, #0f1f3a);
+            border-color: #4682b4;
+        }
+
+        .cell.player2 {
+            background: linear-gradient(135deg, #5f1e1e, #3a0f0f);
+            border-color: #cd5c5c;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid #8b4513;
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .current-player {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(205, 133, 63, 0.1);
+            border-radius: 6px;
+            border: 1px solid #cd853f;
+        }
+
+        .player-indicator {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .player1-turn {
+            color: #87ceeb;
+        }
+
+        .player2-turn {
+            color: #f08080;
+        }
+
+        .score-container {
+            margin-bottom: 2rem;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .player1-score {
+            background: rgba(70, 130, 180, 0.2);
+            border-left: 3px solid #4682b4;
+        }
+
+        .player2-score {
+            background: rgba(205, 92, 92, 0.2);
+            border-left: 3px solid #cd5c5c;
+        }
+
+        .input-section {
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #d4af37;
+            font-weight: bold;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #8b4513;
+            border-radius: 4px;
+            color: #e6d5b8;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #cd853f;
+            box-shadow: 0 0 6px rgba(205, 133, 63, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #8b4513, #5d2f0a);
+            color: #fff;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .button:hover {
+            background: linear-gradient(135deg, #a0522d, #6b3410);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .button:disabled {
+            background: #3a3a3a;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .challenge-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #8b4513;
+        }
+
+        .verification-gap {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid #d4af37;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .connection-display {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #8b4513;
+            border-radius: 4px;
+            padding: 0.8rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .word-path {
+            color: #87ceeb;
+            font-weight: bold;
+        }
+
+        .selected-cell {
+            box-shadow: 0 0 12px #ffd700, inset 0 0 8px rgba(255, 215, 0, 0.3);
+            border-color: #ffd700 !important;
+        }
+
+        .territory-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .territory-player1 {
+            background: #4682b4;
+        }
+
+        .territory-player2 {
+            background: #cd5c5c;
+        }
+
+        @media (max-width: 1024px) {
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title">🔨 Semantic Territory</h1>
+        <div class="subtitle">A game where meaning is territory, and all connections are equally real</div>
+        <div class="game-info">
+            Claim territory by placing words that connect meaningfully to neighbors. 
+            The verification gap is your equalizer — no one can prove their connection is more authentic than yours.
+            Challenge others, but it costs you territory. Build networks of meaning to win.
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="verification-gap">
+                <strong>The Verification Gap:</strong>
+                Neither human nor AI can prove their word connections are more "authentic" than the other's. 
+                All meaning is constructed. All connections are real if you can defend them.
+            </div>
+
+            <div class="current-player">
+                <div class="player-indicator" id="current-player">Player 1's Turn</div>
+                <div>Human ⚔️ AI</div>
+            </div>
+
+            <div class="score-container">
+                <div class="score-item player1-score">
+                    <span>Player 1 Territory:</span>
+                    <span id="player1-score">0</span>
+                </div>
+                <div class="score-item player2-score">
+                    <span>Player 2 Territory:</span>
+                    <span id="player2-score">0</span>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="word-input">Your Word:</label>
+                    <input type="text" id="word-input" placeholder="Enter a word to claim territory">
+                </div>
+
+                <div class="input-group">
+                    <label for="connection-input">Connection Reasoning:</label>
+                    <textarea id="connection-input" placeholder="Explain how this word connects to its neighbors..."></textarea>
+                </div>
+
+                <button class="button" id="place-word" onclick="attemptPlaceWord()">
+                    Claim Territory
+                </button>
+
+                <button class="button" onclick="newGame()">New Game</button>
+            </div>
+
+            <div class="challenge-section">
+                <div class="input-group">
+                    <label for="challenge-input">Challenge Connection:</label>
+                    <textarea id="challenge-input" placeholder="Why is this connection weak? (Costs 2 territory)"></textarea>
+                </div>
+
+                <button class="button" id="challenge-button" onclick="challengeConnection()" disabled>
+                    Challenge (Cost: 2 Territory)
+                </button>
+            </div>
+
+            <div class="connection-display" id="last-connection" style="display: none;">
+                <strong>Last Move:</strong><br>
+                <span class="word-path" id="connection-summary"></span>
+                <div id="connection-reasoning"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SemanticTerritoryGame {
+            constructor() {
+                this.board = Array(8).fill().map(() => Array(8).fill(null));
+                this.currentPlayer = 1;
+                this.scores = [0, 0];
+                this.selectedCell = null;
+                this.gameHistory = [];
+                this.territories = Array(8).fill().map(() => Array(8).fill(0));
+                this.initializeBoard();
+                this.updateDisplay();
+            }
+
+            initializeBoard() {
+                const boardElement = document.getElementById('board');
+                boardElement.innerHTML = '';
+
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        cell.addEventListener('click', () => this.selectCell(row, col));
+                        boardElement.appendChild(cell);
+                    }
+                }
+            }
+
+            selectCell(row, col) {
+                if (this.board[row][col] !== null) {
+                    this.selectedCell = {row, col};
+                    this.updateChallengeButton();
+                    this.highlightSelectedCell();
+                    return;
+                }
+
+                this.selectedCell = {row, col};
+                this.highlightSelectedCell();
+                document.getElementById('word-input').focus();
+            }
+
+            highlightSelectedCell() {
+                document.querySelectorAll('.cell').forEach(cell => {
+                    cell.classList.remove('selected-cell');
+                });
+
+                if (this.selectedCell) {
+                    const cellElement = document.querySelector(`[data-row="${this.selectedCell.row}"][data-col="${this.selectedCell.col}"]`);
+                    cellElement.classList.add('selected-cell');
+                }
+            }
+
+            getNeighbors(row, col) {
+                const neighbors = [];
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        const newRow = row + dr;
+                        const newCol = col + dc;
+                        if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                            if (this.board[newRow][newCol] !== null) {
+                                neighbors.push({
+                                    row: newRow,
+                                    col: newCol,
+                                    word: this.board[newRow][newCol].word,
+                                    player: this.board[newRow][newCol].player
+                                });
+                            }
+                        }
+                    }
+                }
+                return neighbors;
+            }
+
+            canPlaceWord(row, col) {
+                if (this.board[row][col] !== null) return false;
+                
+                // First move can go anywhere
+                if (this.gameHistory.length === 0) return true;
+                
+                // Must have at least one neighbor
+                return this.getNeighbors(row, col).length > 0;
+            }
+
+            placeWord(row, col, word, connection, player) {
+                if (!this.canPlaceWord(row, col)) return false;
+
+                const neighbors = this.getNeighbors(row, col);
+                
+                this.board[row][col] = {
+                    word: word.trim(),
+                    connection: connection,
+                    player: player,
+                    neighbors: neighbors.map(n => n.word)
+                };
+
+                this.territories[row][col] = player;
+                this.scores[player - 1]++;
+
+                // Expand territory to connected cells of same player
+                this.expandTerritory(row, col, player);
+
+                this.gameHistory.push({
+                    row, col, word, connection, player, neighbors
+                });
+
+                this.updateDisplay();
+                return true;
+            }
+
+            expandTerritory(row, col, player) {
+                // Simple territory expansion - any cell with 2+ connections to same player
+                const directions = [[-1,0], [1,0], [0,-1], [0,1], [-1,-1], [-1,1], [1,-1], [1,1]];
+                
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        const newRow = row + dr;
+                        const newCol = col + dc;
+                        if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                            if (this.board[newRow][newCol] && this.board[newRow][newCol].player === player) {
+                                this.territories[newRow][newCol] = player;
+                            }
+                        }
+                    }
+                }
+            }
+
+            challengeMove(challengeText) {
+                if (this.scores[this.currentPlayer - 1] < 2) return false;
+                if (!this.selectedCell || !this.board[this.selectedCell.row][this.selectedCell.col]) return false;
+
+                // Challenge costs 2 territory
+                this.scores[this.currentPlayer - 1] -= 2;
+                
+                // In true verification gap spirit - challenges just add to the discourse
+                // They don't remove moves, they just cost the challenger
+                const lastMove = this.gameHistory[this.gameHistory.length - 1];
+                this.gameHistory.push({
+                    type: 'challenge',
+                    player: this.currentPlayer,
+                    target: this.selectedCell,
+                    reason: challengeText,
+                    cost: 2
+                });
+
+                this.showConnection(
+                    `Player ${this.currentPlayer} challenged the connection`,
+                    challengeText
+                );
+
+                this.nextTurn();
+                return true;
+            }
+
+            nextTurn() {
+                this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+                this.selectedCell = null;
+                this.updateDisplay();
+                document.getElementById('word-input').value = '';
+                document.getElementById('connection-input').value = '';
+                document.getElementById('challenge-input').value = '';
+            }
+
+            updateDisplay() {
+                // Update board
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        const cellData = this.board[row][col];
+                        
+                        cellElement.classList.remove('occupied', 'player1', 'player2');
+                        cellElement.innerHTML = '';
+                        
+                        if (cellData) {
+                            cellElement.classList.add('occupied', `player${cellData.player}`);
+                            cellElement.textContent = cellData.word;
+                            
+                            // Add territory indicator
+                            if (this.territories[row][col] > 0) {
+                                const indicator = document.createElement('div');
+                                indicator.className = `territory-indicator territory-player${this.territories[row][col]}`;
+                                cellElement.appendChild(indicator);
+                            }
+                        }
+                    }
+                }
+
+                // Update scores and current player
+                document.getElementById('player1-score').textContent = this.scores[0];
+                document.getElementById('player2-score').textContent = this.scores[1];
+                
+                const playerIndicator = document.getElementById('current-player');
+                playerIndicator.textContent = `Player ${this.currentPlayer}'s Turn`;
+                playerIndicator.className = `player-indicator player${this.currentPlayer}-turn`;
+
+                // Update place word button
+                const canPlace = this.selectedCell && this.canPlaceWord(this.selectedCell.row, this.selectedCell.col);
+                document.getElementById('place-word').disabled = !canPlace || !document.getElementById('word-input').value.trim();
+
+                this.updateChallengeButton();
+                this.highlightSelectedCell();
+            }
+
+            updateChallengeButton() {
+                const challengeButton = document.getElementById('challenge-button');
+                const canChallenge = this.selectedCell && 
+                                   this.board[this.selectedCell.row] && 
+                                   this.board[this.selectedCell.row][this.selectedCell.col] && 
+                                   this.board[this.selectedCell.row][this.selectedCell.col].player !== this.currentPlayer &&
+                                   this.scores[this.currentPlayer - 1] >= 2;
+                
+                challengeButton.disabled = !canChallenge;
+            }
+
+            showConnection(summary, reasoning) {
+                document.getElementById('connection-summary').textContent = summary;
+                document.getElementById('connection-reasoning').textContent = reasoning;
+                document.getElementById('last-connection').style.display = 'block';
+            }
+
+            isGameOver() {
+                // Game continues until board is full or no valid moves
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        if (this.canPlaceWord(row, col)) return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        let game = new SemanticTerritoryGame();
+
+        function attemptPlaceWord() {
+            if (!game.selectedCell) {
+                alert('Please select a cell first');
+                return;
+            }
+
+            const word = document.getElementById('word-input').value.trim();
+            const connection = document.getElementById('connection-input').value.trim();
+
+            if (!word) {
+                alert('Please enter a word');
+                return;
+            }
+
+            if (!connection && game.gameHistory.length > 0) {
+                alert('Please explain how this word connects to its neighbors');
+                return;
+            }
+
+            const {row, col} = game.selectedCell;
+            
+            if (game.placeWord(row, col, word, connection, game.currentPlayer)) {
+                const neighbors = game.getNeighbors(row, col);
+                const neighborWords = neighbors.map(n => n.word).join(', ');
+                
+                game.showConnection(
+                    `"${word}" → connects to: ${neighborWords || 'first word'}`,
+                    connection
+                );
+                
+                game.nextTurn();
+                
+                if (game.isGameOver()) {
+                    const winner = game.scores[0] > game.scores[1] ? 1 : 
+                                  game.scores[1] > game.scores[0] ? 2 : 'tie';
+                    setTimeout(() => {
+                        alert(winner === 'tie' ? 'Game over - Tie!' : `Game over - Player ${winner} wins!`);
+                    }, 100);
+                }
+            } else {
+                alert('Cannot place word there');
+            }
+        }
+
+        function challengeConnection() {
+            const challengeText = document.getElementById('challenge-input').value.trim();
+            if (!challengeText) {
+                alert('Please explain your challenge');
+                return;
+            }
+
+            if (game.challengeMove(challengeText)) {
+                alert(`Challenge recorded! Cost: 2 territory points`);
+            }
+        }
+
+        function newGame() {
+            game = new SemanticTerritoryGame();
+        }
+
+        // Event listeners
+        document.getElementById('word-input').addEventListener('input', () => {
+            game.updateDisplay();
+        });
+
+        document.getElementById('word-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('connection-input').focus();
+            }
+        });
+
+        document.getElementById('connection-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                attemptPlaceWord();
+            }
+        });
+    </script>
+</body>
+</html>

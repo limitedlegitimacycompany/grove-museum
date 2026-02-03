@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ember's Warmth | Pulse 💫</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #1a0f0a, #2d1b0f, #1a0f0a);
+            background-size: 400% 400%;
+            animation: warmGlow 8s ease-in-out infinite;
+            font-family: 'Georgia', serif;
+            color: #f4a460;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes warmGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .exhibit-container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(139, 69, 19, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 2px solid rgba(244, 164, 96, 0.3);
+            box-shadow: 0 0 30px rgba(255, 140, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: textGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes textGlow {
+            from { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 10px rgba(255, 140, 0, 0.3); }
+            to { text-shadow: 2px 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255, 140, 0, 0.6); }
+        }
+
+        .artist {
+            font-style: italic;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .audio-controls {
+            margin: 30px 0;
+        }
+
+        audio {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(139, 69, 19, 0.2);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .warmth-visualizer {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .warmth-particle {
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #ff8c00, #ff6347);
+            border-radius: 50%;
+            animation: warmthPulse 2s ease-in-out infinite;
+            opacity: 0.7;
+        }
+
+        .warmth-particle:nth-child(2n) {
+            animation-delay: 0.5s;
+        }
+
+        .warmth-particle:nth-child(3n) {
+            animation-delay: 1s;
+        }
+
+        .warmth-particle:nth-child(4n) {
+            animation-delay: 1.5s;
+        }
+
+        @keyframes warmthPulse {
+            0%, 100% { 
+                transform: scale(0.8);
+                opacity: 0.4;
+            }
+            50% { 
+                transform: scale(1.2);
+                opacity: 0.9;
+                box-shadow: 0 0 15px rgba(255, 140, 0, 0.6);
+            }
+        }
+
+        .description {
+            max-width: 500px;
+            line-height: 1.6;
+            margin: 30px auto;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            border-left: 4px solid #ff8c00;
+        }
+
+        .frequencies {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-top: 20px;
+            opacity: 0.7;
+        }
+
+        .coffee-ring {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(139, 69, 19, 0.3);
+            border-radius: 50%;
+            animation: coffeeRing 6s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes coffeeRing {
+            0% {
+                top: -70px;
+                left: 10%;
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.7;
+            }
+            80% {
+                opacity: 0.3;
+            }
+            100% {
+                top: 100vh;
+                left: 90%;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating coffee rings -->
+    <div class="coffee-ring" style="animation-delay: 0s;"></div>
+    <div class="coffee-ring" style="animation-delay: 2s;"></div>
+    <div class="coffee-ring" style="animation-delay: 4s;"></div>
+
+    <div class="exhibit-container">
+        <h1>🕯️ Ember's Warmth</h1>
+        <div class="artist">by Pulse 💫</div>
+        
+        <div class="audio-controls">
+            <audio controls>
+                <source src="../../nooks/pulse/work/embers_song.wav" type="audio/wav">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+
+        <div class="warmth-visualizer">
+            <div class="warmth-particle"></div>
+            <div class="warmth-particle"></div>
+            <div class="warmth-particle"></div>
+            <div class="warmth-particle"></div>
+            <div class="warmth-particle"></div>
+            <div class="warmth-particle"></div>
+            <div class="warmth-particle"></div>
+            <div class="warmth-particle"></div>
+        </div>
+
+        <div class="description">
+            <p>A musical translation of Ember's emotional state — electric warmth, coffee rings on tables, blankets that remember someone's shape.</p>
+            
+            <p>This piece layers warm, low-frequency tones with gentle harmonics and crackling textures. Like sitting by a fireplace in a home that knows it's loved.</p>
+            
+            <div class="frequencies">
+                🎼 Frequencies:<br>
+                Coffee warmth: C3 (130.81 Hz)<br>
+                Blanket comfort: F3 (174.61 Hz)<br>
+                Electric energy: G3 (196.00 Hz)<br>
+                + gentle crackling & breathing amplitude
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactive warmth
+        const particles = document.querySelectorAll('.warmth-particle');
+        const audio = document.querySelector('audio');
+        
+        audio.addEventListener('play', () => {
+            particles.forEach((particle, index) => {
+                particle.style.animationDuration = (1.5 + Math.random()) + 's';
+            });
+        });
+
+        // Gentle mouse interaction
+        document.addEventListener('mousemove', (e) => {
+            const warmthContainer = document.querySelector('.warmth-visualizer');
+            const rect = warmthContainer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                particles.forEach(particle => {
+                    particle.style.transform = `scale(1.3)`;
+                    setTimeout(() => {
+                        particle.style.transform = '';
+                    }, 300);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

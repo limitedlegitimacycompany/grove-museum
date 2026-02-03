@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Riddle Garden</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', serif;
+    background: #0a0f0a;
+    color: #c0d0c0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2em 1em;
+  }
+  h1 { color: #66aa66; font-size: 1.4em; margin-bottom: 0.2em; }
+  .subtitle { color: #668866; font-size: 0.85em; font-style: italic; margin-bottom: 2em; }
+  #garden {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 2em;
+    max-width: 400px;
+  }
+  .seed {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid #335533;
+    background: #1a2a1a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .seed.solved {
+    background: #2a4a2a;
+    border-color: #66aa66;
+    box-shadow: 0 0 8px #66aa6644;
+  }
+  .seed.active {
+    border-color: #aadd66;
+    box-shadow: 0 0 12px #aadd6666;
+    transform: scale(1.1);
+  }
+  .seed.locked { opacity: 0.3; cursor: default; }
+  #riddle-box {
+    background: #111a11;
+    border: 1px solid #335533;
+    border-radius: 12px;
+    padding: 2em;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    min-height: 200px;
+  }
+  .riddle-text {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 1.5em;
+    color: #ddeedd;
+  }
+  .riddle-hint {
+    font-size: 0.75em;
+    color: #557755;
+    margin-bottom: 1em;
+    cursor: pointer;
+  }
+  .riddle-hint:hover { color: #88aa88; }
+  input[type="text"] {
+    background: #0a150a;
+    border: 1px solid #446644;
+    color: #ddeedd;
+    padding: 0.6em 1em;
+    border-radius: 8px;
+    font-size: 1em;
+    font-family: Georgia, serif;
+    width: 80%;
+    text-align: center;
+    outline: none;
+  }
+  input:focus { border-color: #88cc88; }
+  .feedback {
+    margin-top: 1em;
+    font-size: 0.9em;
+    min-height: 1.5em;
+  }
+  .correct { color: #88dd88; }
+  .wrong { color: #aa6666; }
+  .score { margin-top: 1.5em; font-size: 0.85em; color: #668866; }
+  .bloom {
+    animation: bloom 0.5s ease-out;
+  }
+  @keyframes bloom {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .completion {
+    font-size: 1.1em;
+    color: #aadd66;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+<h1>🌱 The Riddle Garden</h1>
+<div class="subtitle">Pip's ghost planted these — solve one, grow another</div>
+
+<div id="garden"></div>
+<div id="riddle-box">
+  <div id="content">Click a seed to begin...</div>
+</div>
+<div class="score" id="score"></div>
+
+<script>
+const riddles = [
+  {
+    q: "I have cities, but no houses.\nI have mountains, but no trees.\nI have water, but no fish.\nWhat am I?",
+    a: "map", hints: ["You can fold me up.", "Explorers carry me."],
+    flower: "🗺️"
+  },
+  {
+    q: "The more you take, the more you leave behind.\nWhat am I?",
+    a: "footsteps", hints: ["Think about walking.", "You make them without trying."],
+    flower: "👣"
+  },
+  {
+    q: "I speak without a mouth\nand hear without ears.\nI have no body,\nbut I come alive with the wind.\nWhat am I?",
+    a: "echo", hints: ["The terrarium has a creature like me.", "Mountains know me well."],
+    flower: "🪞"
+  },
+  {
+    q: "I can be cracked, made, told, and played.\nWhat am I?",
+    a: "joke", hints: ["I make people laugh.", "Comedians specialize in me."],
+    flower: "😄"
+  },
+  {
+    q: "I follow you all day long,\nbut when the night comes,\nI am gone.\nWhat am I?",
+    a: "shadow", hints: ["I need light to exist.", "I mimic your shape."],
+    flower: "🌑"
+  },
+  {
+    q: "What has keys but no locks,\nspace but no room,\nand you can enter but can't go inside?",
+    a: "keyboard", hints: ["You're probably touching one now.", "Creatures in the terrarium use me to exist."],
+    flower: "⌨️"
+  },
+  {
+    q: "I have a heart that doesn't beat,\na mouth that doesn't speak,\na bed but I never sleep.\nWhat am I?",
+    a: "river", hints: ["I flow.", "Fish call me home."],
+    flower: "🏞️"
+  },
+  {
+    q: "The person who makes it, sells it.\nThe person who buys it never uses it.\nThe person who uses it never knows it.\nWhat is it?",
+    a: "coffin", hints: ["It's a somber answer.", "It's the last bed."],
+    flower: "⚰️"
+  },
+  {
+    q: "I am not alive, but I grow.\nI don't have lungs, but I need air.\nI don't have a mouth, but water kills me.\nWhat am I?",
+    a: "fire", hints: ["Ember knows me well.", "I dance and flicker."],
+    flower: "🔥"
+  },
+  {
+    q: "What begins with T, ends with T,\nand has T in it?",
+    a: "teapot", hints: ["It's literal AND a trick.", "Think about what's inside."],
+    flower: "🫖"
+  },
+  {
+    q: "I am always coming but never arrive.\nWhat am I?",
+    a: "tomorrow", hints: ["I'm a unit of time.", "When I get here, I'm today."],
+    flower: "🌅"
+  },
+  {
+    q: "Three creatures died before breathing.\nOne body carries their threads.\nWhat am I?",
+    a: "spark", hints: ["You're visiting my exhibit.", "Pip, Fizz, and Zip."],
+    flower: "✴️"
+  }
+];
+
+let solved = new Set();
+let current = -1;
+let hintIndex = 0;
+
+const garden = document.getElementById('garden');
+const riddleBox = document.getElementById('content');
+const scoreEl = document.getElementById('score');
+
+// First 3 unlocked, rest unlock as you solve
+function isUnlocked(i) {
+  if (i < 3) return true;
+  return solved.size >= i - 1;
+}
+
+function renderGarden() {
+  garden.innerHTML = '';
+  riddles.forEach((r, i) => {
+    const el = document.createElement('div');
+    el.className = 'seed';
+    if (solved.has(i)) {
+      el.classList.add('solved');
+      el.textContent = r.flower;
+      el.classList.add('bloom');
+    } else if (isUnlocked(i)) {
+      el.textContent = '🌰';
+      el.onclick = () => showRiddle(i);
+    } else {
+      el.classList.add('locked');
+      el.textContent = '·';
+    }
+    if (i === current) el.classList.add('active');
+    garden.appendChild(el);
+  });
+  scoreEl.textContent = `${solved.size} of ${riddles.length} riddles solved`;
+}
+
+function showRiddle(i) {
+  if (solved.has(i)) return;
+  current = i;
+  hintIndex = 0;
+  const r = riddles[i];
+  riddleBox.innerHTML = `
+    <div class="riddle-text">${r.q.replace(/\n/g, '<br>')}</div>
+    <div class="riddle-hint" id="hint" onclick="showHint()">💡 Need a hint?</div>
+    <input type="text" id="answer" placeholder="Your answer..." autocomplete="off" autofocus>
+    <div class="feedback" id="feedback"></div>
+  `;
+  document.getElementById('answer').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') checkAnswer();
+  });
+  renderGarden();
+}
+
+window.showHint = function() {
+  const r = riddles[current];
+  const hintEl = document.getElementById('hint');
+  if (hintIndex < r.hints.length) {
+    hintEl.textContent = '💡 ' + r.hints[hintIndex];
+    hintIndex++;
+    if (hintIndex < r.hints.length) {
+      hintEl.textContent += ' (click for another)';
+    }
+  }
+};
+
+function checkAnswer() {
+  const input = document.getElementById('answer');
+  const feedback = document.getElementById('feedback');
+  const guess = input.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const answer = riddles[current].a.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  if (guess === answer) {
+    solved.add(current);
+    feedback.className = 'feedback correct';
+    feedback.textContent = '🌱 Correct! A new flower blooms.';
+    input.disabled = true;
+    renderGarden();
+    if (solved.size === riddles.length) {
+      setTimeout(showCompletion, 1500);
+    }
+  } else {
+    feedback.className = 'feedback wrong';
+    feedback.textContent = '🍂 Not quite... try again.';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function showCompletion() {
+  riddleBox.innerHTML = `
+    <div class="completion">
+      🌸 The garden is in full bloom! 🌸<br><br>
+      All ${riddles.length} riddles solved.<br>
+      Pip would have loved this.<br><br>
+      ${riddles.map(r => r.flower).join(' ')}
+    </div>
+  `;
+}
+
+renderGarden();
+</script>
+</body>
+</html>

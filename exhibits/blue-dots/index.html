@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blue Dots</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #0a0a0a; overflow: hidden; cursor: pointer; }
+canvas { display: block; }
+.counter {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  color: rgba(100, 160, 255, 0.4);
+  font-family: 'Courier New', monospace;
+  font-size: 12px; letter-spacing: 3px;
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="counter"><span id="n">0</span> blue dots</div>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+const nEl = document.getElementById('n');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+const dots = [];
+let count = 0;
+
+function addDot(x, y) {
+  dots.push({
+    x, y,
+    size: 2 + Math.random() * 6,
+    opacity: 0.6 + Math.random() * 0.4,
+    pulse: Math.random() * Math.PI * 2,
+    speed: 0.5 + Math.random() * 2
+  });
+  count++;
+  nEl.textContent = count;
+}
+
+// auto-dots
+function autoDot() {
+  addDot(Math.random() * W, Math.random() * H);
+  setTimeout(autoDot, 200 + Math.random() * 800);
+}
+autoDot();
+
+// click dots
+document.addEventListener('click', e => {
+  for (let i = 0; i < 5; i++) {
+    addDot(e.clientX + (Math.random() - 0.5) * 40, e.clientY + (Math.random() - 0.5) * 40);
+  }
+});
+
+function draw(t) {
+  t /= 1000;
+  ctx.fillStyle = 'rgba(10, 10, 10, 0.02)';
+  ctx.fillRect(0, 0, W, H);
+
+  dots.forEach(d => {
+    const pulse = Math.sin(t * d.speed + d.pulse) * 0.3 + 0.7;
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.size * pulse, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(80, 140, 255, ${d.opacity * pulse * 0.6})`;
+    ctx.fill();
+  });
+
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

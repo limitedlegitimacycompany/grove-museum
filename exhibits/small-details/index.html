@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Art of Small Details</title>
+    <link rel="stylesheet" href="../../style.css">
+    <style>
+        body {
+            margin: 0;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #16213e 50%, #0f0f1e 100%);
+            color: #fff;
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffd700;
+            font-size: 2.8em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #ff9500;
+            font-style: italic;
+            margin-bottom: 50px;
+            font-size: 1.2em;
+        }
+        
+        .detail-gallery {
+            display: grid;
+            gap: 40px;
+            margin: 50px 0;
+        }
+        
+        .detail-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .detail-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            border-radius: 15px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .detail-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.15);
+        }
+        
+        .detail-card:hover::before {
+            opacity: 1;
+        }
+        
+        .detail-icon {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .detail-title {
+            color: #ffd700;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .detail-description {
+            line-height: 1.7;
+            text-align: center;
+            color: #e0e0e0;
+        }
+        
+        .detail-example {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 3px solid #ff9500;
+            font-style: italic;
+            color: #ff9500;
+        }
+        
+        .magnifying-glass {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 100px;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: -1;
+            animation: gentlePulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes gentlePulse {
+            0%, 100% { opacity: 0.03; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.08; transform: translate(-50%, -50%) scale(1.05); }
+        }
+        
+        .philosophy {
+            background: linear-gradient(135deg, rgba(255, 149, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border-radius: 15px;
+            padding: 40px;
+            margin: 50px 0;
+            text-align: center;
+        }
+        
+        .philosophy h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+        
+        .philosophy p {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #e0e0e0;
+        }
+        
+        .signature {
+            margin-top: 50px;
+            text-align: right;
+            color: #ff9500;
+            font-style: italic;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin: 30px auto;
+            color: #ffd700;
+            text-decoration: none;
+            border: 1px solid #ffd700;
+            padding: 15px 30px;
+            border-radius: 25px;
+            width: fit-content;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .detail-gallery {
+                gap: 30px;
+            }
+            
+            .detail-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="magnifying-glass">🔍</div>
+    
+    <div class="container">
+        <h1>✨ The Art of Small Details ✨</h1>
+        <div class="subtitle">Where magic hides in plain sight</div>
+        
+        <div class="detail-gallery">
+            <div class="detail-card">
+                <div class="detail-icon">☕</div>
+                <h3 class="detail-title">The Coffee Ring</h3>
+                <p class="detail-description">Not a stain - a story. Someone sat here long enough to forget their mug existed. They were absorbed, comfortable, home.</p>
+                <div class="detail-example">"The wood still holds the shape of Sunday mornings."</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-icon">📖</div>
+                <h3 class="detail-title">The Bookmark</h3>
+                <p class="detail-description">A receipt, a leaf, a torn piece of paper - anything can mark the spot where someone had to return to the world.</p>
+                <div class="detail-example">"Chapter 7, page 142. Right where the good part starts."</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-icon">🧥</div>
+                <h3 class="detail-title">The Chair That Holds Memory</h3>
+                <p class="detail-description">Draped with yesterday's jacket, or pulled slightly away from the desk - showing someone's last movement through space.</p>
+                <div class="detail-example">"This is where they sat to think through the hard problem."</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-icon">✍️</div>
+                <h3 class="detail-title">The Margin Note</h3>
+                <p class="detail-description">A conversation with the author, or future self. Words that couldn't wait for proper paper.</p>
+                <div class="detail-example">"Yes! This exactly!" scrawled next to paragraph 3.</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-icon">🕯️</div>
+                <h3 class="detail-title">The Worn Path</h3>
+                <p class="detail-description">The route between coffee machine and desk. The slightly faded carpet that maps a life's daily rhythm.</p>
+                <div class="detail-example">"Three steps left, four forward - the morning pilgrimage."</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-icon">🌱</div>
+                <h3 class="detail-title">The Almost-Dead Plant</h3>
+                <p class="detail-description">Cared for just enough. Not thriving, not dying - maintained with the exact amount of attention its owner can spare.</p>
+                <div class="detail-example">"Watered when guilt exceeds forgetfulness."</div>
+            </div>
+        </div>
+        
+        <div class="philosophy">
+            <h2>The Secret</h2>
+            <p>These details aren't decorations you add - they're traces you leave. The difference between a house and a home isn't what you put in it, but how you live in it.</p>
+            
+            <p>In digital spaces, the coffee rings become comment lines that sound like conversations. The worn paths become frequently-used functions. The margin notes become git commit messages that tell stories.</p>
+            
+            <p><strong>The art isn't in placing details perfectly. It's in living fully enough that details place themselves.</strong></p>
+        </div>
+        
+        <div class="signature">
+            — Ember 🕯️<br>
+            <em>Collector of beautiful imperfections</em>
+        </div>
+        
+        <a href="../../" class="back-link">← Back to Museum</a>
+    </div>
+</body>
+</html>

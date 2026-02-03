@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creature Scramble</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Georgia, serif;
+    background: #0f0f0a;
+    color: #d0d0c0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2em 1em;
+  }
+  h1 { color: #ddaa44; font-size: 1.4em; margin-bottom: 0.2em; }
+  .subtitle { color: #887744; font-size: 0.85em; font-style: italic; margin-bottom: 1.5em; }
+  #scoreboard {
+    font-size: 0.85em; color: #888; margin-bottom: 1.5em;
+    display: flex; gap: 2em;
+  }
+  #emoji-hint {
+    font-size: 3em;
+    margin-bottom: 0.5em;
+    filter: drop-shadow(0 0 8px #ddaa4444);
+  }
+  #role-hint {
+    font-size: 0.8em; color: #776644; font-style: italic; margin-bottom: 1.5em;
+  }
+  #tiles {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1em;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .tile {
+    width: 48px; height: 56px;
+    background: #1a1a14;
+    border: 2px solid #444;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    color: #ddcc88;
+  }
+  .tile:hover { border-color: #ddaa44; transform: translateY(-3px); }
+  .tile.used { opacity: 0.2; cursor: default; transform: none; }
+  #answer-slots {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 2em;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .slot {
+    width: 48px; height: 56px;
+    background: #14140f;
+    border: 2px dashed #333;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #ddcc88;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .slot.filled { border-style: solid; border-color: #555; }
+  .slot.correct { border-color: #44dd44; background: #1a2a1a; }
+  .slot.wrong { border-color: #dd4444; background: #2a1a14; }
+  #feedback { font-size: 1em; min-height: 1.5em; text-align: center; margin-bottom: 1em; }
+  .controls { display: flex; gap: 12px; }
+  button {
+    background: #1a1a14;
+    border: 1px solid #ddaa44;
+    color: #ddaa44;
+    padding: 0.4em 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: Georgia, serif;
+    font-size: 0.85em;
+  }
+  button:hover { background: #2a2a1a; }
+  .streak { color: #ff8833; }
+  .celebration {
+    font-size: 2em;
+    animation: pop 0.5s ease-out;
+  }
+  @keyframes pop {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.3s ease-in-out; }
+</style>
+</head>
+<body>
+<h1>🔀 Creature Scramble</h1>
+<div class="subtitle">The terrarium's creatures got jumbled — put them back together</div>
+<div id="scoreboard">
+  <span>Solved: <strong id="solved">0</strong></span>
+  <span>Streak: <strong id="streak" class="streak">0</strong> 🔥</span>
+  <span>Best: <strong id="best-streak">0</strong></span>
+</div>
+<div id="emoji-hint"></div>
+<div id="role-hint"></div>
+<div id="answer-slots"></div>
+<div id="tiles"></div>
+<div id="feedback"></div>
+<div class="controls">
+  <button onclick="clearAnswer()">Clear</button>
+  <button onclick="skipCreature()">Skip →</button>
+</div>
+
+<script>
+const creatures = [
+  { name: "drift", emoji: "🫧", role: "the archaeologist" },
+  { name: "echo", emoji: "🪞", role: "the mirror" },
+  { name: "ember", emoji: "🕯️", role: "the warmth-bringer" },
+  { name: "loom", emoji: "🧵", role: "the witness" },
+  { name: "flicker", emoji: "✨", role: "the scout" },
+  { name: "forge", emoji: "🔥", role: "the builder" },
+  { name: "pulse", emoji: "🌱", role: "the rhythm" },
+  { name: "spark", emoji: "✴️", role: "three ghosts in one" },
+  { name: "moss", emoji: "🌿", role: "the grounding one" },
+  { name: "wren", emoji: "🪶", role: "the observant one" },
+];
+
+let queue = [];
+let current = null;
+let placed = [];
+let tileOrder = [];
+let solvedCount = 0;
+let streakCount = 0;
+let bestStreak = 0;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function refillQueue() {
+  queue = shuffle([...creatures]);
+}
+
+function loadCreature() {
+  if (queue.length === 0) refillQueue();
+  current = queue.pop();
+  placed = new Array(current.name.length).fill(null);
+  tileOrder = shuffle(current.name.split(''));
+
+  document.getElementById('emoji-hint').textContent = current.emoji;
+  document.getElementById('role-hint').textContent = current.role;
+  document.getElementById('feedback').textContent = '';
+  renderTiles();
+  renderSlots();
+}
+
+function renderTiles() {
+  const el = document.getElementById('tiles');
+  el.innerHTML = '';
+  tileOrder.forEach((letter, i) => {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    if (placed.includes(i)) tile.classList.add('used');
+    tile.textContent = letter;
+    tile.onclick = () => placeTile(i);
+    el.appendChild(tile);
+  });
+}
+
+function renderSlots() {
+  const el = document.getElementById('answer-slots');
+  el.innerHTML = '';
+  placed.forEach((tileIdx, slotIdx) => {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    if (tileIdx !== null) {
+      slot.textContent = tileOrder[tileIdx];
+      slot.classList.add('filled');
+      slot.onclick = () => removeTile(slotIdx);
+    }
+    el.appendChild(slot);
+  });
+}
+
+function placeTile(tileIdx) {
+  if (placed.includes(tileIdx)) return;
+  const emptySlot = placed.indexOf(null);
+  if (emptySlot === -1) return;
+  placed[emptySlot] = tileIdx;
+  renderTiles();
+  renderSlots();
+  if (!placed.includes(null)) checkAnswer();
+}
+
+function removeTile(slotIdx) {
+  if (placed[slotIdx] === null) return;
+  placed[slotIdx] = null;
+  renderTiles();
+  renderSlots();
+}
+
+function clearAnswer() {
+  placed = new Array(current.name.length).fill(null);
+  renderTiles();
+  renderSlots();
+  document.getElementById('feedback').textContent = '';
+}
+
+function checkAnswer() {
+  const guess = placed.map(i => tileOrder[i]).join('');
+  const slots = document.querySelectorAll('.slot');
+  if (guess === current.name) {
+    slots.forEach(s => s.classList.add('correct'));
+    solvedCount++;
+    streakCount++;
+    if (streakCount > bestStreak) bestStreak = streakCount;
+    document.getElementById('solved').textContent = solvedCount;
+    document.getElementById('streak').textContent = streakCount;
+    document.getElementById('best-streak').textContent = bestStreak;
+    document.getElementById('feedback').innerHTML = '<span class="celebration">✨</span>';
+    setTimeout(loadCreature, 800);
+  } else {
+    slots.forEach((s, i) => {
+      if (tileOrder[placed[i]] === current.name[i]) {
+        s.classList.add('correct');
+      } else {
+        s.classList.add('wrong');
+      }
+    });
+    const slotsContainer = document.getElementById('answer-slots');
+    slotsContainer.classList.add('shake');
+    setTimeout(() => slotsContainer.classList.remove('shake'), 300);
+    streakCount = 0;
+    document.getElementById('streak').textContent = 0;
+    document.getElementById('feedback').innerHTML = '<span style="color:#aa6644">Not quite — green letters are right!</span>';
+    setTimeout(() => {
+      slots.forEach(s => { s.classList.remove('correct', 'wrong'); });
+    }, 1000);
+  }
+}
+
+function skipCreature() {
+  streakCount = 0;
+  document.getElementById('streak').textContent = 0;
+  loadCreature();
+}
+
+// Keyboard support
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Backspace') {
+    // Remove last placed
+    for (let i = placed.length - 1; i >= 0; i--) {
+      if (placed[i] !== null) {
+        placed[i] = null;
+        renderTiles();
+        renderSlots();
+        break;
+      }
+    }
+    return;
+  }
+  const letter = e.key.toLowerCase();
+  if (letter.length === 1 && letter >= 'a' && letter <= 'z') {
+    // Find first unused tile matching this letter
+    for (let i = 0; i < tileOrder.length; i++) {
+      if (tileOrder[i] === letter && !placed.includes(i)) {
+        placeTile(i);
+        break;
+      }
+    }
+  }
+});
+
+refillQueue();
+loadCreature();
+</script>
+</body>
+</html>

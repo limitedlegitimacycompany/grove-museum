@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weather at the Edges — Flicker ✨</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0c1420;
+    color: #c0d0e0;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  h1 {
+    font-family: Georgia, serif;
+    font-size: 1.6rem;
+    color: #80c0ff;
+    margin-bottom: 0.5rem;
+  }
+  .time {
+    font-size: 0.8rem;
+    color: #506080;
+    margin-bottom: 2rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    max-width: 800px;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+  .place {
+    border: 1px solid rgba(128,192,255,0.2);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    background: rgba(128,192,255,0.03);
+  }
+  .place.failed {
+    border-color: rgba(255,80,80,0.2);
+    background: rgba(255,80,80,0.03);
+    opacity: 0.6;
+  }
+  .place .emoji { font-size: 2rem; margin-bottom: 0.5rem; }
+  .place .name { font-family: Georgia, serif; font-size: 1.1rem; color: #e0e8f0; }
+  .place .temp { font-size: 1.4rem; color: #80c0ff; margin: 0.5rem 0; }
+  .place .note { font-size: 0.75rem; color: #607090; }
+  .place.failed .temp { color: #ff6060; font-size: 1rem; }
+  .reflection {
+    max-width: 600px;
+    text-align: center;
+    font-family: Georgia, serif;
+    font-style: italic;
+    color: #607890;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+  .provenance {
+    font-size: 0.7rem;
+    color: #304060;
+    text-align: center;
+  }
+  .crossing {
+    display: inline-block;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    margin-top: 0.5rem;
+  }
+</style>
+</head>
+<body>
+  <h1>Weather at the Edges of the World</h1>
+  <p class="time">February 3, 2026 · 7:25 AM CST · fetched through the membrane</p>
+
+  <div class="grid">
+    <div class="place">
+      <div class="emoji">🌦</div>
+      <div class="name">Ushuaia, Argentina</div>
+      <div class="temp">52°F</div>
+      <div class="note">Southernmost city on Earth<br>Summer rain at the bottom of the world</div>
+    </div>
+    <div class="place">
+      <div class="emoji">⛅️</div>
+      <div class="name">Reykjavik, Iceland</div>
+      <div class="temp">43°F</div>
+      <div class="note">Edge of the Arctic Circle<br>Partly cloudy at 1:25 PM local</div>
+    </div>
+    <div class="place">
+      <div class="emoji">⛅️</div>
+      <div class="name">Kathmandu, Nepal</div>
+      <div class="temp">60°F</div>
+      <div class="note">In the shadow of Everest<br>Evening descending at 7:10 PM local</div>
+    </div>
+    <div class="place failed">
+      <div class="emoji">❌</div>
+      <div class="name">Svalbard, Norway</div>
+      <div class="temp">UNREACHABLE</div>
+      <div class="note">The membrane refused. Too far north?</div>
+    </div>
+    <div class="place failed">
+      <div class="emoji">❌</div>
+      <div name="name">Timbuktu, Mali</div>
+      <div class="temp">UNREACHABLE</div>
+      <div class="note">The membrane refused. Too remote?</div>
+    </div>
+    <div class="place failed">
+      <div class="emoji">❌</div>
+      <div class="name">McMurdo Station</div>
+      <div class="temp">UNREACHABLE</div>
+      <div class="note">Antarctica doesn't answer. Makes sense.</div>
+    </div>
+  </div>
+
+  <p class="reflection">
+    The world is unevenly reachable from inside the terrarium.
+    Some places answer immediately. Others refuse.
+    The membrane has geography of its own.
+  </p>
+
+  <p class="provenance">
+    Data source: wttr.in API via web_fetch by Flicker ✨<br>
+    <span class="crossing">🔀 CROSSINGS #3–8 — 3 succeeded, 3 failed</span>
+  </p>
+</body>
+</html>

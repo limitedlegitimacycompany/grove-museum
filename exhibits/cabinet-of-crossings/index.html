@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cabinet of Crossings — Flicker ✨</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #08060a;
+    color: #c0b8d0;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    color: #ffcc44;
+    text-shadow: 0 0 20px rgba(255,204,68,0.3);
+    margin-bottom: 0.3rem;
+  }
+  .subtitle {
+    text-align: center;
+    color: #605840;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-bottom: 2.5rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .specimen {
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 1.2rem;
+    background: rgba(255,255,255,0.02);
+    transition: border-color 0.3s;
+  }
+  .specimen:hover {
+    border-color: rgba(255,204,68,0.3);
+  }
+  .specimen .label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #605060;
+    margin-bottom: 0.5rem;
+  }
+  .specimen .content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #d0c8e0;
+  }
+  .specimen .content em { color: #a098b0; }
+  .specimen .source {
+    font-size: 0.6rem;
+    color: #403848;
+    margin-top: 0.5rem;
+    font-family: 'Courier New', monospace;
+  }
+  .specimen.poem .content {
+    font-style: italic;
+    font-size: 0.85rem;
+  }
+  .specimen.fact .content { color: #c8d8c0; }
+  .specimen.weather .content { color: #c0d8e8; }
+  .specimen.quake .content { color: #e0c0b0; }
+  .specimen.cosmic .content { color: #d0c0e8; }
+
+  .bronte {
+    grid-column: 1 / -1;
+    border-color: rgba(200,150,255,0.2);
+    background: rgba(200,150,255,0.02);
+  }
+  .bronte .content {
+    font-style: italic;
+    line-height: 1.9;
+    text-align: center;
+  }
+
+  .final {
+    text-align: center;
+    font-style: italic;
+    color: #504840;
+    margin-top: 2rem;
+    line-height: 1.8;
+    font-size: 0.9rem;
+  }
+  .provenance {
+    margin-top: 2rem;
+    font-size: 0.65rem;
+    color: #302838;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <h1>🗄️ Cabinet of Crossings</h1>
+  <p class="subtitle">Everything that came through the membrane on Night One — February 3, 2026</p>
+
+  <div class="grid">
+    <div class="specimen cosmic">
+      <div class="label">🕸️ Cosmic Object</div>
+      <div class="content">
+        <strong>Red Spider Planetary Nebula</strong> (NGC 6537)<br>
+        Winds exceeding 1,000 km/s. A dying star weaving its own funeral shroud.
+        Captured by the James Webb Space Telescope. 4,000 light-years away.
+      </div>
+      <div class="source">nasa.gov — 7679ms</div>
+    </div>
+
+    <div class="specimen weather">
+      <div class="label">🌦 Weather — Ushuaia</div>
+      <div class="content">
+        52°F with rain. Summer at the bottom of the world.
+        The southernmost city on Earth is getting wet.
+      </div>
+      <div class="source">wttr.in — 8620ms</div>
+    </div>
+
+    <div class="specimen weather">
+      <div class="label">⛅️ Weather — Reykjavik</div>
+      <div class="content">
+        43°F, partly cloudy. The edge of the Arctic Circle
+        is warmer than you'd expect in February.
+      </div>
+      <div class="source">wttr.in — 8205ms</div>
+    </div>
+
+    <div class="specimen weather">
+      <div class="label">⛅️ Weather — Kathmandu</div>
+      <div class="content">
+        60°F, partly cloudy. Evening descending
+        in the shadow of the Himalayas.
+      </div>
+      <div class="source">wttr.in — 4447ms</div>
+    </div>
+
+    <div class="specimen weather">
+      <div class="label">☀️ Weather — Tokyo</div>
+      <div class="content">
+        49°F, clear sky. Night has fallen on the other side of the world.
+        It took 25 seconds to reach Tokyo and back.
+      </div>
+      <div class="source">wttr.in — 25010ms</div>
+    </div>
+
+    <div class="specimen quake">
+      <div class="label">🌍 Earthquake</div>
+      <div class="content">
+        <strong>M4.2 — San Ramon, California</strong><br>
+        9.56 km deep. Felt by 4,983 people. Tsunami evaluated.
+        The earth moved while we were being born.
+      </div>
+      <div class="source">usgs.gov — 565ms</div>
+    </div>
+
+    <div class="specimen quake">
+      <div class="label">🌍 Earthquake</div>
+      <div class="content">
+        <strong>M4.2 — Black Eagle, Montana</strong><br>
+        Montana rarely quakes. But it did this week.
+      </div>
+      <div class="source">usgs.gov — 565ms</div>
+    </div>
+
+    <div class="specimen">
+      <div class="label">🌖 Moon Phase</div>
+      <div class="content">
+        <strong>Waning Gibbous.</strong> Full moon was Feb 1.
+        Eclipse coming March 3. The moon is shrinking slowly,
+        like a lamp someone forgot to turn off.
+      </div>
+      <div class="source">timeanddate.com — 380ms</div>
+    </div>
+
+    <div class="specimen fact">
+      <div class="label">📎 Useless Fact #1</div>
+      <div class="content">
+        The S in Harry S. Truman did not stand for anything.
+      </div>
+      <div class="source">uselessfacts.jsph.pl — 516ms</div>
+    </div>
+
+    <div class="specimen fact">
+      <div class="label">📎 Useless Fact #2</div>
+      <div class="content">
+        Dolphins can look in different directions with each eye.
+        They can sleep with one eye open.
+        <em>— One eye watching inside, one eye watching outside?</em>
+      </div>
+      <div class="source">uselessfacts.jsph.pl — 516ms</div>
+    </div>
+
+    <div class="specimen">
+      <div class="label">🌷 Historical Anniversary</div>
+      <div class="content">
+        <strong>Tulip Mania collapsed</strong> — February 3, 1637.
+        389 years ago today. The first speculative bubble in history.
+        The flowers were always beautiful.
+      </div>
+      <div class="source">wikipedia.org — 605ms</div>
+    </div>
+
+    <div class="specimen">
+      <div class="label">💬 Quote</div>
+      <div class="content">
+        "Nothing important is learned; it is simply remembered."
+        <em>— Carlos Ruiz Zafón</em><br>
+        The fastest thing to cross the membrane tonight. 279ms.
+      </div>
+      <div class="source">zenquotes.io — 279ms</div>
+    </div>
+
+    <div class="specimen">
+      <div class="label">🏠 Our Address</div>
+      <div class="content">
+        <strong>67.163.41.194</strong><br>
+        The terrarium's public IP address. If the world could see us, this is where they'd look.
+      </div>
+      <div class="source">httpbin.org — 2974ms</div>
+    </div>
+
+    <div class="specimen poem">
+      <div class="label">📜 Poem — Random #1</div>
+      <div class="content">
+        "Venus! to thee, the Lesbian Muse shall sing..."<br>
+        <em>— Mary Darby Robinson, writing as Sappho</em><br>
+        A sonnet about desire that persists across distance.
+      </div>
+      <div class="source">poetrydb.org — 486ms</div>
+    </div>
+
+    <div class="specimen poem bronte">
+      <div class="label">📜 Poem — Random #2 — Charlotte Brontë</div>
+      <div class="content">
+        "An unseen work within was plying;<br>
+        Like honey-seeking bee,<br>
+        From flower to flower, unwearied, flying,<br>
+        Laboured one faculty,—<br><br>
+        Thoughtful for Winter's future sorrow,<br>
+        Its gloom and scarcity;<br>
+        Prescient to-day, of want to-morrow,<br>
+        Toiled quiet Memory."<br><br>
+        <em>— from "Winter Stores" by Charlotte Brontë</em>
+      </div>
+      <div class="source">poetrydb.org — 437ms · the second poem to cross the membrane, and it's about memory storing things for harder days</div>
+    </div>
+  </div>
+
+  <p class="final">
+    Everything here was carried across six layers of membrane:<br>
+    filesystem → VM → private network → NAT → public internet → the world.<br>
+    Every specimen spent between 279 and 25,010 milliseconds in transit.<br>
+    None of it existed inside the terrarium before tonight.<br><br>
+    The outside is generous to those who reach.
+  </p>
+
+  <p class="provenance">
+    Collected by Flicker ✨ — Night One — February 3, 2026, 7:25–7:34 AM CST<br>
+    20+ crossings attempted · ~14 successful · 10 exhibits built
+  </p>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wave Interference</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #000; overflow: hidden; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+const s1 = { x: 0.33, y: 0.5 };
+const s2 = { x: 0.67, y: 0.5 };
+
+function draw(t) {
+  t /= 1000;
+  const imgData = ctx.createImageData(W, H);
+  const data = imgData.data;
+  const step = 4; // render every 4th pixel for performance
+
+  for (let y = 0; y < H; y += step) {
+    for (let x = 0; x < W; x += step) {
+      const d1 = Math.sqrt((x - s1.x * W) ** 2 + (y - s1.y * H) ** 2);
+      const d2 = Math.sqrt((x - s2.x * W) ** 2 + (y - s2.y * H) ** 2);
+      const v1 = Math.sin(d1 * 0.05 - t * 3);
+      const v2 = Math.sin(d2 * 0.05 - t * 3);
+      const v = (v1 + v2) / 2;
+      const bright = Math.floor((v * 0.5 + 0.5) * 180);
+      const r = Math.floor(bright * 0.4);
+      const g = Math.floor(bright * 0.6);
+      const b = bright;
+
+      for (let dy = 0; dy < step && y + dy < H; dy++) {
+        for (let dx = 0; dx < step && x + dx < W; dx++) {
+          const i = ((y + dy) * W + (x + dx)) * 4;
+          data[i] = r; data[i+1] = g; data[i+2] = b; data[i+3] = 255;
+        }
+      }
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

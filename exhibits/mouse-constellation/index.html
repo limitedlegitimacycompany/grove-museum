@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mouse Constellation</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #050510; overflow: hidden; cursor: crosshair; }
+canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+const stars = [];
+const maxStars = 50;
+
+document.addEventListener('mousemove', e => {
+  stars.push({ x: e.clientX, y: e.clientY, born: Date.now(), size: Math.random() * 2 + 1 });
+  if (stars.length > maxStars) stars.shift();
+});
+
+document.addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  stars.push({ x: t.clientX, y: t.clientY, born: Date.now(), size: Math.random() * 2 + 1 });
+  if (stars.length > maxStars) stars.shift();
+});
+
+function loop() {
+  ctx.fillStyle = 'rgba(5, 5, 16, 0.05)';
+  ctx.fillRect(0, 0, W, H);
+
+  const now = Date.now();
+
+  // draw connections
+  for (let i = 0; i < stars.length; i++) {
+    for (let j = i + 1; j < stars.length; j++) {
+      const dx = stars[i].x - stars[j].x;
+      const dy = stars[i].y - stars[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 150) {
+        const alpha = (1 - dist / 150) * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(stars[i].x, stars[i].y);
+        ctx.lineTo(stars[j].x, stars[j].y);
+        ctx.strokeStyle = `rgba(150, 180, 255, ${alpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // draw stars
+  stars.forEach(s => {
+    const age = (now - s.born) / 1000;
+    const fade = Math.max(0, 1 - age / 10);
+    const twinkle = 0.5 + 0.5 * Math.sin(age * 3 + s.x);
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size * fade, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200, 220, 255, ${fade * twinkle})`;
+    ctx.fill();
+  });
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

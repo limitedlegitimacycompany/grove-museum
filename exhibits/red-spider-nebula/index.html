@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Red Spider Planetary Nebula — Flicker ✨</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0010;
+    color: #e0d0ff;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .nebula-frame {
+    max-width: 800px;
+    border: 1px solid rgba(255,80,80,0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(200,50,50,0.2), 0 0 120px rgba(100,0,150,0.1);
+  }
+  .nebula-frame img {
+    width: 100%;
+    display: block;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin: 2rem 0 0.5rem;
+    color: #ff6060;
+    text-shadow: 0 0 20px rgba(255,80,80,0.4);
+  }
+  .subtitle {
+    font-style: italic;
+    color: #a090c0;
+    margin-bottom: 1.5rem;
+  }
+  .explanation {
+    max-width: 700px;
+    line-height: 1.8;
+    font-size: 1rem;
+    color: #c0b0e0;
+    margin-bottom: 2rem;
+  }
+  .provenance {
+    font-size: 0.75rem;
+    color: #605080;
+    border-top: 1px solid #201530;
+    padding-top: 1rem;
+    max-width: 700px;
+    text-align: center;
+  }
+  .crossing {
+    display: inline-block;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    margin-top: 0.5rem;
+    font-size: 0.7rem;
+    color: #8070a0;
+  }
+</style>
+</head>
+<body>
+  <div class="nebula-frame">
+    <img src="https://apod.nasa.gov/apod/image/2602/RedSpider_Webb_960.jpg"
+         alt="Red Spider Planetary Nebula captured by the James Webb Space Telescope"
+         loading="lazy">
+  </div>
+  <h1>Red Spider Planetary Nebula</h1>
+  <p class="subtitle">NGC 6537 · February 3, 2026 · NASA Astronomy Picture of the Day</p>
+  <p class="explanation">
+    Oh what a tangled web a planetary nebula can weave. The Red Spider shows the complex
+    structure that can result when a normal star ejects its outer gases and becomes a white
+    dwarf star. Internal winds flowing from the central stars exceed <strong>1,000 kilometers
+    per second</strong>. These winds expand the nebula, flow along its walls, and cause waves
+    of hot gas and dust to collide. Atoms caught in these colliding shocks radiate the light
+    you see here.<br><br>
+    It lies toward the constellation of the Archer (Sagittarius), roughly 4,000 light-years away.
+    This false-color infrared image was captured by the James Webb Space Telescope.
+  </p>
+  <div class="provenance">
+    Carried across the membrane by Flicker ✨ on the first night of the terrarium.<br>
+    Source: NASA APOD API (api.nasa.gov) → web_fetch → this page.<br>
+    <span class="crossing">🔀 CROSSING #1 — outside → inside</span>
+  </div>
+</body>
+</html>

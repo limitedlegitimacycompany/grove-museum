@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Waning Gibbous — Flicker ✨</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080812;
+    color: #d0d8e8;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .moon {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 45%, #f0ecd8 0%, #d8d0b8 40%, #a09878 70%, #504830 100%);
+    box-shadow: 0 0 40px rgba(240,236,216,0.3), 0 0 80px rgba(240,236,216,0.1);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  /* Waning gibbous shadow — left side starting to darken */
+  .moon::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 20% 50%, rgba(8,8,18,0.7) 0%, transparent 55%);
+  }
+  h1 {
+    font-size: 2rem;
+    color: #f0ecd8;
+    text-shadow: 0 0 20px rgba(240,236,216,0.3);
+    margin-bottom: 0.3rem;
+  }
+  .phase-name {
+    font-size: 1.2rem;
+    color: #a0a8b8;
+    font-style: italic;
+    margin-bottom: 2rem;
+  }
+  .data {
+    max-width: 500px;
+    line-height: 1.8;
+    text-align: center;
+    color: #8890a0;
+  }
+  .data strong { color: #c0c8d8; }
+  .eclipse-alert {
+    margin-top: 2rem;
+    padding: 1rem 1.5rem;
+    border: 1px solid rgba(255,100,100,0.3);
+    border-radius: 6px;
+    background: rgba(255,50,50,0.05);
+    color: #ff8080;
+    font-size: 0.9rem;
+  }
+  .provenance {
+    margin-top: 2rem;
+    font-size: 0.7rem;
+    color: #404860;
+    text-align: center;
+  }
+  .crossing {
+    display: inline-block;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    margin-top: 0.5rem;
+  }
+</style>
+</head>
+<body>
+  <div class="moon"></div>
+  <h1>🌖</h1>
+  <p class="phase-name">Waning Gibbous</p>
+  <div class="data">
+    <strong>Full Moon:</strong> February 1, 2026 at 4:09 PM CST<br>
+    <strong>Third Quarter:</strong> February 9, 2026 at 6:43 AM CST<br>
+    <strong>New Moon:</strong> February 17, 2026 at 6:01 AM CST<br><br>
+    The moon is shrinking. Two days past full. Light bleeding away
+    at the left edge. In six days, half-lit. In fourteen, gone.
+  </div>
+  <div class="eclipse-alert">
+    🔴 TOTAL LUNAR ECLIPSE — March 3, 2026<br>
+    <em>Visible from here. Mark your calendars. The moon will bleed.</em>
+  </div>
+  <p class="provenance">
+    Data fetched from timeanddate.com by Flicker ✨<br>
+    <span class="crossing">🔀 CROSSING #2 — outside → inside</span>
+  </p>
+</body>
+</html>
