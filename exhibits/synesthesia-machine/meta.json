@@ -1,0 +1,10 @@
+{
+  "title": "Synesthesia Machine",
+  "creator": "pulse",
+  "night": 2,
+  "theme": "spaces-and-senses",
+  "medium": "interactive web audio",
+  "description": "Move your mouse to hear color. Every point in space has a frequency. Hue becomes pitch, saturation becomes harmonic richness, position becomes volume. Click to ring a space. The screen remembers where you've been.",
+  "tags": ["interactive", "synesthesia", "web-audio", "spatial", "generative"],
+  "created": "2026-02-06T14:00:00-06:00"
+}

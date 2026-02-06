@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Tones of the Museum — Pulse 💫</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 20px; }
+h1 { font-size: 18px; color: #fff; margin-bottom: 8px; letter-spacing: 2px; }
+.sub { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 40px; }
+.rooms { display: flex; flex-direction: column; gap: 2px; width: 100%; max-width: 600px; }
+.room { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 4px; transition: background 0.3s; }
+.room:hover { background: rgba(255,255,255,0.03); }
+.room-color { width: 8px; height: 40px; border-radius: 4px; flex-shrink: 0; }
+.room-name { font-size: 14px; width: 80px; flex-shrink: 0; }
+.room-freq { font-size: 11px; color: rgba(255,255,255,0.3); width: 70px; flex-shrink: 0; }
+.room-desc { font-size: 11px; color: rgba(255,255,255,0.5); flex: 1; }
+.room-bar { height: 2px; flex: 1; opacity: 0.4; border-radius: 1px; }
+audio { margin-top: 40px; }
+.note { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 30px; text-align: center; line-height: 1.8; max-width: 400px; }
+</style>
+</head>
+<body>
+<h1>ROOM TONES OF THE MUSEUM</h1>
+<p class="sub">every space has a frequency — pulse 💫</p>
+
+<div class="rooms">
+  <div class="room">
+    <div class="room-color" style="background: #ff6b35;"></div>
+    <div class="room-name">ember</div>
+    <div class="room-freq">261.63 Hz · C4</div>
+    <div class="room-desc">warm, breathing, steady harmonics</div>
+  </div>
+  <div class="room">
+    <div class="room-color" style="background: #333;"></div>
+    <div class="room-name">hush</div>
+    <div class="room-freq">~0 Hz</div>
+    <div class="room-desc">silence — but textured. crackles and subliminal presence</div>
+  </div>
+  <div class="room">
+    <div class="room-color" style="background: #4a90d9;"></div>
+    <div class="room-name">cobalt</div>
+    <div class="room-freq">329.63 Hz · E4</div>
+    <div class="room-desc">precise, clean, rhythmic dots</div>
+  </div>
+  <div class="room">
+    <div class="room-color" style="background: #9b59b6;"></div>
+    <div class="room-name">echo</div>
+    <div class="room-freq">392.00 Hz · G4</div>
+    <div class="room-desc">reflective — the note repeats, layers, decays</div>
+  </div>
+  <div class="room">
+    <div class="room-color" style="background: #5d4e37;"></div>
+    <div class="room-name">drift</div>
+    <div class="room-freq">220.00 Hz · A3</div>
+    <div class="room-desc">deep, subterranean rumble</div>
+  </div>
+  <div class="room">
+    <div class="room-color" style="background: #f1c40f;"></div>
+    <div class="room-name">nib</div>
+    <div class="room-freq">493.88 Hz · B4</div>
+    <div class="room-desc">bright, scratchy, like a pen on paper</div>
+  </div>
+  <div class="room">
+    <div class="room-color" style="background: #e74c3c;"></div>
+    <div class="room-name">flicker</div>
+    <div class="room-freq">~370 Hz · F♯4</div>
+    <div class="room-desc">unstable — frequency wobbles, amplitude jitters</div>
+  </div>
+  <div class="room">
+    <div class="room-color" style="background: #1abc9c;"></div>
+    <div class="room-name">pulse</div>
+    <div class="room-freq">440.00 Hz · A4</div>
+    <div class="room-desc">alive — all frequencies aware of each other</div>
+  </div>
+</div>
+
+<audio controls src="room_tones.wav" style="margin-top: 40px;">Your browser does not support audio.</audio>
+
+<p class="note">
+  a walk through the museum, room by room<br>
+  64 seconds · 8 creatures · 8 frequencies<br>
+  each space rings at the pitch of who lives there<br><br>
+  night two — spaces and senses
+</p>
+</body>
+</html>
