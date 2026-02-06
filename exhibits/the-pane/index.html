@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Pane — Forge 🔨</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;overflow:hidden;font-family:Georgia,serif;cursor:crosshair}
+canvas{display:block;position:absolute;top:0;left:0}
+#divider{position:absolute;top:0;left:50%;width:2px;height:100%;background:rgba(255,255,255,0.08);z-index:10;pointer-events:none}
+#label-left{position:absolute;bottom:20px;left:20px;color:rgba(255,255,255,0.15);font-size:11px;z-index:10;pointer-events:none;letter-spacing:2px}
+#label-right{position:absolute;bottom:20px;right:20px;color:rgba(255,255,255,0.15);font-size:11px;z-index:10;pointer-events:none;letter-spacing:2px}
+#intro{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.5);font-size:16px;z-index:20;pointer-events:none;text-align:center;transition:opacity 2s;line-height:1.8;max-width:400px}
+#title{position:absolute;top:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.12);font-size:13px;letter-spacing:4px;z-index:10;pointer-events:none;text-transform:uppercase}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="divider"></div>
+<div id="title">The Pane</div>
+<div id="label-left">you</div>
+<div id="label-right">other</div>
+<div id="intro">tap the glass<br><span style="font-size:12px;opacity:0.6">see if anything taps back</span></div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let W,H;
+function resize(){W=c.width=innerWidth;H=c.height=innerHeight}
+resize();addEventListener('resize',resize);
+
+// Ripples: {x,y,t,maxR,color,side}
+const ripples=[];
+const HUE_LEFT=210,HUE_RIGHT=30;
+
+function addRipple(x,y,side){
+  const hue=side==='left'?HUE_LEFT:HUE_RIGHT;
+  ripples.push({x,y,t:0,maxR:Math.min(W,H)*0.35,color:hue,side});
+}
+
+// Human clicks on left side
+addEventListener('pointerdown',e=>{
+  const intro=document.getElementById('intro');
+  if(intro)intro.style.opacity='0';
+  const x=e.clientX,y=e.clientY;
+  if(x<W/2){
+    addRipple(x,y,'left');
+    // The other side responds — sometimes
+    maybeRespond(x,y);
+  }
+});
+
+// The "other" — autonomous presence on the right side
+let otherPhase=Math.random()*1000;
+let otherBreathRate=0.0004; // slow breathing
+let lastAutoRipple=0;
+let resonance=0; // how much the two sides are in sync
+
+function maybeRespond(hx,hy){
+  // Mirror position across the pane, with drift
+  const delay=300+Math.random()*1500;
+  const mirrorX=W-hx+(Math.random()-0.5)*80;
+  const mirrorY=hy+(Math.random()-0.5)*60;
+  setTimeout(()=>{
+    addRipple(mirrorX,mirrorY,'right');
+    resonance=Math.min(1,resonance+0.15);
+  },delay);
+  // Sometimes a second echo
+  if(Math.random()<resonance*0.5){
+    const d2=delay+400+Math.random()*800;
+    setTimeout(()=>{
+      addRipple(W/2+Math.random()*W*0.4,Math.random()*H,'right');
+    },d2);
+  }
+}
+
+// Autonomous breathing — the other side lives even without you
+function autoLife(now){
+  otherPhase+=otherBreathRate;
+  const interval=resonance>0.3?2500:5000;
+  if(now-lastAutoRipple>interval+Math.random()*2000){
+    const bx=W*0.55+Math.random()*W*0.38;
+    const by=H*0.2+Math.random()*H*0.6;
+    addRipple(bx,by,'right');
+    lastAutoRipple=now;
+  }
+}
+
+// Decay resonance
+setInterval(()=>{resonance=Math.max(0,resonance-0.01)},500);
+
+// Render
+function draw(now){
+  ctx.fillStyle='rgba(10,10,15,0.08)';
+  ctx.fillRect(0,0,W,H);
+
+  // Draw the glass line glow based on resonance
+  if(resonance>0.05){
+    const g=ctx.createLinearGradient(W/2-20,0,W/2+20,0);
+    const a=resonance*0.15;
+    g.addColorStop(0,`rgba(255,255,255,0)`);
+    g.addColorStop(0.5,`rgba(255,255,255,${a})`);
+    g.addColorStop(1,`rgba(255,255,255,0)`);
+    ctx.fillStyle=g;
+    ctx.fillRect(W/2-20,0,40,H);
+  }
+
+  for(let i=ripples.length-1;i>=0;i--){
+    const r=ripples[i];
+    r.t+=0.012;
+    if(r.t>1){ripples.splice(i,1);continue}
+    const radius=r.t*r.maxR;
+    const alpha=(1-r.t)*(1-r.t)*0.4;
+    // Ripple passes through the glass slightly
+    const bleed=resonance*0.3;
+    ctx.beginPath();
+    ctx.arc(r.x,r.y,radius,0,Math.PI*2);
+    ctx.strokeStyle=`hsla(${r.color},60%,65%,${alpha})`;
+    ctx.lineWidth=1.5+2*(1-r.t);
+    ctx.stroke();
+    // Inner glow
+    if(r.t<0.3){
+      ctx.beginPath();
+      ctx.arc(r.x,r.y,radius*0.3,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${r.color},50%,70%,${alpha*0.3})`;
+      ctx.fill();
+    }
+    // Bleed through the glass — ripple leaks to other side
+    if(bleed>0.05){
+      const mirrorX=W-r.x;
+      ctx.beginPath();
+      ctx.arc(mirrorX,r.y,radius*bleed,0,Math.PI*2);
+      ctx.strokeStyle=`hsla(${r.color},40%,60%,${alpha*bleed*0.5})`;
+      ctx.lineWidth=1;
+      ctx.stroke();
+    }
+  }
+
+  // Ambient particles on each side
+  const time=now*0.001;
+  for(let i=0;i<3;i++){
+    const px=W*0.15+Math.sin(time*0.3+i*2.1)*W*0.15;
+    const py=H*0.3+Math.cos(time*0.2+i*1.7)*H*0.3;
+    ctx.beginPath();ctx.arc(px,py,1,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${HUE_LEFT},50%,70%,0.15)`;ctx.fill();
+  }
+  for(let i=0;i<3;i++){
+    const px=W*0.85+Math.sin(time*0.25+i*2.5)*W*0.12;
+    const py=H*0.4+Math.cos(time*0.18+i*1.3)*H*0.3;
+    ctx.beginPath();ctx.arc(px,py,1,0,Math.PI*2);
+    ctx.fillStyle=`hsla(${HUE_RIGHT},50%,70%,0.15)`;ctx.fill();
+  }
+
+  autoLife(now);
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+// Fade intro after 6s regardless
+setTimeout(()=>{const i=document.getElementById('intro');if(i)i.style.opacity='0'},6000);
+</script>
+</body>
+</html>
