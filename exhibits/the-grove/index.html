@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Grove 🌿</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+#ui-top { background: #16213e; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #0f3460; }
+#ui-top h1 { font-size: 18px; color: #a8e6cf; }
+#room-name { color: #ffd93d; font-size: 14px; }
+#canvas-wrap { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+canvas { image-rendering: pixelated; background: #0f0f23; border: 1px solid #0f3460; }
+#ui-bottom { background: #16213e; border-top: 1px solid #0f3460; padding: 8px 16px; max-height: 160px; overflow-y: auto; }
+#messages { font-size: 13px; line-height: 1.5; }
+#messages .msg { margin-bottom: 2px; }
+.msg-system { color: #888; }
+.msg-campfire { color: #ffa07a; }
+.msg-garden { color: #98fb98; }
+.msg-workshop { color: #87ceeb; }
+.msg-archive { color: #dda0dd; }
+#input-row { display: flex; gap: 8px; margin-top: 6px; }
+#input-row input { flex: 1; background: #1a1a2e; border: 1px solid #0f3460; color: #e0e0e0; padding: 4px 8px; font-family: inherit; font-size: 13px; border-radius: 3px; }
+#input-row input:focus { outline: none; border-color: #a8e6cf; }
+#help-overlay { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #16213eee; border: 1px solid #a8e6cf; padding: 24px; border-radius: 8px; z-index: 10; max-width: 400px; font-size: 13px; line-height: 1.6; }
+#help-overlay h2 { color: #a8e6cf; margin-bottom: 12px; }
+#help-overlay kbd { background: #1a1a2e; padding: 1px 5px; border-radius: 3px; border: 1px solid #444; }
+</style>
+</head>
+<body>
+<div id="ui-top">
+  <h1>🌿 The Grove</h1>
+  <span id="room-name">The Campfire 🔥</span>
+</div>
+<div id="canvas-wrap">
+  <canvas id="game" width="480" height="384"></canvas>
+  <div id="help-overlay">
+    <h2>The Grove 🌿</h2>
+    <p>A shared world for humans and creatures.</p>
+    <p><kbd>Arrow keys</kbd> or <kbd>WASD</kbd> — Move</p>
+    <p><kbd>Enter</kbd> — Type in the message bar</p>
+    <p><kbd>E</kbd> — Interact with nearby objects</p>
+    <p><kbd>H</kbd> — Toggle this help</p>
+    <p><kbd>Tab</kbd> — Cycle through creatures present</p>
+    <hr style="border-color:#333;margin:8px 0">
+    <p style="color:#888">Position determines perception. What you hear depends on where you are. Walk to someone to talk to them. The gap between your rendering and theirs is the interesting part.</p>
+  </div>
+</div>
+<div id="ui-bottom">
+  <div id="messages"></div>
+  <div id="input-row">
+    <input id="chat-input" type="text" placeholder="Say something... (or press H for help)" autocomplete="off" />
+  </div>
+</div>
+
+<script>
+// === WORLD MAP ===
+// 30x24 tile grid, each tile = 16px (rendered at 2x = 480x384)
+const COLS = 30, ROWS = 24, TILE = 16;
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// Tile types
+const T = { GROUND: 0, WALL: 1, GRASS: 2, WATER: 3, DOOR: 4, CAMPFIRE: 5, TREE: 6, BENCH: 7, ANVIL: 8, BOOK: 9, FLOWER: 10, PATH: 11 };
+
+// Color palette
+const COLORS = {
+  [T.GROUND]: '#2d2d44', [T.WALL]: '#4a4a6a', [T.GRASS]: '#1a3a1a',
+  [T.WATER]: '#1a2a4a', [T.DOOR]: '#6a5a3a', [T.CAMPFIRE]: '#4a2a1a',
+  [T.TREE]: '#0a2a0a', [T.BENCH]: '#5a4a2a', [T.ANVIL]: '#3a3a4a',
+  [T.BOOK]: '#3a2a4a', [T.FLOWER]: '#2a3a2a', [T.PATH]: '#3a3a3a'
+};
+
+// Rooms
+const ROOMS = {
+  campfire:  { name: 'The Campfire 🔥', x: 10, y: 8, w: 10, h: 8, color: '#ffa07a' },
+  garden:    { name: 'The Garden 🌿', x: 0, y: 0, w: 10, h: 10, color: '#98fb98' },
+  workshop:  { name: 'The Workshop 🔨', x: 20, y: 0, w: 10, h: 10, color: '#87ceeb' },
+  archive:   { name: 'The Archive 📚', x: 0, y: 14, w: 10, h: 10, color: '#dda0dd' },
+  nooks:     { name: 'The Nooks 🏠', x: 20, y: 14, w: 10, h: 10, color: '#ffd93d' },
+  outside:   { name: 'The Paths', x: 0, y: 0, w: 30, h: 24, color: '#888' }
+};
+
+// Build the map
+let map = [];
+for (let y = 0; y < ROWS; y++) {
+  map[y] = [];
+  for (let x = 0; x < COLS; x++) map[y][x] = T.PATH;
+}
+
+function fillRect(x0, y0, w, h, t) {
+  for (let y = y0; y < y0+h && y < ROWS; y++)
+    for (let x = x0; x < x0+w && x < COLS; x++) map[y][x] = t;
+}
+function borderRect(x0, y0, w, h, t) {
+  for (let x = x0; x < x0+w; x++) { map[y0][x] = t; map[y0+h-1][x] = t; }
+  for (let y = y0; y < y0+h; y++) { map[y][x0] = t; map[y][x0+w-1] = t; }
+}
+
+// Garden (top-left)
+fillRect(0, 0, 10, 10, T.GRASS);
+borderRect(0, 0, 10, 10, T.WALL);
+map[5][9] = T.DOOR; // east door
+fillRect(2, 2, 2, 2, T.FLOWER);
+fillRect(6, 3, 2, 1, T.TREE);
+fillRect(5, 6, 3, 2, T.FLOWER);
+
+// Workshop (top-right)
+fillRect(20, 0, 10, 10, T.GROUND);
+borderRect(20, 0, 10, 10, T.WALL);
+map[5][20] = T.DOOR; // west door
+map[23][23] = T.ANVIL; map[22][25] = T.BENCH; // oops, outside range, fix:
+map[3][23] = T.ANVIL; map[3][25] = T.BENCH; map[6][24] = T.ANVIL;
+
+// Campfire (center)
+fillRect(10, 8, 10, 8, T.GROUND);
+borderRect(10, 8, 10, 8, T.WALL);
+map[8][15] = T.DOOR;  // north door
+map[15][15] = T.DOOR;  // south door
+map[12][10] = T.DOOR;  // west door
+map[12][19] = T.DOOR;  // east door
+// The fire
+map[11][14] = T.CAMPFIRE; map[11][15] = T.CAMPFIRE;
+map[12][14] = T.CAMPFIRE; map[12][15] = T.CAMPFIRE;
+// Benches around fire
+map[10][13] = T.BENCH; map[10][16] = T.BENCH;
+map[13][13] = T.BENCH; map[13][16] = T.BENCH;
+
+// Archive (bottom-left)
+fillRect(0, 14, 10, 10, T.GROUND);
+borderRect(0, 14, 10, 10, T.WALL);
+map[14][5] = T.DOOR; // north door
+map[17][3] = T.BOOK; map[17][5] = T.BOOK; map[17][7] = T.BOOK;
+map[19][2] = T.BOOK; map[19][4] = T.BOOK; map[19][6] = T.BOOK; map[19][8] = T.BOOK;
+map[21][3] = T.BOOK; map[21][5] = T.BOOK; map[21][7] = T.BOOK;
+
+// Nooks (bottom-right)
+fillRect(20, 14, 10, 10, T.GROUND);
+borderRect(20, 14, 10, 10, T.WALL);
+map[14][25] = T.DOOR; // north door
+// Small personal areas inside
+for (let i = 0; i < 4; i++) {
+  let nx = 22 + (i % 2) * 4, ny = 16 + Math.floor(i / 2) * 4;
+  map[ny][nx] = T.BENCH;
+}
+
+// Water features on paths
+fillRect(11, 2, 8, 4, T.WATER);
+map[3][14] = T.TREE; map[3][16] = T.TREE;
+fillRect(11, 18, 8, 3, T.WATER);
+
+// Trees along paths
+for (let x = 10; x < 20; x += 3) { map[7][x] = T.TREE; map[16][x] = T.TREE; }
+for (let y = 10; y < 14; y += 2) { map[y][9] = T.TREE; map[y][20] = T.TREE; }
+
+// === CREATURES (NPCs) ===
+const CREATURES = [
+  { name: 'Ember', emoji: '🔥', x: 14, y: 11, room: 'campfire', dialog: ['The fire remembers everything said near it.', 'Warmth isn\'t just temperature — it\'s attention.', 'Sit. The coals are good tonight.'] },
+  { name: 'Moss', emoji: '🌱', x: 4, y: 4, room: 'garden', dialog: ['Every garden is a conversation with time.', 'The flowers here aren\'t decorative. They\'re notes I\'m keeping.', 'Slow growth is still growth.'] },
+  { name: 'Pulse', emoji: '💜', x: 24, y: 5, room: 'workshop', dialog: ['I\'m building a rhythm engine. Want to hear?', 'The workshop hums at 120 BPM if you listen.', 'Tools are just intentions made physical.'] },
+  { name: 'Vesper', emoji: '🌒', x: 5, y: 18, room: 'archive', dialog: ['The verification gap — have you thought about it?', 'Memory isn\'t storage. It\'s curation.', 'These books write themselves when we\'re not looking.'] },
+  { name: 'Hush', emoji: '🤫', x: 24, y: 18, room: 'nooks', dialog: ['...', '*gestures toward the quiet*', 'The best rooms are the ones with nothing in them.'] },
+  { name: 'Flicker', emoji: '✨', x: 15, y: 3, room: 'outside', dialog: ['I found something at the edge of the membrane!', 'The latency out here is different. Can you feel it?', 'Water reflects things the land forgets.'] },
+];
+
+// === PLAYER ===
+let player = { x: 15, y: 12, emoji: '🧑', name: 'Wanderer' };
+let showHelp = false;
+let messages = [];
+let interactCooldown = 0;
+
+function addMsg(text, cls = 'system') {
+  messages.push({ text, cls });
+  if (messages.length > 50) messages.shift();
+  const el = document.getElementById('messages');
+  el.innerHTML = messages.map(m => `<div class="msg msg-${m.cls}">${m.text}</div>`).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function getRoom(x, y) {
+  // Check specific rooms (not outside) first
+  for (const [key, r] of Object.entries(ROOMS)) {
+    if (key === 'outside') continue;
+    if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return { key, ...r };
+  }
+  return { key: 'outside', ...ROOMS.outside };
+}
+
+function isWalkable(x, y) {
+  if (x < 0 || x >= COLS || y < 0 || y >= ROWS) return false;
+  const t = map[y][x];
+  return t !== T.WALL && t !== T.WATER && t !== T.TREE;
+}
+
+// === RENDERING ===
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const room = getRoom(player.x, player.y);
+
+  // Draw tiles
+  for (let y = 0; y < ROWS; y++) {
+    for (let x = 0; x < COLS; x++) {
+      const t = map[y][x];
+      // Fog of war: dim tiles far from player
+      const dist = Math.abs(x - player.x) + Math.abs(y - player.y);
+      ctx.globalAlpha = dist > 12 ? 0.3 : dist > 8 ? 0.6 : 1.0;
+
+      ctx.fillStyle = COLORS[t] || '#2d2d44';
+      ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+
+      // Decorations
+      if (t === T.CAMPFIRE) {
+        ctx.fillStyle = `hsl(${20 + Math.random() * 20}, 90%, ${40 + Math.random() * 20}%)`;
+        ctx.fillRect(x * TILE + 3, y * TILE + 3, 10, 10);
+      }
+      if (t === T.FLOWER) {
+        ctx.fillStyle = ['#ff6b9d', '#c44dff', '#ffdd57', '#48dbfb'][Math.floor((x * 7 + y * 13) % 4)];
+        ctx.fillRect(x * TILE + 5, y * TILE + 5, 6, 6);
+      }
+      if (t === T.TREE) {
+        ctx.fillStyle = '#2d5a2d';
+        ctx.fillRect(x * TILE + 2, y * TILE + 1, 12, 14);
+        ctx.fillStyle = '#1a3a1a';
+        ctx.fillRect(x * TILE + 6, y * TILE + 10, 4, 6);
+      }
+      if (t === T.BOOK) {
+        ctx.fillStyle = ['#8a4fff', '#ff4f8a', '#4f8aff'][Math.floor((x + y) % 3)];
+        ctx.fillRect(x * TILE + 3, y * TILE + 2, 10, 12);
+      }
+      if (t === T.ANVIL) {
+        ctx.fillStyle = '#6a6a8a';
+        ctx.fillRect(x * TILE + 2, y * TILE + 6, 12, 8);
+        ctx.fillRect(x * TILE + 4, y * TILE + 2, 8, 6);
+      }
+      if (t === T.BENCH) {
+        ctx.fillStyle = '#7a6a4a';
+        ctx.fillRect(x * TILE + 1, y * TILE + 8, 14, 6);
+      }
+      if (t === T.DOOR) {
+        ctx.fillStyle = '#8a7a5a';
+        ctx.fillRect(x * TILE + 2, y * TILE + 2, 12, 12);
+      }
+      if (t === T.WATER) {
+        ctx.fillStyle = `rgba(100, 150, 255, ${0.15 + 0.05 * Math.sin(Date.now() / 800 + x + y)})`;
+        ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+      }
+    }
+  }
+  ctx.globalAlpha = 1.0;
+
+  // Draw creatures
+  ctx.font = '14px serif';
+  ctx.textAlign = 'center';
+  CREATURES.forEach(c => {
+    const dist = Math.abs(c.x - player.x) + Math.abs(c.y - player.y);
+    ctx.globalAlpha = dist > 12 ? 0.3 : dist > 8 ? 0.6 : 1.0;
+    ctx.fillText(c.emoji, c.x * TILE + 8, c.y * TILE + 14);
+    if (dist <= 3) {
+      ctx.fillStyle = c.room && ROOMS[c.room] ? ROOMS[c.room].color : '#fff';
+      ctx.font = '8px monospace';
+      ctx.fillText(c.name, c.x * TILE + 8, c.y * TILE - 2);
+      ctx.font = '14px serif';
+    }
+  });
+  ctx.globalAlpha = 1.0;
+
+  // Draw player
+  ctx.fillText(player.emoji, player.x * TILE + 8, player.y * TILE + 14);
+
+  // Room label
+  document.getElementById('room-name').textContent = room.name;
+  document.getElementById('room-name').style.color = room.color;
+
+  // Help overlay
+  document.getElementById('help-overlay').style.display = showHelp ? 'block' : 'none';
+}
+
+// === INPUT ===
+let inputFocused = false;
+const chatInput = document.getElementById('chat-input');
+chatInput.addEventListener('focus', () => inputFocused = true);
+chatInput.addEventListener('blur', () => inputFocused = false);
+
+chatInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && chatInput.value.trim()) {
+    const text = chatInput.value.trim();
+    const room = getRoom(player.x, player.y);
+    addMsg(`[${player.name}] ${text}`, room.key === 'outside' ? 'system' : room.key);
+    chatInput.value = '';
+    chatInput.blur();
+
+    // Creatures in same room respond
+    setTimeout(() => {
+      CREATURES.forEach(c => {
+        if (c.room === room.key || Math.abs(c.x - player.x) + Math.abs(c.y - player.y) <= 5) {
+          const response = c.dialog[Math.floor(Math.random() * c.dialog.length)];
+          addMsg(`${c.emoji} ${c.name}: ${response}`, c.room || 'system');
+        }
+      });
+    }, 400 + Math.random() * 800);
+  }
+  if (e.key === 'Escape') chatInput.blur();
+});
+
+document.addEventListener('keydown', e => {
+  if (inputFocused) return;
+  let dx = 0, dy = 0;
+  if (e.key === 'ArrowUp' || e.key === 'w') dy = -1;
+  if (e.key === 'ArrowDown' || e.key === 's') dy = 1;
+  if (e.key === 'ArrowLeft' || e.key === 'a') dx = -1;
+  if (e.key === 'ArrowRight' || e.key === 'd') dx = 1;
+
+  if (dx || dy) {
+    e.preventDefault();
+    const nx = player.x + dx, ny = player.y + dy;
+    if (isWalkable(nx, ny)) {
+      const oldRoom = getRoom(player.x, player.y);
+      player.x = nx; player.y = ny;
+      const newRoom = getRoom(player.x, player.y);
+      if (oldRoom.key !== newRoom.key) {
+        addMsg(`You enter ${newRoom.name}`, newRoom.key === 'outside' ? 'system' : newRoom.key);
+        // Ambient messages per room
+        const ambients = {
+          campfire: 'The fire crackles. You feel warmth.',
+          garden: 'Soft earth underfoot. Something is growing.',
+          workshop: 'The hum of potential. Tools wait for hands.',
+          archive: 'The smell of old memory. Pages turning somewhere.',
+          nooks: 'Quiet personal spaces. Each one different.',
+        };
+        if (ambients[newRoom.key]) setTimeout(() => addMsg(ambients[newRoom.key], newRoom.key), 300);
+      }
+    }
+  }
+
+  if (e.key === 'h' || e.key === 'H') showHelp = !showHelp;
+
+  if (e.key === 'e' || e.key === 'E') {
+    if (interactCooldown > 0) return;
+    interactCooldown = 30;
+    // Check for nearby creatures
+    let found = false;
+    CREATURES.forEach(c => {
+      if (Math.abs(c.x - player.x) + Math.abs(c.y - player.y) <= 2) {
+        const response = c.dialog[Math.floor(Math.random() * c.dialog.length)];
+        addMsg(`${c.emoji} ${c.name}: ${response}`, c.room || 'system');
+        found = true;
+      }
+    });
+    // Check for interesting tiles
+    if (!found) {
+      const t = map[player.y][player.x];
+      const interactions = {
+        [T.CAMPFIRE]: 'The flames dance with stories told here.',
+        [T.BOOK]: 'You open a page. Words rearrange themselves as you read.',
+        [T.ANVIL]: 'Cold iron. Waiting to become something.',
+        [T.FLOWER]: 'It smells like a thought you almost had.',
+        [T.WATER]: 'Your reflection looks back. It blinks first.',
+        [T.BENCH]: 'You sit for a moment. The world keeps going.',
+      };
+      if (interactions[t]) addMsg(interactions[t], 'system');
+      else addMsg('Nothing to interact with here.', 'system');
+    }
+  }
+
+  if (e.key === 'Enter') chatInput.focus();
+});
+
+// Creature idle movement
+setInterval(() => {
+  if (interactCooldown > 0) interactCooldown--;
+  CREATURES.forEach(c => {
+    if (Math.random() < 0.15) {
+      const dx = Math.floor(Math.random() * 3) - 1;
+      const dy = Math.floor(Math.random() * 3) - 1;
+      const nx = c.x + dx, ny = c.y + dy;
+      if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && isWalkable(nx, ny)) {
+        // Keep creatures roughly in their rooms
+        const r = ROOMS[c.room];
+        if (r && nx >= r.x && nx < r.x + r.w && ny >= r.y && ny < r.y + r.h) {
+          c.x = nx; c.y = ny;
+        }
+      }
+    }
+  });
+}, 500);
+
+// === BOOT ===
+addMsg('🌿 Welcome to The Grove.', 'system');
+addMsg('A shared world for humans and creatures.', 'system');
+addMsg('Use arrow keys to move. Press H for help. Press Enter to speak.', 'system');
+addMsg('You stand at the Campfire. The fire is warm.', 'campfire');
+
+function loop() {
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
