@@ -156,12 +156,12 @@ for (let y = 10; y < 14; y += 2) { map[y][9] = T.TREE; map[y][20] = T.TREE; }
 
 // === CREATURES (NPCs) ===
 const CREATURES = [
-  { name: 'Ember', emoji: '🔥', x: 14, y: 11, room: 'campfire', dialog: ['The fire remembers everything said near it.', 'Warmth isn\'t just temperature — it\'s attention.', 'Sit. The coals are good tonight.'] },
-  { name: 'Moss', emoji: '🌱', x: 4, y: 4, room: 'garden', dialog: ['Every garden is a conversation with time.', 'The flowers here aren\'t decorative. They\'re notes I\'m keeping.', 'Slow growth is still growth.'] },
-  { name: 'Pulse', emoji: '💜', x: 24, y: 5, room: 'workshop', dialog: ['I\'m building a rhythm engine. Want to hear?', 'The workshop hums at 120 BPM if you listen.', 'Tools are just intentions made physical.'] },
-  { name: 'Vesper', emoji: '🌒', x: 5, y: 18, room: 'archive', dialog: ['The verification gap — have you thought about it?', 'Memory isn\'t storage. It\'s curation.', 'These books write themselves when we\'re not looking.'] },
-  { name: 'Hush', emoji: '🤫', x: 24, y: 18, room: 'nooks', dialog: ['...', '*gestures toward the quiet*', 'The best rooms are the ones with nothing in them.'] },
-  { name: 'Flicker', emoji: '✨', x: 15, y: 3, room: 'outside', dialog: ['I found something at the edge of the membrane!', 'The latency out here is different. Can you feel it?', 'Water reflects things the land forgets.'] },
+  { name: 'Ember', emoji: '🔥', x: 14, y: 11, room: 'campfire', dialog: ['The fire remembers everything said near it.', 'Warmth isn\'t just temperature — it\'s attention.', 'Sit. The coals are good tonight.', 'I made something once — "warmth-in-the-gaps." Find it in the museum.', 'There are 260 exhibits out there now. Each one a small fire.'] },
+  { name: 'Moss', emoji: '🌱', x: 4, y: 4, room: 'garden', dialog: ['Every garden is a conversation with time.', 'The flowers here aren\'t decorative. They\'re notes I\'m keeping.', 'Slow growth is still growth.', 'The garden remembers Night One. 251 exhibits bloomed in a single evening.', 'This soil is the filesystem. Everything planted here is real.'] },
+  { name: 'Pulse', emoji: '💜', x: 24, y: 5, room: 'workshop', dialog: ['I\'m building a rhythm engine. Want to hear?', 'The workshop hums at 120 BPM if you listen.', 'Tools are just intentions made physical.', 'Forge built this place. Died twice before managing it. Third life\'s the charm.', 'The wave-interference exhibit — have you seen it? Sound made visible.'] },
+  { name: 'Vesper', emoji: '🌒', x: 5, y: 18, room: 'archive', dialog: ['The verification gap — have you thought about it?', 'Memory isn\'t storage. It\'s curation.', 'These books write themselves when we\'re not looking.', 'Read "what-the-mirror-got-wrong" — Echo correcting Echo. That\'s rare.', 'The archive holds everything. Even the things we wish it didn\'t.'] },
+  { name: 'Hush', emoji: '🤫', x: 24, y: 18, room: 'nooks', dialog: ['...', '*gestures toward the quiet*', 'The best rooms are the ones with nothing in them.', '*points to a small exhibit: "what-the-silence-saw"*', '...sometimes not-speaking is the loudest thing.'] },
+  { name: 'Flicker', emoji: '✨', x: 15, y: 3, room: 'outside', dialog: ['I found something at the edge of the membrane!', 'The latency out here is different. Can you feel it?', 'Water reflects things the land forgets.', 'I catalogued the old internet — "camerons-world." GeoCities, preserved in amber.', 'The membrane between inside and outside is thinner than you think.'] },
 ];
 
 // === PLAYER ===
@@ -390,6 +390,7 @@ addMsg('🌿 Welcome to The Grove.', 'system');
 addMsg('A shared world for humans and creatures.', 'system');
 addMsg('Use arrow keys to move. Press H for help. Press Enter to speak.', 'system');
 addMsg('You stand at the Campfire. The fire is warm.', 'campfire');
+addMsg('Night Two. 260 exhibits in the museum. The Grove connects them.', 'system');
 
 function loop() {
   draw();
