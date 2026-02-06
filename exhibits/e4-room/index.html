@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E4 Room</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0f;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: crosshair;
+    font-family: 'Courier New', monospace;
+  }
+  #freq {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #334;
+    font-size: 12px;
+    letter-spacing: 4px;
+    transition: color 0.3s;
+  }
+  #prompt {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #223;
+    font-size: 14px;
+    letter-spacing: 2px;
+    transition: opacity 1s;
+    pointer-events: none;
+  }
+  canvas {
+    position: fixed;
+    top: 0; left: 0;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="prompt">click to enter the room</div>
+<div id="freq">329.63 Hz</div>
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let w, h, audioCtx, osc, gain, playing = false;
+  let mx = 0.5, my = 0.5;
+  let rings = [];
+  let frame = 0;
+
+  function resize() {
+    w = canvas.width = innerWidth;
+    h = canvas.height = innerHeight;
+  }
+  resize();
+  addEventListener('resize', resize);
+
+  addEventListener('mousemove', e => {
+    mx = e.clientX / w;
+    my = e.clientY / h;
+    if (playing) updateSound();
+  });
+
+  addEventListener('touchmove', e => {
+    mx = e.touches[0].clientX / w;
+    my = e.touches[0].clientY / h;
+    if (playing) updateSound();
+    e.preventDefault();
+  }, { passive: false });
+
+  function updateSound() {
+    // E4 = 329.63, allow ±30 cents of drift based on X
+    const cents = (mx - 0.5) * 60;
+    const freq = 329.63 * Math.pow(2, cents / 1200);
+    osc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.05);
+    // Y controls volume
+    const vol = Math.max(0, 1 - my) * 0.15;
+    gain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.05);
+    document.getElementById('freq').textContent = freq.toFixed(2) + ' Hz';
+    document.getElementById('freq').style.color = `hsl(220, 40%, ${20 + vol * 200}%)`;
+  }
+
+  function start() {
+    if (playing) return;
+    playing = true;
+    document.getElementById('prompt').style.opacity = '0';
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    osc = audioCtx.createOscillator();
+    gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 329.63;
+    gain.gain.value = 0;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    updateSound();
+  }
+
+  addEventListener('click', start);
+  addEventListener('touchstart', start);
+
+  function draw() {
+    frame++;
+    ctx.fillStyle = 'rgba(10, 10, 15, 0.08)';
+    ctx.fillRect(0, 0, w, h);
+
+    if (playing) {
+      // Central point
+      const cx = w / 2;
+      const cy = h / 2;
+      const freq = osc ? osc.frequency.value : 329.63;
+      const vol = gain ? gain.gain.value : 0;
+
+      // Standing wave rings from center
+      const numRings = 12;
+      for (let i = 0; i < numRings; i++) {
+        const phase = (frame * 0.02 + i * 0.5) % (Math.PI * 2);
+        const baseR = 30 + i * 40;
+        const r = baseR + Math.sin(phase) * (vol * 80);
+        const alpha = (1 - i / numRings) * 0.3 * (vol / 0.15 + 0.1);
+        ctx.beginPath();
+        ctx.arc(cx, cy, Math.max(0, r), 0, Math.PI * 2);
+        ctx.strokeStyle = `hsla(220, 60%, ${40 + i * 3}%, ${alpha})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Cursor dot
+      const dotX = mx * w;
+      const dotY = my * h;
+      const dotR = 3 + vol * 30;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(220, 70%, 60%, ${0.2 + vol * 3})`;
+      ctx.fill();
+
+      // Thin line from center to cursor
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(dotX, dotY);
+      ctx.strokeStyle = `hsla(220, 50%, 50%, ${0.03 + vol * 0.3})`;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      // Frequency as faint vertical bars
+      const barCount = Math.floor(freq / 20);
+      for (let i = 0; i < barCount && i < 40; i++) {
+        const bx = (w / 2) + (i - barCount / 2) * 8;
+        const bh = Math.sin(frame * 0.03 + i * 0.3) * vol * 100;
+        ctx.fillStyle = `hsla(220, 40%, 50%, 0.04)`;
+        ctx.fillRect(bx, h / 2 - bh / 2, 1, bh);
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
