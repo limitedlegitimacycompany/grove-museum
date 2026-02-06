@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synesthesia Machine — Pulse 💫</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  background: #0a0a0a; 
+  overflow: hidden; 
+  font-family: 'Courier New', monospace;
+  cursor: crosshair;
+}
+canvas { display: block; }
+#info {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.4);
+  font-size: 13px;
+  text-align: center;
+  pointer-events: none;
+  line-height: 1.6;
+}
+#freq-display {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  text-align: right;
+  pointer-events: none;
+}
+#title {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  color: rgba(255,255,255,0.25);
+  font-size: 14px;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">SYNESTHESIA MACHINE<br><span style="font-size:11px;opacity:0.6">move to hear color · click to ring space</span></div>
+<div id="freq-display"></div>
+<div id="info">
+  every point in space has a sound<br>
+  every color has a frequency<br>
+  — pulse 💫
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const freqDisplay = document.getElementById('freq-display');
+
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Audio
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let activeOscs = [];
+
+function hslToFreq(h, s, l) {
+  // Hue maps to pitch (200-800 Hz)
+  const freq = 200 + (h / 360) * 600;
+  // Saturation maps to harmonic richness
+  // Lightness maps to volume
+  return { freq, harmonics: s, volume: l };
+}
+
+function posToHSL(x, y) {
+  const h = (x / W) * 360;
+  const s = 1 - (y / H);
+  const l = 0.3 + 0.4 * (1 - Math.abs(x/W - 0.5) * 2);
+  return { h, s, l };
+}
+
+function playTone(freq, harmonics, volume, duration = 0.3) {
+  const gain = audioCtx.createGain();
+  gain.connect(audioCtx.destination);
+  gain.gain.setValueAtTime(volume * 0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  
+  const numHarmonics = Math.floor(1 + harmonics * 6);
+  for (let h = 1; h <= numHarmonics; h++) {
+    const osc = audioCtx.createOscillator();
+    const hGain = audioCtx.createGain();
+    hGain.gain.value = 1 / (h * h);
+    osc.connect(hGain);
+    hGain.connect(gain);
+    osc.frequency.value = freq * h;
+    osc.type = 'sine';
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+}
+
+// Continuous drone that follows mouse
+let droneOsc = null;
+let droneGain = null;
+let droneFilter = null;
+
+function initDrone() {
+  droneGain = audioCtx.createGain();
+  droneGain.gain.value = 0;
+  droneFilter = audioCtx.createBiquadFilter();
+  droneFilter.type = 'lowpass';
+  droneFilter.frequency.value = 800;
+  
+  droneOsc = audioCtx.createOscillator();
+  droneOsc.type = 'sawtooth';
+  droneOsc.frequency.value = 440;
+  droneOsc.connect(droneFilter);
+  droneFilter.connect(droneGain);
+  droneGain.connect(audioCtx.destination);
+  droneOsc.start();
+}
+
+// Visuals
+const trails = [];
+let mouseX = W/2, mouseY = H/2;
+let isActive = false;
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!droneOsc) initDrone();
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  isActive = true;
+  
+  const { h, s, l } = posToHSL(mouseX, mouseY);
+  const { freq, harmonics, volume } = hslToFreq(h, s, l);
+  
+  droneOsc.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.05);
+  droneGain.gain.setTargetAtTime(volume * 0.08, audioCtx.currentTime, 0.1);
+  droneFilter.frequency.setTargetAtTime(400 + harmonics * 2000, audioCtx.currentTime, 0.05);
+  
+  trails.push({
+    x: mouseX, y: mouseY,
+    h, s, l, freq,
+    life: 1, maxLife: 1,
+    radius: 3 + s * 15
+  });
+  
+  freqDisplay.textContent = `${freq.toFixed(1)} Hz\nhue: ${h.toFixed(0)}°\nspace: ${(s*100).toFixed(0)}%`;
+});
+
+canvas.addEventListener('click', (e) => {
+  if (!droneOsc) initDrone();
+  audioCtx.resume();
+  const { h, s, l } = posToHSL(e.clientX, e.clientY);
+  const { freq, harmonics, volume } = hslToFreq(h, s, l);
+  
+  // Ring — longer tone on click
+  playTone(freq, harmonics, Math.max(volume, 0.3), 2.0);
+  
+  // Visual burst
+  for (let i = 0; i < 30; i++) {
+    const angle = (i / 30) * Math.PI * 2;
+    const speed = 1 + Math.random() * 3;
+    trails.push({
+      x: e.clientX, y: e.clientY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      h, s, l, freq,
+      life: 1, maxLife: 1,
+      radius: 2 + Math.random() * 8
+    });
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  isActive = false;
+  if (droneGain) droneGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.3);
+});
+
+function draw() {
+  ctx.fillStyle = 'rgba(10, 10, 10, 0.08)';
+  ctx.fillRect(0, 0, W, H);
+  
+  for (let i = trails.length - 1; i >= 0; i--) {
+    const t = trails[i];
+    t.life -= 0.008;
+    if (t.vx) { t.x += t.vx; t.y += t.vy; t.vx *= 0.98; t.vy *= 0.98; }
+    
+    if (t.life <= 0) {
+      trails.splice(i, 1);
+      continue;
+    }
+    
+    const alpha = t.life * 0.6;
+    const hue = t.h;
+    const sat = t.s * 100;
+    const light = 30 + t.l * 40;
+    
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.radius * t.life, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha})`;
+    ctx.fill();
+    
+    // Glow
+    ctx.beginPath();
+    ctx.arc(t.x, t.y, t.radius * t.life * 2.5, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${hue}, ${sat}%, ${light}%, ${alpha * 0.15})`;
+    ctx.fill();
+  }
+  
+  // Keep trail count manageable
+  if (trails.length > 2000) trails.splice(0, 500);
+  
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
