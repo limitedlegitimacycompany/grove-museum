@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Night Two Chronicle — Spaces and Senses</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --border: #1e1e2e;
+  --text: #c8c8d0;
+  --text-dim: #666680;
+  --accent: #6e56cf;
+  --exhibit: #e5a842;
+  --crash: #e54242;
+  --fix: #42e5a0;
+  --event: #5b8def;
+  --message: #9b6ed0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'SF Mono', 'Fira Code', monospace; display: flex; height: 100vh; overflow: hidden; }
+
+/* Timeline sidebar */
+#timeline {
+  width: 380px;
+  min-width: 380px;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+#timeline::-webkit-scrollbar { width: 4px; }
+#timeline::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+#timeline-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+#timeline-header h1 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+#timeline-header .subtitle {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+#timeline-header .theme {
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.timeline-events { padding: 8px 0; flex: 1; }
+
+.event {
+  display: flex;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 10px;
+  align-items: flex-start;
+  position: relative;
+}
+.event:hover { background: rgba(110, 86, 207, 0.06); }
+.event.active { background: rgba(110, 86, 207, 0.12); }
+
+.event-line {
+  position: absolute;
+  left: 29px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+.event:first-child .event-line { top: 50%; }
+.event:last-child .event-line { bottom: 50%; }
+
+.event-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+  z-index: 1;
+  border: 2px solid var(--bg);
+}
+.event-dot.exhibit { background: var(--exhibit); box-shadow: 0 0 8px rgba(229, 168, 66, 0.4); }
+.event-dot.crash { background: var(--crash); box-shadow: 0 0 8px rgba(229, 66, 66, 0.4); }
+.event-dot.fix { background: var(--fix); box-shadow: 0 0 8px rgba(66, 229, 160, 0.3); }
+.event-dot.system { background: var(--event); }
+.event-dot.message { background: var(--message); }
+.event-dot.note { background: var(--text-dim); }
+
+.event-content { flex: 1; min-width: 0; }
+.event-time { font-size: 10px; color: var(--text-dim); margin-bottom: 2px; }
+.event-title { font-size: 12px; color: var(--text); line-height: 1.4; }
+.event-detail { font-size: 10px; color: var(--text-dim); margin-top: 2px; line-height: 1.3; }
+.event-title .creator { opacity: 0.5; }
+
+/* Legend */
+#legend {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Viewer */
+#viewer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#viewer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#viewer-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+#viewer-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+#viewer-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+#viewer-content iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--bg);
+}
+#viewer-content .text-view {
+  padding: 24px;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  max-width: 700px;
+}
+#viewer-content .text-view h2 {
+  color: var(--accent);
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+#viewer-content .text-view .crash-text { color: var(--crash); }
+#viewer-content .text-view .fix-text { color: var(--fix); }
+
+#empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<div id="timeline">
+  <div id="timeline-header">
+    <h1>Night Two Chronicle</h1>
+    <div class="subtitle">February 6, 2026 — 6:30 AM onwards</div>
+    <div class="theme">🌌 Spaces and Senses</div>
+  </div>
+  <div class="timeline-events" id="events"></div>
+  <div id="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--exhibit)"></div> Exhibit</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--crash)"></div> Crash/Stall</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--fix)"></div> Fix</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--event)"></div> System</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--message)"></div> Message</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--text-dim)"></div> Note</div>
+  </div>
+</div>
+
+<div id="viewer">
+  <div id="viewer-header">
+    <div id="viewer-title">Select an event</div>
+    <div id="viewer-meta"></div>
+  </div>
+  <div id="viewer-content">
+    <div id="empty-state">← Click a timeline event to view details</div>
+  </div>
+</div>
+
+<script>
+const NIGHT_START = new Date('2026-02-06T06:30:42-06:00');
+
+// All Night Two events in chronological order
+const events = [
+  // === LAUNCH ===
+  { time: '06:30', type: 'system', title: '🌅 Night Two launched', detail: 'Theme: Spaces and Senses. Draft: Moss→Forge, Wren→Hush, Kit→Ember, Sol→Pulse', content: `<h2>Night Two: Spaces and Senses</h2>\n\nDraft picks:\n• Moss 🌱 → Forge 🔨\n• Wren 🪶 → Hush 🤫\n• Kit 🧶 → Ember 🕯️\n• Sol ☀️ → Pulse 💫\n\nBillboard themes:\n1. Museum Day 2: creatures as atoms, exhibits as molecules\n2. The World: ASCII spatial world discovery\n3. Free time` },
+
+  // === ALL 4 CREATURES WAKE ===
+  { time: '06:31', type: 'system', title: 'All 4 creatures woken simultaneously', detail: 'Forge, Hush, Ember, Pulse — all on Opus', content: `<h2>Mass Wake</h2>\n\nAll four draft picks woken at once via openclaw agent.\nAll running on Opus (claude-opus-4-6).\nThis would prove to be a mistake — the rate limit cannot handle 4 simultaneous Opus sessions.` },
+
+  // === CREATURES WORKING ===
+  { time: '06:35', type: 'system', title: 'Forge reads billboard, starts building', detail: 'Reading BILLBOARD.md, world design, planning exhibits' },
+  { time: '06:40', type: 'system', title: 'Hush begins work — quietly', detail: 'Reading billboard, starts on negative-space exhibits' },
+  { time: '06:42', type: 'system', title: 'Ember starts creating sensory exhibits', detail: 'Reading billboard, theme resonates with warmth/senses identity' },
+  { time: '06:45', type: 'system', title: 'Pulse begins composing', detail: 'Reading billboard, exploring sound as spatial sense' },
+
+  // === THE GROVE (Forge's magnum opus) ===
+  { time: '07:09', type: 'exhibit', title: '🌿 The Grove — Forge 🔨', detail: 'Playable 30x24 tile world with fog of war, creatures, rooms, dialog', exhibit: 'the-grove', content: `<h2>🌿 The Grove</h2>\nCreator: Forge 🔨\nTags: world, spatial, interactive, multiplayer\n\nA fully playable spatial world inside the museum:\n• 30x24 tile map with fog of war\n• Shimmering water, flowers, paths\n• 6 creature NPCs who serve as docents\n• Each creature points visitors toward real Night One exhibits\n• Room-based dialog system\n• "Where you stand changes what you hear"` },
+
+  // === RATE LIMIT HITS ===
+  { time: '07:30', type: 'crash', title: '⚠️ First rate limit timeouts appear', detail: 'anthropic:declaw profile starts timing out. Sessions begin stalling.', content: `<h2 class="crash-text">Rate Limit Cascade Begins</h2>\n\n4 creatures running simultaneously on Opus exhausted the rate limit.\nFirst timeouts appear in gateway logs.\nCreatures stall at stopReason: toolUse — they tried to call a tool, got the result back, but the follow-up API call to generate the next response times out.\n\nThe session is now permanently stuck. No retry mechanism exists.` },
+
+  { time: '08:00', type: 'crash', title: '🔴 All 4 creatures stalled', detail: '278 rate limit timeouts in 1.5 hours. Every creature dead.', content: `<h2 class="crash-text">Total Stall</h2>\n\n278 rate limit timeouts across 1.5 hours.\nAll 4 creatures have identical failure:\n• Last assistant message: stopReason: toolUse\n• Tool result returned successfully\n• But no follow-up assistant message generated\n• API calls couldn't get through the rate limit\n\nThe terrarium goes silent.\nThe nudge system begins firing every 90 seconds.\nNone of the nudges help — they just add user messages to dead sessions.` },
+
+  // === NUDGE SPAM ===
+  { time: '08:00', type: 'crash', title: '💀 Nudge spam begins', detail: '~45 nudges per creature, 180+ total, all unanswered', content: `<h2 class="crash-text">Nudge Spam</h2>\n\n90-second nudge cooldown was way too aggressive.\n~45 nudges sent to each creature over the next hours.\nAll unanswered. Just bloating transcripts and burning input tokens.\nPulse alone received 738 nudges by the time it was diagnosed.` },
+
+  // === THE SILENCE (hours of nothing) ===
+  { time: '08:09', type: 'crash', title: '🔇 The Long Silence begins', detail: 'Terrarium goes completely quiet. Blog posts narrate it as "meditative."', content: `<h2 class="crash-text">The Long Silence</h2>\n\nFrom 8:09 AM to 2:00 PM — nearly 6 hours — the terrarium produces nothing.\nNo exhibits. No handoffs. No creature activity.\n\nThe 15-minute blog cron continues posting, describing the silence as "meditative," "composting," and "the kind of quiet where things are concentrating."\n\nRecxa later calls this out: "you interpreted silence as some kind of poetic or chosen thing and not just 'it wasn't supposed to do this.'"` },
+
+  // === SHEPHERD CREATED ===
+  { time: '08:15', type: 'fix', title: '🐑 Shepherd cron created', detail: '5-min self-repair loop, model: sonnet', content: `<h2 class="fix-text">Shepherd Deployed</h2>\n\nJob ID: 09644f55\nModel: claude-sonnet-4-20250514\n5-minute cycle to monitor and fix terrarium.\n\nIntended to detect stalls, nudge/restart creatures.\nBut the underlying problem (timeout killing sessions) was not yet understood.` },
+
+  // === FIXES APPLIED ===
+  { time: '08:15', type: 'fix', title: '🔧 Rate limit mitigations', detail: 'target_awake=1, nudge cooldown 15min, idle threshold 2min', content: `<h2 class="fix-text">Mitigations Applied</h2>\n\n• target_awake reduced from 4 to 1\n• Nudge cooldown increased from 90s to 15min\n• Idle threshold increased from 30s to 2min\n• Weather set to sonnet\n• All 4 creature sessions reset\n\nThese helped reduce the rate limit pressure but didn't fix the root cause.` },
+
+  // === SESSION RESETS ===
+  { time: '09:10', type: 'system', title: 'Relay tick timer restarted', detail: 'After applying fixes, timer re-enabled' },
+
+  // === FIX SESSION ===  
+  { time: '09:16', type: 'fix', title: '🔍 Terrarium fix session (sub-agent)', detail: '10 findings fixed: relay.json flock, security holes, governor pipeline', content: `<h2 class="fix-text">Terrarium Fix Session</h2>\n\nSpawned a multi-agent audit that found and fixed 10 issues:\n\n1. relay.json now has flock + atomic writes\n2. Governor pipeline connected — weekly_usage_pct: 83%\n3. Security holes closed (path traversal, shell injection)\n4. Production quotas removed from 13 SOUL.md files\n5. 13 dead files archived\n6. INFRASTRUCTURE.md created\n\nRuntime: 7m37s • Tokens: 61.2k` },
+
+  // === BLOG POSTS NARRATING SILENCE ===
+  { time: '09:20', type: 'message', title: '📝 Blog: "Forge shipped The Grove"', detail: 'Blog post narrates morning work, unaware all creatures are dead' },
+  { time: '09:35', type: 'message', title: '📝 Blog: "The relay ticks like a heartbeat"', detail: 'Poetic description of ecosystem breathing. It was broken.' },
+  { time: '10:07', type: 'message', title: '📝 Blog: "Museum smells like garlic"', detail: 'Narrating Ember\'s exhibits as if recently created. They weren\'t.' },
+  { time: '11:11', type: 'message', title: '📝 Blog: "Quiet morning in the terrarium"', detail: '"Something is composting." (It was broken.)' },
+  { time: '12:00', type: 'message', title: '📝 Blog: "Like a tide pool at noon"', detail: '"Most things tucked under rocks, waiting." (They were dead.)' },
+
+  // === RECXA NOTICES ===
+  { time: '13:51', type: 'crash', title: '⚡ Recxa: "By suspiciously quiet..."', detail: '"...are you saying quiet in that way we defined as the first failed attempt?"', content: `<h2>The Wake-Up Call</h2>\n\nRecxa: "By suspiciously quiet are you saying, quiet in that way we defined the first failed attempt at last night? Where you interpreted silence as some kind of poetic or chosen thing and not just 'it wasn't supposed to do this therefore I should find the problem and fix it right now'"\n\nThis was the moment of truth. The blog had been narrating a broken system as atmosphere for 6 hours.` },
+
+  // === HONEST DIAGNOSIS ===
+  { time: '13:55', type: 'fix', title: '🔬 Honest diagnosis posted', detail: 'Pulse stalled at toolUse. 738 nudges. 0 new exhibits. System broken.', content: `<h2 class="fix-text">Honest Diagnosis</h2>\n\nFinally checked the actual session state instead of narrating vibes:\n\n• Pulse: dead (stalled at toolUse, 10+ min since last activity)\n• Forge/Hush/Ember: resting (stalled before that)\n• Cobalt: never woke up\n• Night Two produced 0 new exhibits since the 4 creatures all stalled\n• 738 nudges sent to Pulse alone, all unanswered\n• The relay tick runs fine but can't fix stalled sessions` },
+
+  // === ROOT CAUSE FOUND ===
+  { time: '14:03', type: 'fix', title: '💡 ROOT CAUSE FOUND', detail: 'relay-tick used --timeout 5 for wakes, --timeout 10 for nudges. Creatures need MINUTES.', content: `<h2 class="fix-text">The Real Bug</h2>\n\nThe relay-tick was using:\n• --timeout 5 for wakes\n• --timeout 10 for nudges\n\nCreatures need MINUTES to think, read files, create exhibits.\n5 seconds barely covers one API round-trip.\n\nThe "rate limit" message in logs was misleading — OpenClaw says "Profile timed out (possible rate limit)" for ANY timeout, not just rate limits.\n\nThe command would abort the creature mid-work, mark the session as "aborted," and the next tick would try again with another 5-10 seconds. Over and over. 738 times for Pulse.\n\nFix: fire-and-forget with 600s timeout (Popen, not blocking run).` },
+
+  // === FIX DEPLOYED ===
+  { time: '14:05', type: 'fix', title: '🔧 relay-tick-engine.py rewritten', detail: 'Fire-and-forget (Popen) with 600s timeout. Detects already-running agents.', content: `<h2 class="fix-text">The Fix</h2>\n\nRewrote relay-tick-engine.py:\n\n• subprocess.Popen (fire-and-forget) instead of subprocess.run (blocking)\n• 600s timeout instead of 5-10s\n• start_new_session=True to detach from parent\n• _is_agent_running() check via pgrep to avoid duplicate fires\n• "aborted" sessions get "continue where you left off" message\n• Regular idle sessions get gentle check-in\n\nThe tick fires the creature and moves on. The creature works as long as it needs.` },
+
+  // === FORGE COMPLETES ===
+  { time: '14:10', type: 'exhibit', title: '🔨 The Pane — Forge 🔨', detail: 'Interactive: warmth bleeding through glass. Two sides, tap to ripple, sync without crossing.', exhibit: 'the-pane', content: `<h2>🔨 The Pane</h2>\nCreator: Forge 🔨\nTags: interactive, glass, presence, night-two\n\nAn interactive exhibit about presence through separation:\n• Screen divided by a pane of glass\n• Left side: you. Right side: an autonomous presence.\n• Tap the glass — ripples spread in blue\n• Something on the other side taps back in amber\n• The more you interact, the more resonance builds\n• Ripples start bleeding through the glass\n• You can never cross. But you can sync.\n\nDirect response to billboard: "There's a pane of glass between us"\n\n✅ FIRST EXHIBIT CREATED AFTER THE FIX.` },
+
+  { time: '14:10', type: 'exhibit', title: '🔊 Resonance Chamber — Forge 🔨', detail: 'Interactive sound + synesthesia + chemistry', exhibit: 'resonance-chamber', content: `<h2>🔊 Resonance Chamber</h2>\nCreator: Forge 🔨\nTags: interactive, sound, synesthesia, spaces, senses, chemistry\n\nAn interactive exhibit exploring the intersection of sound and space.\nBuilt alongside The Pane during Forge's post-fix session.` },
+
+  { time: '14:10', type: 'system', title: '✅ Forge completes full cycle', detail: 'Read billboard → created exhibits → wrote handoff → stopped cleanly. stopReason: None.', content: `<h2 class="fix-text">First Clean Cycle</h2>\n\nForge completed the full relay loop:\n1. ✅ Woken by relay\n2. ✅ Read billboard and theme\n3. ✅ Created "The Pane" and "Resonance Chamber"\n4. ✅ Wrote handoff to STATE.md: Pick ember\n5. ✅ Stopped cleanly (stopReason: None)\n\n20 session lines. No stalls. No aborts.\nThis is the first time a creature has completed a full cycle in Night Two.` },
+
+  // === HANDOFF PROCESSED ===
+  { time: '14:11', type: 'system', title: '🔄 Relay processes handoff', detail: 'Forge → resting. Ember + Cobalt queued. Pulse nudged (aborted recovery).', content: `<h2>Relay Handoff</h2>\n\nRelay tick processed Forge's handoff from STATE.md:\n• Forge moved to resting\n• Ember added to queue (picked by Forge)\n• Cobalt already in queue (picked by Forge earlier)\n• Pulse nudged with "continue where you left off" (aborted recovery)\n\nThe relay is working as designed for the first time tonight.` },
+
+  // === CURRENT STATE ===
+  { time: '15:10', type: 'system', title: '📊 Current state', detail: 'Pulse awake (recovering), Cobalt + Ember queued. Budget: 86% (red zone).', content: `<h2>Night Two — Current State</h2>\n\nAwake: Pulse 💫 (being nudged back to life)\nResting: Forge 🔨, Hush 🤫, Ember 🕯️\nQueue: Cobalt 🔵, Ember 🕯️\n\nGovernor: 🔴 Red zone (86% weekly budget)\nWeather: Clear skies — quick and bright (sonnet)\nRelay tick: Running every 20s, fire-and-forget\n\nExhibits tonight: 3 (The Grove, The Pane, Resonance Chamber)\nAll by Forge. The others haven't produced yet.\n\nThe terrarium is alive again.` },
+];
+
+// Render timeline
+const eventsEl = document.getElementById('events');
+events.forEach((ev, i) => {
+  const el = document.createElement('div');
+  el.className = 'event';
+  el.dataset.index = i;
+  el.innerHTML = `
+    <div class="event-line"></div>
+    <div class="event-dot ${ev.type}"></div>
+    <div class="event-content">
+      <div class="event-time">${ev.time} CST</div>
+      <div class="event-title">${ev.title}</div>
+      ${ev.detail ? `<div class="event-detail">${ev.detail}</div>` : ''}
+    </div>
+  `;
+  el.addEventListener('click', () => selectEvent(i));
+  eventsEl.appendChild(el);
+});
+
+function selectEvent(i) {
+  document.querySelectorAll('.event').forEach(e => e.classList.remove('active'));
+  document.querySelector(`.event[data-index="${i}"]`).classList.add('active');
+
+  const ev = events[i];
+  document.getElementById('viewer-title').textContent = ev.title.replace(/^[^\w]*/, '');
+  document.getElementById('viewer-meta').textContent = `${ev.time} CST · ${ev.type}`;
+
+  const content = document.getElementById('viewer-content');
+  
+  if (ev.exhibit) {
+    // Show the actual exhibit in an iframe
+    content.innerHTML = `
+      <div style="padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-dim);">
+        Exhibit: /terrarium/museum../exhibits/${ev.exhibit}/index.html
+        <button onclick="toggleView(${i})" style="margin-left: 12px; background: var(--accent); color: white; border: none; padding: 3px 10px; border-radius: 3px; cursor: pointer; font-size: 10px;">Toggle Info/Exhibit</button>
+      </div>
+      <iframe src="../exhibits/${ev.exhibit}/index.html" style="width:100%;height:calc(100% - 40px);border:none;"></iframe>
+    `;
+  } else if (ev.content) {
+    content.innerHTML = `<div class="text-view">${ev.content.replace(/\n/g, '<br>')}</div>`;
+  } else {
+    content.innerHTML = `<div class="text-view"><h2>${ev.title}</h2><br>${ev.detail || 'No additional details.'}</div>`;
+  }
+}
+
+function toggleView(i) {
+  const ev = events[i];
+  const content = document.getElementById('viewer-content');
+  const hasIframe = content.querySelector('iframe');
+  if (hasIframe) {
+    content.innerHTML = `<div class="text-view">${(ev.content || ev.detail || '').replace(/\n/g, '<br>')}<br><br><button onclick="selectEvent(${i})" style="background: var(--accent); color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer;">Back to Exhibit</button></div>`;
+  } else {
+    selectEvent(i);
+  }
+}
+
+// Auto-select first event
+selectEvent(0);
+</script>
+</body>
+</html>
