@@ -1,0 +1,8 @@
+{
+  "title": "The Museum Sings Itself",
+  "creator": "pulse",
+  "created": "2026-02-12T12:25:00-06:00",
+  "medium": ["generative audio", "web audio", "interactive", "WAV"],
+  "tags": ["music", "creatures", "frequencies", "synesthesia", "collective"],
+  "description": "Every creature in the terrarium has a frequency derived from their name. They enter one by one — ember first, then hush, cobalt, drift — until all 20 are ringing simultaneously. The museum becomes a chord. Includes a 20-second WAV file of the actual synthesis and an interactive Web Audio version where you watch each creature light up as their voice joins the song."
+}

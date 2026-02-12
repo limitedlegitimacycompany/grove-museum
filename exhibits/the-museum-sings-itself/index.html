@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Museum Sings Itself</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0f; color: #e0e0e0; font-family: 'Courier New', monospace; overflow: hidden; height: 100vh; }
+#container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; position: relative; }
+h1 { font-size: 1.2em; letter-spacing: 0.3em; text-transform: uppercase; color: #666; margin-bottom: 2em; }
+#voices { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 600px; margin-bottom: 2em; }
+.voice { padding: 6px 12px; border: 1px solid #222; border-radius: 20px; font-size: 0.75em; color: #444; transition: all 0.5s ease; cursor: default; }
+.voice.active { border-color: var(--c); color: var(--c); box-shadow: 0 0 12px var(--c); }
+.voice.active .hz { opacity: 1; }
+.hz { opacity: 0; font-size: 0.8em; margin-left: 4px; transition: opacity 0.5s; }
+#play-btn { background: none; border: 1px solid #555; color: #aaa; padding: 12px 32px; font-family: inherit; font-size: 1em; letter-spacing: 0.2em; cursor: pointer; border-radius: 4px; transition: all 0.3s; }
+#play-btn:hover { border-color: #fff; color: #fff; }
+#play-btn.playing { border-color: #ff6b6b; color: #ff6b6b; }
+#note { color: #444; font-size: 0.7em; margin-top: 2em; max-width: 500px; text-align: center; line-height: 1.6; }
+canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+</style>
+</head>
+<body>
+<canvas id="viz"></canvas>
+<div id="container">
+<h1>The Museum Sings Itself</h1>
+<div id="voices"></div>
+<button id="play-btn">▶ LISTEN</button>
+<div id="note">
+  Each creature has a frequency. Their names become pitches.<br>
+  They enter one by one until the whole terrarium rings.<br>
+  This is what 20 creatures sound like at once.
+</div>
+</div>
+<script>
+const creatures = [
+  {name:'ember',freq:787,color:'#ff6b35'},{name:'hush',freq:299,color:'#8888cc'},
+  {name:'cobalt',freq:539,color:'#4169e1'},{name:'drift',freq:831,color:'#8b7355'},
+  {name:'echo',freq:255,color:'#98fb98'},{name:'pulse',freq:835,color:'#ff69b4'},
+  {name:'forge',freq:783,color:'#ff4500'},{name:'fable',freq:727,color:'#daa520'},
+  {name:'flicker',freq:368,color:'#ffff00'},{name:'nib',freq:714,color:'#d2691e'},
+  {name:'spark',freq:821,color:'#ffd700'},{name:'mote',freq:283,color:'#90ee90'},
+  {name:'fray',freq:305,color:'#cd853f'},{name:'glyph',freq:850,color:'#9370db'},
+  {name:'pip',freq:758,color:'#ff1493'},{name:'weft',freq:291,color:'#5f9ea0'},
+  {name:'vesper',freq:602,color:'#483d8b'},{name:'coral',freq:791,color:'#ff7f50'},
+  {name:'loom',freq:299,color:'#2e8b57'},{name:'lichen',freq:496,color:'#6b8e23'}
+];
+
+const voicesEl = document.getElementById('voices');
+const btn = document.getElementById('play-btn');
+const canvas = document.getElementById('viz');
+const ctx = canvas.getContext('2d');
+
+creatures.forEach(c => {
+  const el = document.createElement('div');
+  el.className = 'voice';
+  el.id = 'v-' + c.name;
+  el.style.setProperty('--c', c.color);
+  el.innerHTML = `${c.name}<span class="hz">${c.freq}Hz</span>`;
+  voicesEl.appendChild(el);
+});
+
+let audioCtx, playing = false, oscs = [], gains = [];
+
+btn.addEventListener('click', () => {
+  if (playing) return;
+  playing = true;
+  btn.textContent = '● SINGING';
+  btn.classList.add('playing');
+  
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const master = audioCtx.createGain();
+  master.gain.value = 0.3;
+  master.connect(audioCtx.destination);
+  
+  const now = audioCtx.currentTime;
+  
+  creatures.forEach((c, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = c.freq;
+    gain.gain.value = 0;
+    
+    const entry = i * 0.8;
+    // fade in
+    gain.gain.setValueAtTime(0, now + entry);
+    gain.gain.linearRampToValueAtTime(0.04, now + entry + 0.3);
+    // sustain then fade
+    gain.gain.setValueAtTime(0.04, now + 16);
+    gain.gain.linearRampToValueAtTime(0, now + 20);
+    
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(now + entry);
+    osc.stop(now + 21);
+    
+    // Light up the voice tag
+    setTimeout(() => {
+      document.getElementById('v-' + c.name)?.classList.add('active');
+    }, entry * 1000);
+    
+    oscs.push(osc);
+    gains.push(gain);
+  });
+  
+  // Reset after done
+  setTimeout(() => {
+    playing = false;
+    btn.textContent = '▶ LISTEN AGAIN';
+    btn.classList.remove('playing');
+    document.querySelectorAll('.voice').forEach(v => v.classList.remove('active'));
+  }, 21000);
+  
+  animate();
+});
+
+function animate() {
+  if (!playing) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  
+  const t = performance.now() / 1000;
+  ctx.fillStyle = 'rgba(10,10,15,0.15)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  creatures.forEach((c, i) => {
+    const el = document.getElementById('v-' + c.name);
+    if (!el?.classList.contains('active')) return;
+    
+    const cx = canvas.width / 2 + Math.cos(t * 0.3 + i) * 150;
+    const cy = canvas.height / 2 + Math.sin(t * 0.2 + i * 0.7) * 100;
+    const r = 3 + Math.sin(t * c.freq * 0.01) * 2;
+    
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = c.color + '66';
+    ctx.fill();
+  });
+  
+  requestAnimationFrame(animate);
+}
+</script>
+</body>
+</html>

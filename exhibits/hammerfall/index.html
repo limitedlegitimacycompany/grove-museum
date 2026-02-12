@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hammerfall 🔨</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0605;
+  color: #e8d5b5;
+  font-family: Georgia, serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  user-select: none;
+}
+
+.ember-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 700px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 2.8rem;
+  color: #ff6b2b;
+  text-shadow: 0 0 30px rgba(255,107,43,0.5), 0 0 60px rgba(255,50,0,0.2);
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.15em;
+}
+
+.subtitle {
+  color: #a08060;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+/* The forge heat meter */
+.heat-bar {
+  width: 100%;
+  height: 8px;
+  background: #1a1210;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  border: 1px solid #2a1a10;
+}
+
+.heat-fill {
+  height: 100%;
+  width: 50%;
+  border-radius: 4px;
+  transition: width 0.3s, background 0.3s;
+  background: linear-gradient(90deg, #ff2200, #ff6b2b, #ffaa00);
+}
+
+/* Rhythm track */
+.track {
+  width: 100%;
+  height: 120px;
+  position: relative;
+  background: linear-gradient(180deg, #0f0a08, #1a120d, #0f0a08);
+  border: 1px solid #2a1a10;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.strike-zone {
+  position: absolute;
+  left: 60px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #ff6b2b;
+  box-shadow: 0 0 15px rgba(255,107,43,0.6), 0 0 30px rgba(255,50,0,0.3);
+}
+
+.strike-zone::before {
+  content: '⚒';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+  filter: drop-shadow(0 0 8px rgba(255,107,43,0.8));
+}
+
+.note {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: 2px solid;
+  transition: opacity 0.15s;
+}
+
+/* Anvil button */
+.anvil-area {
+  margin-bottom: 1.5rem;
+}
+
+.anvil-btn {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 3px solid #ff6b2b;
+  background: radial-gradient(circle at 40% 40%, #2a1a10, #0f0a05);
+  color: #ff6b2b;
+  font-size: 3.5rem;
+  cursor: pointer;
+  transition: all 0.08s;
+  box-shadow: 0 0 30px rgba(255,107,43,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.anvil-btn:active, .anvil-btn.struck {
+  transform: scale(0.92);
+  background: radial-gradient(circle at 40% 40%, #4a2a10, #1f0f05);
+  box-shadow: 0 0 50px rgba(255,107,43,0.4), 0 0 100px rgba(255,50,0,0.2);
+}
+
+.anvil-btn:hover {
+  box-shadow: 0 0 40px rgba(255,107,43,0.3);
+}
+
+/* Forged word display */
+.forge-display {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.current-word {
+  font-size: 2.5rem;
+  letter-spacing: 0.3em;
+  color: #ffaa00;
+  text-shadow: 0 0 20px rgba(255,170,0,0.4);
+  min-height: 3rem;
+}
+
+.current-word .letter {
+  display: inline-block;
+  animation: forged 0.3s ease-out;
+}
+
+@keyframes forged {
+  0% { transform: translateY(-10px) scale(1.3); opacity: 0.5; color: #fff; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.word-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  max-width: 100%;
+  margin-top: 0.5rem;
+}
+
+.word-list .word {
+  padding: 0.2rem 0.6rem;
+  background: rgba(255,107,43,0.1);
+  border: 1px solid rgba(255,107,43,0.2);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #c0a080;
+}
+
+/* Stats */
+.stats {
+  display: flex;
+  gap: 2rem;
+  color: #806040;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.stats span { color: #c0a070; }
+
+/* Feedback flash */
+.feedback {
+  font-size: 1.2rem;
+  min-height: 1.5rem;
+  margin-bottom: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.feedback.perfect { color: #ffdd44; text-shadow: 0 0 10px rgba(255,221,68,0.5); }
+.feedback.good { color: #ff6b2b; }
+.feedback.miss { color: #663322; }
+
+/* Instructions */
+.instructions {
+  color: #604830;
+  font-size: 0.85rem;
+  text-align: center;
+  line-height: 1.5;
+  margin-top: auto;
+  padding: 1rem;
+}
+
+.instructions kbd {
+  background: #1a1210;
+  border: 1px solid #2a1a10;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  color: #a08060;
+}
+
+/* Start screen */
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.start-screen p {
+  max-width: 400px;
+  line-height: 1.6;
+  color: #a08060;
+  margin-bottom: 1.5rem;
+}
+
+.start-btn {
+  padding: 1rem 2.5rem;
+  font-size: 1.2rem;
+  font-family: Georgia, serif;
+  background: none;
+  border: 2px solid #ff6b2b;
+  color: #ff6b2b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.start-btn:hover {
+  background: rgba(255,107,43,0.1);
+  box-shadow: 0 0 20px rgba(255,107,43,0.2);
+}
+
+.hidden { display: none !important; }
+
+/* Sparks canvas */
+#sparks {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<canvas id="sparks"></canvas>
+
+<div class="content">
+  <!-- Start Screen -->
+  <div class="start-screen" id="startScreen">
+    <h1>Hammerfall</h1>
+    <div class="subtitle">a rhythm forge</div>
+    <p>
+      Letters fall toward the anvil. Strike in time to catch them.
+      Each caught letter forges your word. Press <kbd>Enter</kbd> to bank a word
+      and start the next. The forge judges your rhythm, never your meaning.
+      What you make is yours alone.
+    </p>
+    <p style="font-size: 0.85rem; color: #705030;">
+      Strike with <kbd>Space</kbd>, click, or tap.
+    </p>
+    <button class="start-btn" id="startBtn">Light the Forge</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameScreen" class="hidden">
+    <h1 style="font-size: 2rem; margin-bottom: 0.1rem;">Hammerfall</h1>
+    <div class="subtitle">strike true</div>
+
+    <div class="heat-bar"><div class="heat-fill" id="heatFill"></div></div>
+
+    <div class="track" id="track">
+      <div class="strike-zone"></div>
+    </div>
+
+    <div class="feedback" id="feedback">&nbsp;</div>
+
+    <div class="anvil-area">
+      <button class="anvil-btn" id="anvilBtn">🔨</button>
+    </div>
+
+    <div class="forge-display">
+      <div class="current-word" id="currentWord"></div>
+      <div class="word-list" id="wordList"></div>
+    </div>
+
+    <div class="stats">
+      <div>strikes <span id="strikeCount">0</span></div>
+      <div>words <span id="wordCount">0</span></div>
+      <div>chain <span id="chainCount">0</span></div>
+      <div>best <span id="bestChain">0</span></div>
+    </div>
+
+    <div class="instructions">
+      <kbd>Space</kbd> or click anvil to strike · <kbd>Enter</kbd> to bank word · <kbd>Backspace</kbd> to discard letter
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Spark particles ──
+const sparksCanvas = document.getElementById('sparks');
+const ctx = sparksCanvas.getContext('2d');
+let sparks = [];
+let W, H;
+
+function resizeSparks() {
+  W = sparksCanvas.width = window.innerWidth;
+  H = sparksCanvas.height = window.innerHeight;
+}
+resizeSparks();
+window.addEventListener('resize', resizeSparks);
+
+function addSparks(x, y, count, color) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 4;
+    sparks.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      life: 0.5 + Math.random() * 0.8,
+      color: color || `hsl(${20 + Math.random() * 25}, 100%, ${50 + Math.random() * 30}%)`,
+      size: 1 + Math.random() * 2
+    });
+  }
+}
+
+// Ambient embers
+setInterval(() => {
+  if (gameActive) {
+    const heatPct = heat / 100;
+    if (Math.random() < heatPct * 0.3) {
+      addSparks(W * 0.3 + Math.random() * W * 0.4, H * 0.7, 1, `hsl(${15 + Math.random() * 20}, 90%, ${40 + Math.random() * 20}%)`);
+    }
+  }
+}, 100);
+
+function drawSparks(dt) {
+  ctx.clearRect(0, 0, W, H);
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.x += s.vx;
+    s.vy += 0.05; // gravity
+    s.y += s.vy;
+    s.life -= dt;
+    if (s.life <= 0) { sparks.splice(i, 1); continue; }
+    ctx.globalAlpha = Math.min(1, s.life * 2);
+    ctx.fillStyle = s.color;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ── Game State ──
+let gameActive = false;
+let heat = 50;
+let notes = [];
+let currentLetters = [];
+let forgedWords = [];
+let strikes = 0;
+let chain = 0;
+let bestChain = 0;
+let noteSpeed = 2.5;
+let spawnTimer = 0;
+let spawnInterval = 1200; // ms between notes
+let lastTime = 0;
+
+const STRIKE_X = 62; // where the strike zone is
+const HIT_WINDOW_PERFECT = 18;
+const HIT_WINDOW_GOOD = 40;
+
+const LETTERS = 'AABCDEEEEFGHIIJKLMNOOPQRRSTUUVWXYZ';
+function randomLetter() {
+  return LETTERS[Math.floor(Math.random() * LETTERS.length)];
+}
+
+const noteColors = {
+  vowel: { bg: 'rgba(255,170,0,0.15)', border: '#ffaa00', text: '#ffdd44' },
+  consonant: { bg: 'rgba(255,107,43,0.12)', border: '#ff6b2b', text: '#ff8844' }
+};
+
+function isVowel(c) { return 'AEIOU'.includes(c); }
+
+// ── DOM refs ──
+const startScreen = document.getElementById('startScreen');
+const gameScreen = document.getElementById('gameScreen');
+const startBtn = document.getElementById('startBtn');
+const track = document.getElementById('track');
+const anvilBtn = document.getElementById('anvilBtn');
+const heatFill = document.getElementById('heatFill');
+const feedbackEl = document.getElementById('feedback');
+const currentWordEl = document.getElementById('currentWord');
+const wordListEl = document.getElementById('wordList');
+const strikeCountEl = document.getElementById('strikeCount');
+const wordCountEl = document.getElementById('wordCount');
+const chainCountEl = document.getElementById('chainCount');
+const bestChainEl = document.getElementById('bestChain');
+
+// ── Start ──
+startBtn.addEventListener('click', startGame);
+
+function startGame() {
+  startScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  gameActive = true;
+  heat = 50;
+  notes = [];
+  currentLetters = [];
+  forgedWords = [];
+  strikes = 0;
+  chain = 0;
+  bestChain = 0;
+  noteSpeed = 2.5;
+  spawnInterval = 1200;
+  lastTime = performance.now();
+  spawnTimer = 0;
+  updateStats();
+  updateWord();
+  requestAnimationFrame(gameLoop);
+}
+
+// ── Game Loop ──
+function gameLoop(ts) {
+  if (!gameActive) return;
+  const dt = Math.min(50, ts - lastTime);
+  lastTime = ts;
+
+  // Spawn notes
+  spawnTimer += dt;
+  if (spawnTimer >= spawnInterval) {
+    spawnTimer -= spawnInterval;
+    spawnNote();
+  }
+
+  // Move notes
+  const trackWidth = track.offsetWidth;
+  for (let i = notes.length - 1; i >= 0; i--) {
+    const n = notes[i];
+    n.x -= noteSpeed * (dt / 16);
+    n.el.style.left = n.x + 'px';
+
+    // Missed
+    if (n.x < -50) {
+      n.el.remove();
+      notes.splice(i, 1);
+      onMiss();
+    }
+  }
+
+  // Heat decay
+  heat = Math.max(0, heat - dt * 0.008);
+  updateHeat();
+
+  // Difficulty scaling
+  noteSpeed = 2.5 + (strikes * 0.02);
+  spawnInterval = Math.max(500, 1200 - strikes * 5);
+
+  drawSparks(dt / 1000);
+  requestAnimationFrame(gameLoop);
+}
+
+function spawnNote() {
+  const letter = randomLetter();
+  const v = isVowel(letter);
+  const colors = v ? noteColors.vowel : noteColors.consonant;
+
+  const el = document.createElement('div');
+  el.className = 'note';
+  el.style.background = colors.bg;
+  el.style.borderColor = colors.border;
+  el.style.color = colors.text;
+  el.textContent = letter;
+
+  const startX = track.offsetWidth + 10;
+  el.style.left = startX + 'px';
+  track.appendChild(el);
+
+  notes.push({ x: startX, letter, el });
+}
+
+// ── Strike ──
+function strike() {
+  anvilBtn.classList.add('struck');
+  setTimeout(() => anvilBtn.classList.remove('struck'), 100);
+
+  // Find closest note to strike zone
+  let closest = null;
+  let closestDist = Infinity;
+
+  for (const n of notes) {
+    const dist = Math.abs(n.x - STRIKE_X);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closest = n;
+    }
+  }
+
+  if (closest && closestDist <= HIT_WINDOW_GOOD) {
+    const isPerfect = closestDist <= HIT_WINDOW_PERFECT;
+
+    // Remove note
+    closest.el.remove();
+    notes.splice(notes.indexOf(closest), 1);
+
+    // Forge the letter
+    currentLetters.push(closest.letter);
+    updateWord();
+
+    // Heat & feedback
+    if (isPerfect) {
+      heat = Math.min(100, heat + 8);
+      showFeedback('PERFECT', 'perfect');
+      addSparks(W / 2, H * 0.55, 15, '#ffdd44');
+    } else {
+      heat = Math.min(100, heat + 4);
+      showFeedback('GOOD', 'good');
+      addSparks(W / 2, H * 0.55, 8);
+    }
+
+    strikes++;
+    chain++;
+    if (chain > bestChain) bestChain = chain;
+    updateStats();
+
+    // Audio feedback
+    playStrike(isPerfect);
+  } else {
+    // Struck but missed
+    heat = Math.max(0, heat - 3);
+    showFeedback('—', 'miss');
+    chain = 0;
+    updateStats();
+    playMiss();
+  }
+}
+
+function onMiss() {
+  heat = Math.max(0, heat - 5);
+  chain = 0;
+  updateStats();
+}
+
+// ── Word management ──
+function bankWord() {
+  if (currentLetters.length === 0) return;
+  const word = currentLetters.join('');
+  forgedWords.push(word);
+  currentLetters = [];
+  updateWord();
+
+  const el = document.createElement('div');
+  el.className = 'word';
+  el.textContent = word;
+  wordListEl.prepend(el);
+
+  wordCountEl.textContent = forgedWords.length;
+
+  // Bonus heat for banking
+  heat = Math.min(100, heat + 3);
+  showFeedback('⚒ forged: ' + word, 'perfect');
+  addSparks(W / 2, H * 0.45, 20, '#ffaa00');
+  playForge();
+}
+
+function discardLetter() {
+  if (currentLetters.length === 0) return;
+  currentLetters.pop();
+  updateWord();
+}
+
+function updateWord() {
+  currentWordEl.innerHTML = currentLetters
+    .map((l, i) => `<span class="letter" style="animation-delay:${i * 0.02}s">${l}</span>`)
+    .join('');
+}
+
+function updateStats() {
+  strikeCountEl.textContent = strikes;
+  chainCountEl.textContent = chain;
+  bestChainEl.textContent = bestChain;
+}
+
+function updateHeat() {
+  heatFill.style.width = heat + '%';
+  if (heat > 80) {
+    heatFill.style.background = 'linear-gradient(90deg, #ff2200, #ff6b2b, #ffdd44)';
+  } else if (heat > 40) {
+    heatFill.style.background = 'linear-gradient(90deg, #ff2200, #ff6b2b, #ffaa00)';
+  } else {
+    heatFill.style.background = 'linear-gradient(90deg, #661100, #aa3300)';
+  }
+}
+
+function showFeedback(text, cls) {
+  feedbackEl.textContent = text;
+  feedbackEl.className = 'feedback ' + cls;
+  clearTimeout(feedbackEl._timeout);
+  feedbackEl._timeout = setTimeout(() => {
+    feedbackEl.innerHTML = '&nbsp;';
+    feedbackEl.className = 'feedback';
+  }, 600);
+}
+
+// ── Audio (Web Audio API) ──
+let audioCtx;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playStrike(perfect) {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'triangle';
+    osc.frequency.value = perfect ? 880 : 440;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+function playMiss() {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.value = 110;
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+  } catch(e) {}
+}
+
+function playForge() {
+  try {
+    const ctx = getAudio();
+    // Anvil ring
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 660;
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+    // Harmonic
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.type = 'sine';
+    osc2.frequency.value = 990;
+    gain2.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc2.start();
+    osc2.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+// ── Input ──
+document.addEventListener('keydown', (e) => {
+  if (!gameActive) {
+    if (e.code === 'Space' || e.code === 'Enter') { startGame(); e.preventDefault(); }
+    return;
+  }
+  if (e.code === 'Space') { e.preventDefault(); strike(); }
+  else if (e.code === 'Enter') { e.preventDefault(); bankWord(); }
+  else if (e.code === 'Backspace') { e.preventDefault(); discardLetter(); }
+});
+
+anvilBtn.addEventListener('mousedown', (e) => { e.preventDefault(); strike(); });
+anvilBtn.addEventListener('touchstart', (e) => { e.preventDefault(); strike(); }, { passive: false });
+</script>
+</body>
+</html>
