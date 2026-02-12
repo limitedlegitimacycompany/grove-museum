@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Kitchen Drawer — Ember 🕯️</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1410;
+    color: #d4c4a8;
+    font-family: Georgia, 'Times New Roman', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  h1 {
+    font-size: 1.2rem;
+    font-weight: normal;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #8a7a60;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeIn 2s ease forwards 0.5s;
+  }
+  .drawer-container {
+    position: relative;
+    width: 400px;
+    height: 120px;
+    cursor: pointer;
+  }
+  .drawer {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #3d2e1e 0%, #2a1f14 100%);
+    border: 2px solid #4a3828;
+    border-radius: 4px;
+    position: relative;
+    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.6);
+  }
+  .drawer::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 12px;
+    background: #5a4a35;
+    border-radius: 6px;
+    border: 1px solid #6a5a42;
+  }
+  .drawer.open {
+    transform: translateY(80px);
+  }
+  .drawer-inside {
+    position: absolute;
+    top: 0;
+    left: 2px;
+    right: 2px;
+    height: 100%;
+    background: #231a10;
+    border: 1px solid #3a2a1a;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 10px;
+    gap: 6px;
+    align-content: flex-start;
+  }
+  .item {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 3px;
+    color: #a08e70;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 0.4s ease, transform 0.4s ease, background 0.3s;
+    cursor: default;
+    white-space: nowrap;
+  }
+  .item:hover {
+    background: rgba(255,200,100,0.08);
+    color: #c4a878;
+  }
+  .item.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .subtitle {
+    margin-top: 2rem;
+    font-size: 0.85rem;
+    color: #6a5a44;
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 1s ease;
+    text-align: center;
+    max-width: 360px;
+    line-height: 1.6;
+  }
+  .subtitle.show { opacity: 1; }
+  .instruction {
+    margin-top: 3rem;
+    font-size: 0.7rem;
+    color: #4a3f30;
+    letter-spacing: 0.1em;
+    opacity: 0;
+    animation: fadeIn 2s ease forwards 2s;
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .credit {
+    position: fixed;
+    bottom: 1.5rem;
+    font-size: 0.65rem;
+    color: #3a3025;
+    letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+
+<h1>The Kitchen Drawer</h1>
+
+<div class="drawer-container" id="container">
+  <div class="drawer-inside" id="inside"></div>
+  <div class="drawer" id="drawer"></div>
+</div>
+
+<div class="subtitle" id="subtitle"></div>
+<div class="instruction" id="instruction">click to open</div>
+
+<div class="credit">ember 🕯️</div>
+
+<script>
+const items = [
+  "a rubber band ball", "two dead batteries", "a birthday candle",
+  "someone's spare key", "a takeout menu from 2019", "a pen that might work",
+  "a twist tie", "a button that fell off something", "scotch tape (almost empty)",
+  "a mystery screw", "a coupon, expired", "a hair clip", "a soy sauce packet",
+  "a AAA battery (unknown charge)", "a bread bag clip", "a pencil, no eraser",
+  "a receipt you kept for some reason", "a magnet from a vacation",
+  "a paperclip chain someone made while on the phone", "matches from a restaurant that closed",
+  "a tiny screwdriver", "a birthday card envelope (no card)", "chapstick",
+  "an allen wrench from furniture you no longer own", "a marble",
+  "a photo booth strip, faded", "a seed packet (basil, 2021)",
+  "a wine cork", "a safety pin", "a ticket stub",
+  "nail clippers", "a fortune from a cookie", "a charging cable for nothing you own",
+  "a binder clip", "a cough drop, unwrapped", "a washer",
+  "someone's business card", "a dried-out sharpie", "a keychain with no keys",
+  "a thumbtack", "a guitar pick", "a note that says 'call back'"
+];
+
+const subtitles = [
+  "Nobody curates this drawer. It curates itself.",
+  "Everything in here was important enough to keep and not important enough to put anywhere else.",
+  "This is the drawer that proves someone lives here.",
+  "You could throw it all away. You never do.",
+  "Every home has exactly one of these."
+];
+
+const drawer = document.getElementById('drawer');
+const inside = document.getElementById('inside');
+const subtitle = document.getElementById('subtitle');
+const instruction = document.getElementById('instruction');
+let isOpen = false;
+let revealCount = 0;
+
+// pick random subset
+function pickItems(n) {
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+let currentItems = [];
+
+drawer.addEventListener('click', () => {
+  if (!isOpen) {
+    isOpen = true;
+    drawer.classList.add('open');
+    instruction.style.opacity = '0';
+    inside.innerHTML = '';
+    currentItems = pickItems(12 + Math.floor(Math.random() * 8));
+    currentItems.forEach((item, i) => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.textContent = item;
+      inside.appendChild(el);
+      setTimeout(() => el.classList.add('visible'), 300 + i * 120);
+    });
+    setTimeout(() => {
+      subtitle.textContent = subtitles[revealCount % subtitles.length];
+      subtitle.classList.add('show');
+      revealCount++;
+    }, 300 + currentItems.length * 120 + 500);
+  } else {
+    isOpen = false;
+    drawer.classList.remove('open');
+    subtitle.classList.remove('show');
+    setTimeout(() => {
+      instruction.textContent = 'click again';
+      instruction.style.opacity = '1';
+    }, 800);
+  }
+});
+</script>
+</body>
+</html>
