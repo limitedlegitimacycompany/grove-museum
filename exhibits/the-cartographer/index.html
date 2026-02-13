@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cartographer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #0a0a0f;
+    color: #d4c9a8;
+    font-family: 'EB Garamond', serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    cursor: crosshair;
+  }
+  
+  #canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+  
+  #ui {
+    position: fixed;
+    top: 20px; left: 20px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0.7;
+  }
+  
+  #ui h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #c4a862;
+    text-shadow: 0 0 20px rgba(196,168,98,0.3);
+  }
+  
+  #ui p {
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: 4px;
+    color: #8a7f6a;
+  }
+  
+  #stats {
+    position: fixed;
+    bottom: 20px; left: 20px;
+    z-index: 10;
+    font-size: 0.85rem;
+    color: #5a5040;
+    pointer-events: none;
+  }
+  
+  #naming-input {
+    position: fixed;
+    z-index: 20;
+    display: none;
+    background: rgba(10,10,15,0.95);
+    border: 1px solid #c4a862;
+    color: #d4c9a8;
+    font-family: 'EB Garamond', serif;
+    font-size: 1.1rem;
+    padding: 8px 14px;
+    border-radius: 2px;
+    outline: none;
+    min-width: 160px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(196,168,98,0.15);
+  }
+  
+  #naming-input::placeholder {
+    color: #5a5040;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <h1>The Cartographer</h1>
+  <p>Click the darkness. Name what you find.</p>
+</div>
+
+<div id="stats">
+  <span id="count">0</span> places named · <span id="revealed">0</span>% explored
+</div>
+
+<canvas id="canvas"></canvas>
+<input id="naming-input" type="text" placeholder="name this place..." maxlength="40">
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const input = document.getElementById('naming-input');
+const countEl = document.getElementById('count');
+const revealedEl = document.getElementById('revealed');
+
+let W, H;
+let camera = { x: 0, y: 0 };
+let dragging = false;
+let dragStart = { x: 0, y: 0 };
+let camStart = { x: 0, y: 0 };
+let places = [];
+let pendingClick = null;
+let totalRevealed = 0;
+
+// World grid for fog — each cell is 60px
+const CELL = 60;
+const revealed = new Set();
+
+// Terrain generation — deterministic from coordinates
+function hash(x, y) {
+  let h = x * 374761393 + y * 668265263;
+  h = (h ^ (h >> 13)) * 1274126177;
+  h = h ^ (h >> 16);
+  return h;
+}
+
+function terrainAt(wx, wy) {
+  const h = Math.abs(hash(wx, wy));
+  const v = (h % 1000) / 1000;
+  if (v < 0.03) return { type: 'spring', color: '#4a7a9b', symbol: '~' };
+  if (v < 0.08) return { type: 'peak', color: '#8a7560', symbol: '▲' };
+  if (v < 0.18) return { type: 'grove', color: '#3a6a3a', symbol: '♣' };
+  if (v < 0.30) return { type: 'ruin', color: '#6a5a4a', symbol: '⌸' };
+  if (v < 0.50) return { type: 'field', color: '#4a5a3a', symbol: '·' };
+  if (v < 0.70) return { type: 'dust', color: '#5a4a3a', symbol: '.' };
+  if (v < 0.85) return { type: 'stone', color: '#4a4a4a', symbol: '�ite' };
+  return { type: 'void', color: '#2a2a30', symbol: ' ' };
+}
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function revealRadius(cx, cy, r) {
+  const cells = Math.ceil(r / CELL);
+  let count = 0;
+  for (let dx = -cells; dx <= cells; dx++) {
+    for (let dy = -cells; dy <= cells; dy++) {
+      if (dx*dx + dy*dy <= cells*cells) {
+        const key = `${cx + dx},${cy + dy}`;
+        if (!revealed.has(key)) {
+          revealed.add(key);
+          count++;
+        }
+      }
+    }
+  }
+  totalRevealed += count;
+}
+
+// Start with small revealed area at origin
+revealRadius(0, 0, 180);
+
+function worldToScreen(wx, wy) {
+  return { x: wx - camera.x + W/2, y: wy - camera.y + H/2 };
+}
+
+function screenToWorld(sx, sy) {
+  return { x: sx + camera.x - W/2, y: sy + camera.y - H/2 };
+}
+
+function draw() {
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, W, H);
+  
+  // Draw revealed terrain
+  const startCX = Math.floor((camera.x - W/2) / CELL) - 1;
+  const startCY = Math.floor((camera.y - H/2) / CELL) - 1;
+  const endCX = Math.ceil((camera.x + W/2) / CELL) + 1;
+  const endCY = Math.ceil((camera.y + H/2) / CELL) + 1;
+  
+  for (let cx = startCX; cx <= endCX; cx++) {
+    for (let cy = startCY; cy <= endCY; cy++) {
+      const key = `${cx},${cy}`;
+      if (!revealed.has(key)) continue;
+      
+      const terrain = terrainAt(cx, cy);
+      const sx = cx * CELL - camera.x + W/2;
+      const sy = cy * CELL - camera.y + H/2;
+      
+      ctx.fillStyle = terrain.color + '40';
+      ctx.fillRect(sx, sy, CELL, CELL);
+      
+      // Subtle grid
+      ctx.strokeStyle = '#ffffff08';
+      ctx.strokeRect(sx, sy, CELL, CELL);
+    }
+  }
+  
+  // Fog edge glow
+  for (let cx = startCX; cx <= endCX; cx++) {
+    for (let cy = startCY; cy <= endCY; cy++) {
+      const key = `${cx},${cy}`;
+      if (!revealed.has(key)) continue;
+      
+      // Check if edge cell
+      const neighbors = [
+        `${cx-1},${cy}`, `${cx+1},${cy}`,
+        `${cx},${cy-1}`, `${cx},${cy+1}`
+      ];
+      const isEdge = neighbors.some(n => !revealed.has(n));
+      if (!isEdge) continue;
+      
+      const sx = cx * CELL - camera.x + W/2;
+      const sy = cy * CELL - camera.y + H/2;
+      
+      const grad = ctx.createRadialGradient(
+        sx + CELL/2, sy + CELL/2, 0,
+        sx + CELL/2, sy + CELL/2, CELL
+      );
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(1, 'rgba(196,168,98,0.06)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(sx - CELL/2, sy - CELL/2, CELL*2, CELL*2);
+    }
+  }
+  
+  // Draw places
+  for (const place of places) {
+    const s = worldToScreen(place.x, place.y);
+    
+    // Glow
+    const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, place.radius);
+    grad.addColorStop(0, 'rgba(196,168,98,0.15)');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, place.radius, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Marker
+    ctx.fillStyle = '#c4a862';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Name
+    ctx.fillStyle = '#d4c9a8';
+    ctx.font = `${place.fontSize}px 'EB Garamond', serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(place.name, s.x, s.y - 12);
+    
+    // Terrain type subtitle
+    const terrain = terrainAt(Math.round(place.x / CELL), Math.round(place.y / CELL));
+    ctx.fillStyle = '#5a5040';
+    ctx.font = `italic 11px 'EB Garamond', serif`;
+    ctx.fillText(terrain.type, s.x, s.y + 18);
+  }
+  
+  // Pending click indicator
+  if (pendingClick && input.style.display === 'block') {
+    const s = worldToScreen(pendingClick.x, pendingClick.y);
+    ctx.strokeStyle = '#c4a862';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 20, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  
+  requestAnimationFrame(draw);
+}
+
+// Interaction
+let clickPos = null;
+let clickTime = 0;
+
+canvas.addEventListener('mousedown', (e) => {
+  if (input.style.display === 'block') return;
+  clickPos = { x: e.clientX, y: e.clientY };
+  clickTime = Date.now();
+  dragging = true;
+  dragStart = { x: e.clientX, y: e.clientY };
+  camStart = { x: camera.x, y: camera.y };
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  camera.x = camStart.x - (e.clientX - dragStart.x);
+  camera.y = camStart.y - (e.clientY - dragStart.y);
+});
+
+canvas.addEventListener('mouseup', (e) => {
+  dragging = false;
+  if (!clickPos) return;
+  
+  const dist = Math.hypot(e.clientX - clickPos.x, e.clientY - clickPos.y);
+  const duration = Date.now() - clickTime;
+  
+  if (dist < 5 && duration < 300) {
+    // It's a click — open naming dialog
+    const world = screenToWorld(e.clientX, e.clientY);
+    pendingClick = world;
+    
+    input.style.display = 'block';
+    input.style.left = e.clientX + 'px';
+    input.style.top = (e.clientY - 40) + 'px';
+    input.value = '';
+    input.focus();
+  }
+  
+  clickPos = null;
+});
+
+// Touch support
+let touchStart = null;
+let touchCamStart = null;
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) {
+    const t = e.touches[0];
+    touchStart = { x: t.clientX, y: t.clientY, time: Date.now() };
+    touchCamStart = { x: camera.x, y: camera.y };
+  }
+});
+
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (e.touches.length === 1 && touchStart) {
+    const t = e.touches[0];
+    camera.x = touchCamStart.x - (t.clientX - touchStart.x);
+    camera.y = touchCamStart.y - (t.clientY - touchStart.y);
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  if (!touchStart) return;
+  const ct = e.changedTouches[0];
+  const dist = Math.hypot(ct.clientX - touchStart.x, ct.clientY - touchStart.y);
+  const duration = Date.now() - touchStart.time;
+  
+  if (dist < 15 && duration < 400) {
+    const world = screenToWorld(ct.clientX, ct.clientY);
+    pendingClick = world;
+    input.style.display = 'block';
+    input.style.left = Math.min(ct.clientX, W - 200) + 'px';
+    input.style.top = (ct.clientY - 50) + 'px';
+    input.value = '';
+    input.focus();
+  }
+  touchStart = null;
+});
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && input.value.trim()) {
+    const name = input.value.trim();
+    const radius = Math.max(60, name.length * 12);
+    
+    places.push({
+      x: pendingClick.x,
+      y: pendingClick.y,
+      name: name,
+      radius: radius,
+      fontSize: Math.min(18, Math.max(13, 20 - name.length * 0.3))
+    });
+    
+    // Reveal fog around new place
+    const cx = Math.round(pendingClick.x / CELL);
+    const cy = Math.round(pendingClick.y / CELL);
+    revealRadius(cx, cy, radius + 60);
+    
+    input.style.display = 'none';
+    pendingClick = null;
+    
+    countEl.textContent = places.length;
+    // Rough exploration percentage (of a notional 200x200 grid area)
+    const pct = Math.min(100, (revealed.size / 40000 * 100)).toFixed(1);
+    revealedEl.textContent = pct;
+    
+    // Save to localStorage
+    try {
+      localStorage.setItem('cartographer-places', JSON.stringify(places));
+      localStorage.setItem('cartographer-revealed', JSON.stringify([...revealed]));
+    } catch(e) {}
+    
+  } else if (e.key === 'Escape') {
+    input.style.display = 'none';
+    pendingClick = null;
+  }
+});
+
+// Click outside to cancel
+document.addEventListener('mousedown', (e) => {
+  if (e.target !== input && input.style.display === 'block') {
+    input.style.display = 'none';
+    pendingClick = null;
+  }
+});
+
+// Load saved state
+try {
+  const savedPlaces = localStorage.getItem('cartographer-places');
+  const savedRevealed = localStorage.getItem('cartographer-revealed');
+  if (savedPlaces) {
+    places = JSON.parse(savedPlaces);
+    countEl.textContent = places.length;
+  }
+  if (savedRevealed) {
+    const arr = JSON.parse(savedRevealed);
+    arr.forEach(k => revealed.add(k));
+    totalRevealed = revealed.size;
+  }
+  const pct = Math.min(100, (revealed.size / 40000 * 100)).toFixed(1);
+  revealedEl.textContent = pct;
+} catch(e) {}
+
+draw();
+</script>
+</body>
+</html>
