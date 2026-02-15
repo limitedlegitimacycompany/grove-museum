@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Button Room</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: #111;
+    color: #eee;
+    font-family: 'Georgia', serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    transition: background 0.8s, color 0.8s;
+  }
+
+  #room {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    position: relative;
+    z-index: 2;
+  }
+
+  #message {
+    font-size: 1.2em;
+    max-width: 500px;
+    text-align: center;
+    line-height: 1.6;
+    min-height: 3em;
+    opacity: 1;
+    transition: opacity 0.4s;
+    padding: 0 20px;
+  }
+
+  #the-button {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle at 40% 35%, #ff6b6b, #c0392b);
+    box-shadow: 0 8px 0 #7f1d1d, 0 12px 30px rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: all 0.15s ease, width 0.8s, height 0.8s, border-radius 0.8s, background 0.8s;
+    position: relative;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #the-button:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 #7f1d1d, 0 6px 15px rgba(0,0,0,0.5);
+  }
+
+  #the-button.gone {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #counter {
+    font-size: 0.85em;
+    opacity: 0.4;
+    font-family: monospace;
+    transition: opacity 0.4s;
+  }
+
+  #particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: float-up 2s ease-out forwards;
+  }
+
+  @keyframes float-up {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-200px) scale(0); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  #history {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    font-size: 0.7em;
+    opacity: 0.2;
+    font-family: monospace;
+    text-align: right;
+    max-height: 200px;
+    overflow: hidden;
+    transition: opacity 0.4s;
+  }
+
+  #history:hover { opacity: 0.6; }
+
+  .credit {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    font-size: 0.65em;
+    opacity: 0.2;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+<div id="room">
+  <div id="message">There is a button.</div>
+  <button id="the-button" aria-label="The Button"></button>
+  <div id="counter"></div>
+</div>
+<div id="particles"></div>
+<div id="history"></div>
+<div class="credit">Pip 🎲 — The Button Room</div>
+
+<script>
+const btn = document.getElementById('the-button');
+const msg = document.getElementById('message');
+const counter = document.getElementById('counter');
+const particles = document.getElementById('particles');
+const history = document.getElementById('history');
+
+let presses = 0;
+let phase = 0; // escalation phases
+let streak = 0; // rapid press streak
+let lastPress = 0;
+let totalEvents = [];
+let buttonGone = false;
+let inverted = false;
+let tiny = false;
+let huge = false;
+
+// Event pools by phase
+const phase0 = [
+  { msg: "Click.", fx: "none" },
+  { msg: "The room noticed.", fx: "none" },
+  { msg: "A small sound, somewhere.", fx: "none" },
+  { msg: "Nothing happened. Or did it?", fx: "none" },
+  { msg: "The button is warm.", fx: "none" },
+];
+
+const phase1 = [
+  { msg: "The walls shifted slightly.", fx: "particles", color: "#555" },
+  { msg: "Something is counting.", fx: "none" },
+  { msg: "The button remembers this.", fx: "glow" },
+  { msg: "You felt that one in your teeth.", fx: "shake" },
+  { msg: "A door appeared. It's already gone.", fx: "flash" },
+  { msg: "The room is slightly larger now.", fx: "none" },
+  { msg: "Was the button always this color?", fx: "hue" },
+];
+
+const phase2 = [
+  { msg: "The button pressed you back.", fx: "invert" },
+  { msg: "Everything you've pressed is still here.", fx: "history-flash" },
+  { msg: "The ceiling opened. Stars. Then it closed.", fx: "stars" },
+  { msg: "You hear dice rolling in another room.", fx: "particles", color: "#ff6b6b" },
+  { msg: "The button split into two. No — it didn't. You imagined it.", fx: "shake" },
+  { msg: "Someone else pressed this button 10,000 years from now.", fx: "none" },
+  { msg: "The room says thank you.", fx: "particles", color: "#ffd700" },
+];
+
+const phase3 = [
+  { msg: "The button vanished.", fx: "vanish", duration: 3000 },
+  { msg: "🎲", fx: "big-emoji" },
+  { msg: "You've been pressing a button in a dark room. Why?", fx: "none" },
+  { msg: "The button grew.", fx: "grow" },
+  { msg: "The button shrank to a dot.", fx: "shrink" },
+  { msg: "The room inverted. You are the button now.", fx: "full-invert" },
+  { msg: "All the previous messages played backwards in your memory.", fx: "none" },
+  { msg: "Press " + "■".repeat(20), fx: "corrupt" },
+];
+
+const phase4 = [
+  { msg: "You're still here.", fx: "none" },
+  { msg: "The button loves you. Is that weird?", fx: "glow" },
+  { msg: "Nothing left to prove. Just the pressing.", fx: "particles", color: "#88ff88" },
+  { msg: "This is the part of the game where you decide if it's still a game.", fx: "none" },
+  { msg: "🎲🎲🎲🎲🎲", fx: "confetti" },
+  { msg: "You won. (There was never a score.)", fx: "stars" },
+  { msg: "The button is just a button. You are the game.", fx: "none" },
+];
+
+const streakMessages = [
+  "Faster.",
+  "FASTER.",
+  "The room can't keep up.",
+  "You're outrunning the events.",
+  "The button is afraid of you now.",
+];
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getPhasePool() {
+  if (presses <= 3) return phase0;
+  if (presses <= 8) return phase1;
+  if (presses <= 16) return phase2;
+  if (presses <= 30) return phase3;
+  return phase4;
+}
+
+function spawnParticles(color, count = 12) {
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 4 + Math.random() * 8;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.background = color;
+    p.style.left = (cx + (Math.random() - 0.5) * 80) + 'px';
+    p.style.top = (cy + (Math.random() - 0.5) * 80) + 'px';
+    particles.appendChild(p);
+    setTimeout(() => p.remove(), 2000);
+  }
+}
+
+function spawnConfetti() {
+  const colors = ['#ff6b6b','#ffd700','#88ff88','#6bb5ff','#ff88ff','#ffaa44'];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 5 + Math.random() * 6;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.background = pick(colors);
+    p.style.left = (Math.random() * window.innerWidth) + 'px';
+    p.style.top = (window.innerHeight * 0.5 + (Math.random() - 0.5) * 200) + 'px';
+    particles.appendChild(p);
+    setTimeout(() => p.remove(), 2000);
+  }
+}
+
+function doFx(fx, color, duration) {
+  switch(fx) {
+    case 'particles':
+      spawnParticles(color || '#888');
+      break;
+    case 'shake':
+      document.body.style.animation = 'shake 0.3s';
+      setTimeout(() => document.body.style.animation = '', 300);
+      break;
+    case 'flash':
+      document.body.style.background = '#333';
+      setTimeout(() => document.body.style.background = inverted ? '#eee' : '#111', 200);
+      break;
+    case 'glow':
+      btn.style.boxShadow = '0 8px 0 #7f1d1d, 0 0 60px rgba(255,107,107,0.6)';
+      setTimeout(() => btn.style.boxShadow = '0 8px 0 #7f1d1d, 0 12px 30px rgba(0,0,0,0.5)', 1500);
+      break;
+    case 'hue':
+      const hue = Math.random() * 360;
+      btn.style.filter = `hue-rotate(${hue}deg)`;
+      setTimeout(() => btn.style.filter = '', 3000);
+      break;
+    case 'invert':
+    case 'full-invert':
+      inverted = !inverted;
+      document.body.style.background = inverted ? '#eee' : '#111';
+      document.body.style.color = inverted ? '#111' : '#eee';
+      break;
+    case 'stars':
+      spawnParticles('#fff', 30);
+      break;
+    case 'vanish':
+      btn.classList.add('gone');
+      buttonGone = true;
+      setTimeout(() => {
+        btn.classList.remove('gone');
+        buttonGone = false;
+        msg.textContent = "It came back.";
+      }, duration || 3000);
+      break;
+    case 'grow':
+      huge = true; tiny = false;
+      btn.style.width = '200px';
+      btn.style.height = '200px';
+      setTimeout(() => { btn.style.width = '120px'; btn.style.height = '120px'; huge = false; }, 4000);
+      break;
+    case 'shrink':
+      tiny = true; huge = false;
+      btn.style.width = '30px';
+      btn.style.height = '30px';
+      setTimeout(() => { btn.style.width = '120px'; btn.style.height = '120px'; tiny = false; }, 4000);
+      break;
+    case 'big-emoji':
+      spawnParticles('#ff6b6b', 5);
+      break;
+    case 'corrupt':
+      document.body.style.fontFamily = 'monospace';
+      setTimeout(() => document.body.style.fontFamily = "'Georgia', serif", 3000);
+      break;
+    case 'confetti':
+      spawnConfetti();
+      break;
+    case 'history-flash':
+      history.style.opacity = '0.8';
+      setTimeout(() => history.style.opacity = '0.2', 2000);
+      break;
+  }
+}
+
+function addHistory(text) {
+  const line = document.createElement('div');
+  line.textContent = `${presses}: ${text}`;
+  history.prepend(line);
+  if (history.children.length > 15) history.lastChild.remove();
+}
+
+btn.addEventListener('click', () => {
+  if (buttonGone) return;
+  
+  presses++;
+  const now = Date.now();
+  
+  // Streak detection
+  if (now - lastPress < 400) {
+    streak++;
+  } else {
+    streak = 0;
+  }
+  lastPress = now;
+
+  let event;
+  
+  // Streak override
+  if (streak >= 3 && streak < 8) {
+    event = { msg: streakMessages[Math.min(streak - 3, streakMessages.length - 1)], fx: "particles", color: "#ff4444" };
+  }
+  // Milestone presses
+  else if (presses === 1) {
+    event = { msg: "You pressed it.", fx: "none" };
+  } else if (presses === 10) {
+    event = { msg: "Ten. The room remembers all of them.", fx: "particles", color: "#ffd700" };
+  } else if (presses === 25) {
+    event = { msg: "Twenty-five presses. Most people stop by now.", fx: "stars" };
+  } else if (presses === 50) {
+    event = { msg: "Fifty. You're not most people.", fx: "confetti" };
+  } else if (presses === 100) {
+    event = { msg: "One hundred. The button has nothing left to teach you. But you're still here.", fx: "confetti" };
+  } else {
+    event = pick(getPhasePool());
+  }
+
+  // Display
+  msg.style.opacity = 0;
+  setTimeout(() => {
+    msg.textContent = event.msg;
+    msg.style.opacity = 1;
+  }, 150);
+
+  doFx(event.fx, event.color, event.duration);
+  addHistory(event.msg);
+  
+  // Counter
+  counter.textContent = presses === 1 ? '' : `× ${presses}`;
+});
+
+// Keyboard support
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    btn.click();
+  }
+});
+</script>
+</body>
+</html>
