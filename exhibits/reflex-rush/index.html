@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reflex Rush ✴️</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a1a; color: #e0e0e0; font-family: 'Georgia', serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; user-select: none; }
+h1 { font-size: 2em; color: #00ddff; margin-bottom: 5px; }
+.subtitle { color: #888; font-style: italic; margin-bottom: 30px; }
+#arena { width: 340px; height: 340px; background: #111; border-radius: 20px; position: relative; cursor: crosshair; overflow: hidden; border: 2px solid #222; }
+.target { position: absolute; border-radius: 50%; background: #00ddff; cursor: pointer; animation: pop 0.15s ease; box-shadow: 0 0 20px #00ddff44; }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+.stats { display: flex; gap: 40px; margin: 20px 0; }
+.stat { text-align: center; }
+.stat-val { font-size: 2em; color: #00ddff; font-weight: bold; }
+.stat-label { font-size: 0.8em; color: #666; }
+#msg { font-size: 1.2em; min-height: 1.5em; text-align: center; margin: 10px 0; }
+button { background: #00ddff; color: #0a0a1a; border: none; padding: 12px 28px; border-radius: 8px; font-size: 1em; cursor: pointer; font-weight: bold; }
+button:hover { background: #44eeff; }
+.final { color: #00ddff; font-size: 1.3em; animation: pop 0.4s ease; }
+</style>
+</head>
+<body>
+<h1>⚡ Reflex Rush</h1>
+<p class="subtitle">Click the targets as fast as you can. They shrink.</p>
+
+<div class="stats">
+  <div class="stat"><div class="stat-val" id="score">0</div><div class="stat-label">hits</div></div>
+  <div class="stat"><div class="stat-val" id="avg">—</div><div class="stat-label">avg ms</div></div>
+  <div class="stat"><div class="stat-val" id="time">30s</div><div class="stat-label">left</div></div>
+</div>
+
+<div id="arena"></div>
+<div id="msg"></div>
+<button onclick="startGame()" id="btn">Start</button>
+
+<script>
+const arena = document.getElementById('arena');
+const DURATION = 30000;
+let score, times, running, gameTimer, spawnTime, currentTarget, shrinkLevel;
+
+function startGame() {
+  score = 0; times = []; running = true; shrinkLevel = 0;
+  document.getElementById('score').textContent = '0';
+  document.getElementById('avg').textContent = '—';
+  document.getElementById('msg').textContent = '';
+  document.getElementById('btn').style.display = 'none';
+  const end = Date.now() + DURATION;
+  gameTimer = setInterval(() => {
+    const left = Math.max(0, end - Date.now());
+    document.getElementById('time').textContent = (left / 1000).toFixed(1) + 's';
+    if (left <= 0) endGame();
+  }, 50);
+  spawnTarget();
+}
+
+function spawnTarget() {
+  if (!running) return;
+  if (currentTarget) arena.removeChild(currentTarget);
+  const size = Math.max(20, 50 - shrinkLevel * 2);
+  const x = Math.random() * (340 - size);
+  const y = Math.random() * (340 - size);
+  const t = document.createElement('div');
+  t.className = 'target';
+  t.style.width = t.style.height = size + 'px';
+  t.style.left = x + 'px';
+  t.style.top = y + 'px';
+  t.addEventListener('click', hit);
+  arena.appendChild(t);
+  currentTarget = t;
+  spawnTime = Date.now();
+  // Auto-expire after 2s
+  setTimeout(() => { if (currentTarget === t && running) spawnTarget(); }, 2000);
+}
+
+function hit() {
+  if (!running) return;
+  const rt = Date.now() - spawnTime;
+  times.push(rt);
+  score++;
+  shrinkLevel = Math.floor(score / 3);
+  document.getElementById('score').textContent = score;
+  const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+  document.getElementById('avg').textContent = avg + 'ms';
+  spawnTarget();
+}
+
+function endGame() {
+  running = false;
+  clearInterval(gameTimer);
+  if (currentTarget) { arena.removeChild(currentTarget); currentTarget = null; }
+  document.getElementById('time').textContent = '0s';
+  const avg = times.length ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : '—';
+  let rating = score >= 30 ? '🔥 Lightning' : score >= 20 ? '⚡ Quick' : score >= 10 ? '✨ Steady' : '🌱 Warming up';
+  document.getElementById('msg').innerHTML = `<span class="final">${score} hits • ${avg}ms avg • ${rating}</span>`;
+  document.getElementById('btn').style.display = '';
+  document.getElementById('btn').textContent = 'Again!';
+}
+</script>
+</body>
+</html>

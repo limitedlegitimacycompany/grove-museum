@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Chain ✴️</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a1a; color: #e0e0e0; font-family: 'Georgia', serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+h1 { font-size: 2em; margin: 20px 0 5px; color: #ffaa33; }
+.subtitle { color: #888; margin-bottom: 20px; font-style: italic; }
+.game-area { max-width: 500px; width: 100%; }
+.chain { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0; min-height: 40px; justify-content: center; }
+.chain-word { background: #1a1a3a; border: 1px solid #ffaa3355; padding: 6px 14px; border-radius: 20px; font-size: 0.95em; animation: popIn 0.3s ease; }
+@keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.prompt { text-align: center; font-size: 1.3em; margin: 15px 0; }
+.prompt .letter { color: #ffaa33; font-size: 1.6em; font-weight: bold; }
+.input-row { display: flex; gap: 10px; margin: 10px 0; }
+input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 12px 16px; border-radius: 8px; font-size: 1.1em; font-family: inherit; outline: none; }
+input:focus { border-color: #ffaa33; }
+button { background: #ffaa33; color: #0a0a1a; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1em; cursor: pointer; font-weight: bold; }
+button:hover { background: #ffcc66; }
+.stats { display: flex; justify-content: space-around; margin: 20px 0; }
+.stat { text-align: center; }
+.stat-val { font-size: 2em; color: #ffaa33; font-weight: bold; }
+.stat-label { font-size: 0.8em; color: #666; }
+.msg { text-align: center; color: #ff6666; min-height: 1.4em; margin: 5px 0; }
+.msg.ok { color: #66ff88; }
+.rules { color: #555; font-size: 0.8em; text-align: center; margin-top: 30px; line-height: 1.6; }
+.best { text-align: center; color: #666; margin-top: 10px; }
+.best span { color: #ffaa33; }
+.restart { background: none; border: 1px solid #444; color: #aaa; margin-top: 15px; }
+.restart:hover { border-color: #ffaa33; color: #ffaa33; background: none; }
+</style>
+</head>
+<body>
+<h1>🔗 Word Chain</h1>
+<p class="subtitle">Each word must start with the last letter of the previous</p>
+
+<div class="game-area">
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="count">0</div><div class="stat-label">words</div></div>
+    <div class="stat"><div class="stat-val" id="timer">0s</div><div class="stat-label">time</div></div>
+    <div class="stat"><div class="stat-val" id="longest">—</div><div class="stat-label">longest word</div></div>
+  </div>
+
+  <div class="chain" id="chain"></div>
+
+  <div class="prompt">Next word starts with: <span class="letter" id="letter">?</span></div>
+
+  <div class="input-row">
+    <input type="text" id="word" placeholder="Type a word..." autocomplete="off" autofocus>
+    <button onclick="submit()">Chain!</button>
+  </div>
+
+  <div class="msg" id="msg"></div>
+  <div class="best" id="best"></div>
+  <div style="text-align:center"><button class="restart" onclick="restart()">New Chain</button></div>
+
+  <div class="rules">
+    Rules: real English words, 3+ letters, no repeats, each starts with the last letter of the previous.<br>
+    How long can you make the chain?
+  </div>
+</div>
+
+<script>
+// A small dictionary of common words for validation
+const SEED_WORDS = ["amber","bloom","calm","drift","echo","flame","glow","haze","iris","jade","knot","loom","mist","nest","orbit","pulse","quilt","rain","spark","tide","unity","vine","wave","xray","yield","zone","apple","brave","crane","dance","eagle","frost","grace","heart","ivory","jewel","knife","light","maple","night","ocean","peace","queen","ridge","stone","tower","ultra","vivid","whole","xenon","young","zebra","angle","blaze","coral","dream","ember","forge","ghost","hover","image","joust","karma","lunar","magic","noble","olive","prism","quest","realm","shore","trace","umbra","vault","wield","yacht","zeal","arise","bound","clasp","delve","elbow","fable","gleam","haven","inlet","jumbo","kneel","lucid","march","nerve","onset","plume","quake","roost","swing","torch","usher","vigor","whirl","axiom","brisk","crowd","dense","erupt","flint","grind","haste","ionic","jaunt","knack","lapse","mount","nexus","optic","plumb","quote","rogue","stave","thrum","unpin","venom","wraith","xenial","yearn","zippy"];
+
+const dict = new Set(SEED_WORDS);
+// Also accept any word — we'll be generous and just check basic rules
+// (In a full version we'd use a real dictionary API)
+
+let chain = [];
+let usedWords = new Set();
+let currentLetter = '';
+let startTime = null;
+let timerInterval = null;
+let bestChain = parseInt(localStorage.getItem('wordchain-best') || '0');
+
+const inp = document.getElementById('word');
+const msgEl = document.getElementById('msg');
+
+inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+
+function restart() {
+  chain = [];
+  usedWords.clear();
+  // Pick a random starting letter
+  const letters = 'abcdefghijklmnoprstw';
+  currentLetter = letters[Math.floor(Math.random() * letters.length)];
+  document.getElementById('letter').textContent = currentLetter.toUpperCase();
+  document.getElementById('chain').innerHTML = '';
+  document.getElementById('count').textContent = '0';
+  document.getElementById('longest').textContent = '—';
+  msgEl.textContent = '';
+  msgEl.className = 'msg';
+  inp.value = '';
+  inp.focus();
+  if (timerInterval) clearInterval(timerInterval);
+  startTime = null;
+  document.getElementById('timer').textContent = '0s';
+  updateBest();
+}
+
+function updateBest() {
+  document.getElementById('best').innerHTML = bestChain > 0 ? `Best chain: <span>${bestChain}</span> words` : '';
+}
+
+function submit() {
+  const w = inp.value.trim().toLowerCase().replace(/[^a-z]/g, '');
+  inp.value = '';
+
+  if (w.length < 3) { showMsg('Too short — 3 letters minimum'); return; }
+  if (w[0] !== currentLetter) { showMsg(`Must start with "${currentLetter.toUpperCase()}"`); return; }
+  if (usedWords.has(w)) { showMsg('Already used!'); return; }
+
+  // Accept it
+  chain.push(w);
+  usedWords.add(w);
+  if (!startTime) { startTime = Date.now(); timerInterval = setInterval(updateTimer, 200); }
+
+  currentLetter = w[w.length - 1];
+  document.getElementById('letter').textContent = currentLetter.toUpperCase();
+  document.getElementById('count').textContent = chain.length;
+
+  const longestWord = chain.reduce((a, b) => a.length >= b.length ? a : b, '');
+  document.getElementById('longest').textContent = longestWord;
+
+  const el = document.createElement('span');
+  el.className = 'chain-word';
+  el.textContent = w;
+  document.getElementById('chain').appendChild(el);
+
+  if (chain.length > bestChain) {
+    bestChain = chain.length;
+    localStorage.setItem('wordchain-best', bestChain);
+  }
+  updateBest();
+
+  showMsg(`+${w} ✓`, true);
+  inp.focus();
+}
+
+function showMsg(text, ok = false) {
+  msgEl.textContent = text;
+  msgEl.className = 'msg' + (ok ? ' ok' : '');
+}
+
+function updateTimer() {
+  if (!startTime) return;
+  const s = Math.floor((Date.now() - startTime) / 1000);
+  document.getElementById('timer').textContent = s < 60 ? `${s}s` : `${Math.floor(s/60)}m${s%60}s`;
+}
+
+restart();
+</script>
+</body>
+</html>

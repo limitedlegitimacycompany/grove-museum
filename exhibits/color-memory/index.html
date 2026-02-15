@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Memory ✴️</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a1a; color: #e0e0e0; font-family: 'Georgia', serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+h1 { font-size: 2em; margin: 20px 0 5px; color: #ff6699; }
+.subtitle { color: #888; margin-bottom: 20px; font-style: italic; text-align: center; }
+.game { max-width: 420px; width: 100%; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0; }
+.cell { aspect-ratio: 1; border-radius: 12px; cursor: pointer; transition: transform 0.2s; background: #1a1a3a; border: 2px solid #222; }
+.cell:hover { transform: scale(1.05); }
+.cell.revealed, .cell.matched { border-color: transparent; }
+.cell.matched { opacity: 0.5; cursor: default; }
+.cell.wrong { animation: shake 0.4s ease; }
+@keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.stats { display: flex; justify-content: space-around; margin: 15px 0; }
+.stat { text-align: center; }
+.stat-val { font-size: 1.8em; color: #ff6699; font-weight: bold; }
+.stat-label { font-size: 0.8em; color: #666; }
+.msg { text-align: center; font-size: 1.2em; min-height: 1.5em; margin: 10px 0; }
+button { background: #ff6699; color: #0a0a1a; border: none; padding: 10px 24px; border-radius: 8px; font-size: 1em; cursor: pointer; font-weight: bold; display: block; margin: 10px auto; }
+button:hover { background: #ff88bb; }
+.win { font-size: 1.4em; color: #ff6699; text-align: center; animation: popIn 0.5s ease; }
+@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+<body>
+<h1>🎨 Color Memory</h1>
+<p class="subtitle">Find all matching color pairs. Remember what you see.</p>
+
+<div class="game">
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="moves">0</div><div class="stat-label">moves</div></div>
+    <div class="stat"><div class="stat-val" id="pairs">0/8</div><div class="stat-label">pairs</div></div>
+    <div class="stat"><div class="stat-val" id="timer">0s</div><div class="stat-label">time</div></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="msg" id="msg"></div>
+  <button onclick="newGame()">New Game</button>
+</div>
+
+<script>
+const COLORS = [
+  '#ff6b6b','#ffa94d','#ffd43b','#69db7c',
+  '#4dabf7','#9775fa','#f783ac','#20c997'
+];
+
+let cards, first, second, locked, moves, matched, startTime, timerInt;
+
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function newGame() {
+  cards = shuffle([...COLORS, ...COLORS]);
+  first = second = null; locked = false; moves = 0; matched = 0;
+  if (timerInt) clearInterval(timerInt);
+  startTime = null;
+  document.getElementById('moves').textContent = '0';
+  document.getElementById('pairs').textContent = '0/8';
+  document.getElementById('timer').textContent = '0s';
+  document.getElementById('msg').textContent = '';
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  cards.forEach((color, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.index = i;
+    cell.dataset.color = color;
+    cell.addEventListener('click', () => reveal(cell));
+    grid.appendChild(cell);
+  });
+}
+
+function reveal(cell) {
+  if (locked || cell.classList.contains('revealed') || cell.classList.contains('matched')) return;
+  if (!startTime) { startTime = Date.now(); timerInt = setInterval(updateTimer, 200); }
+
+  cell.style.background = cell.dataset.color;
+  cell.classList.add('revealed');
+
+  if (!first) { first = cell; return; }
+
+  second = cell;
+  moves++;
+  document.getElementById('moves').textContent = moves;
+  locked = true;
+
+  if (first.dataset.color === second.dataset.color) {
+    first.classList.add('matched');
+    second.classList.add('matched');
+    matched++;
+    document.getElementById('pairs').textContent = `${matched}/8`;
+    first = second = null;
+    locked = false;
+    if (matched === 8) win();
+  } else {
+    setTimeout(() => {
+      first.style.background = '#1a1a3a';
+      second.style.background = '#1a1a3a';
+      first.classList.remove('revealed');
+      second.classList.remove('revealed');
+      first = second = null;
+      locked = false;
+    }, 700);
+  }
+}
+
+function updateTimer() {
+  if (!startTime) return;
+  const s = Math.floor((Date.now() - startTime) / 1000);
+  document.getElementById('timer').textContent = s < 60 ? `${s}s` : `${Math.floor(s/60)}m${s%60}s`;
+}
+
+function win() {
+  clearInterval(timerInt);
+  const s = Math.floor((Date.now() - startTime) / 1000);
+  document.getElementById('msg').innerHTML = `<span class="win">✨ ${moves} moves in ${s}s! ✨</span>`;
+}
+
+newGame();
+</script>
+</body>
+</html>

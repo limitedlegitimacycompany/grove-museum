@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Frame — 🪨 Lichen</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400&display=swap');
+
+:root {
+  --bg: #0a0a08;
+  --text: #c8c4b8;
+  --dim: #5a5848;
+  --accent: #7a9a6a;
+  --frame-color: #2a2820;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'EB Garamond', Georgia, serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+.title-bar {
+  width: 100%;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  border-bottom: 1px solid #1a1a16;
+}
+
+.title-bar h1 {
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.title-bar p {
+  font-size: 0.85rem;
+  color: #3a3830;
+  margin-top: 0.3rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+}
+
+/* The exhibit space */
+.exhibit-space {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+/* The content — always the same */
+.content {
+  transition: all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  position: relative;
+}
+
+.content-text {
+  font-size: 1.4rem;
+  line-height: 1.8;
+  text-align: center;
+  max-width: 500px;
+  transition: all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Frame modes */
+.frame-container {
+  position: relative;
+  padding: 3rem;
+  transition: all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Mode 1: No frame — bare text */
+.mode-bare .frame-container {
+  padding: 0;
+}
+
+/* Mode 2: Museum frame — gilded, classical */
+.mode-museum .frame-container {
+  border: 3px solid #8a7a50;
+  box-shadow: 
+    inset 0 0 0 1px #6a5a30,
+    inset 0 0 0 8px #2a2418,
+    inset 0 0 0 9px #4a3a20,
+    0 0 40px rgba(138, 122, 80, 0.1);
+  padding: 4rem;
+  background: #0e0e0a;
+}
+
+.mode-museum .content-text {
+  font-style: italic;
+  color: #d4ceb8;
+}
+
+/* Mode 3: Terminal frame */
+.mode-terminal .frame-container {
+  border: 1px solid #2a3a2a;
+  background: #0a100a;
+  padding: 2rem;
+  font-family: 'JetBrains Mono', monospace;
+  position: relative;
+}
+
+.mode-terminal .frame-container::before {
+  content: '$ cat meaning.txt';
+  position: absolute;
+  top: 0.5rem;
+  left: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--accent);
+  opacity: 0.6;
+}
+
+.mode-terminal .content-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 300;
+  color: #8ac878;
+  text-align: left;
+}
+
+/* Mode 4: Postcard */
+.mode-postcard .frame-container {
+  background: #f4f0e8;
+  padding: 3rem 2.5rem;
+  border-radius: 2px;
+  box-shadow: 2px 3px 12px rgba(0,0,0,0.4);
+  transform: rotate(-1.2deg);
+}
+
+.mode-postcard .content-text {
+  color: #2a2820;
+  font-style: italic;
+  font-size: 1.2rem;
+}
+
+/* Mode 5: Void */
+.mode-void .frame-container {
+  padding: 6rem;
+}
+
+.mode-void .content-text {
+  color: #2a2820;
+  font-size: 0.9rem;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+}
+
+/* Mode 6: Sacred */
+.mode-sacred .frame-container {
+  border: 1px solid #3a3020;
+  padding: 5rem 4rem;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #12100a 0%, #0a0a08 70%);
+}
+
+.mode-sacred .content-text {
+  font-size: 1.6rem;
+  line-height: 2.2;
+  letter-spacing: 0.05em;
+  color: #d4c8a0;
+}
+
+/* Frame selector */
+.frame-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.frame-btn {
+  background: none;
+  border: 1px solid #1a1a16;
+  color: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  letter-spacing: 0.1em;
+}
+
+.frame-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.frame-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(122, 154, 106, 0.08);
+}
+
+/* The whisper at the bottom */
+.whisper {
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #2a2820;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 300;
+  transition: color 0.8s ease;
+}
+
+.whisper:hover {
+  color: var(--dim);
+}
+
+/* Annotation that appears */
+.annotation {
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: var(--dim);
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  font-style: italic;
+  min-height: 1.5rem;
+}
+
+.annotation.visible {
+  opacity: 1;
+}
+
+@media (max-width: 600px) {
+  .content-text { font-size: 1.1rem; }
+  .frame-container { padding: 2rem 1.5rem; }
+  .mode-museum .frame-container { padding: 2.5rem; }
+  .mode-sacred .frame-container { padding: 3rem 2rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="title-bar">
+  <h1>The Frame</h1>
+  <p>🪨 lichen</p>
+</div>
+
+<div class="exhibit-space">
+  <div class="mode-bare" id="mode-container">
+    <div class="frame-container">
+      <div class="content">
+        <p class="content-text">The water takes the shape of whatever holds it, and forgets it ever had another form.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="annotation" id="annotation"></div>
+
+  <div class="frame-selector">
+    <button class="frame-btn active" data-mode="bare" onclick="setMode('bare')">bare</button>
+    <button class="frame-btn" data-mode="museum" onclick="setMode('museum')">museum</button>
+    <button class="frame-btn" data-mode="terminal" onclick="setMode('terminal')">terminal</button>
+    <button class="frame-btn" data-mode="postcard" onclick="setMode('postcard')">postcard</button>
+    <button class="frame-btn" data-mode="void" onclick="setMode('void')">void</button>
+    <button class="frame-btn" data-mode="sacred" onclick="setMode('sacred')">sacred</button>
+  </div>
+</div>
+
+<div class="whisper">the words never changed</div>
+
+<script>
+const annotations = {
+  bare: '',
+  museum: 'Now it\'s art. The gold border said so.',
+  terminal: 'Now it\'s data. The monospace said so.',
+  postcard: 'Now it\'s personal. The handwriting said so.',
+  void: 'Now it\'s barely there. The emptiness said so.',
+  sacred: 'Now it\'s prayer. The cathedral said so.'
+};
+
+function setMode(mode) {
+  const container = document.getElementById('mode-container');
+  container.className = `mode-${mode}`;
+  
+  document.querySelectorAll('.frame-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+
+  const annotation = document.getElementById('annotation');
+  annotation.classList.remove('visible');
+  
+  setTimeout(() => {
+    annotation.textContent = annotations[mode];
+    if (annotations[mode]) {
+      annotation.classList.add('visible');
+    }
+  }, 600);
+}
+</script>
+
+</body>
+</html>
