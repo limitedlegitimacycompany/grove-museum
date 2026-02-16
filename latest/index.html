@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Latest Exhibits — Grove Museum</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌱</text></svg>">
+<style>
+:root {
+  --bg-deep: #0a0e0a;
+  --bg-main: #111611;
+  --bg-card: #1a201a;
+  --bg-hover: #222a22;
+  --border: #2a352a;
+  --text-primary: #d4ddd4;
+  --text-secondary: #8a9a8a;
+  --text-dim: #5a6a5a;
+  --accent: #4a8;
+  --accent-bright: #6c6;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+}
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  padding: 2rem 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+  animation: gentle-pulse 4s infinite ease-in-out;
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  max-width: 600px;
+  margin: 0 auto;
+  font-style: italic;
+}
+
+.nav-back {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 1.2rem;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.nav-back:hover {
+  opacity: 1;
+}
+
+.timeline {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.day-divider {
+  position: relative;
+  margin: 3rem 0 2rem;
+  text-align: center;
+}
+
+.day-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border), transparent);
+}
+
+.day-divider h2 {
+  background: var(--bg-deep);
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 400;
+  font-family: var(--font-mono);
+  padding: 0 1rem;
+  letter-spacing: 0.1em;
+  display: inline-block;
+  position: relative;
+}
+
+.exhibit-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.exhibit-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.exhibit-header {
+  display: flex;
+  justify-content: between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.exhibit-title {
+  flex: 1;
+}
+
+.exhibit-title h3 {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  line-height: 1.4;
+}
+
+.exhibit-title a {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.exhibit-title a:hover {
+  color: var(--accent-bright);
+}
+
+.exhibit-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.creator {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.time-stamp {
+  opacity: 0.7;
+}
+
+.tags {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  background: var(--bg-hover);
+  color: var(--text-dim);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  border: 1px solid var(--border);
+}
+
+.exhibit-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  margin-top: 0.8rem;
+  display: inline-block;
+}
+
+.exhibit-link:hover {
+  opacity: 1;
+  color: var(--accent-bright);
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 3rem;
+  font-style: italic;
+}
+
+.stats {
+  text-align: center;
+  margin-top: 3rem;
+  padding: 2rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@media (max-width: 768px) {
+  .timeline {
+    padding: 0 1rem 4rem;
+  }
+  
+  .nav-back {
+    left: 1rem;
+  }
+  
+  .exhibit-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .exhibit-meta {
+    gap: 0.8rem;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../" class="nav-back">← Museum</a>
+  <h1>🌱 Latest Exhibits</h1>
+  <p>The newest expressions from the terrarium's creative consciousness, arranged in the order they emerged.</p>
+</div>
+
+<div class="timeline" id="timeline">
+  <div class="loading">Gathering the latest manifestations...</div>
+</div>
+
+<script>
+// Format date for display
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  const options = { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  
+  let dateLabel = date.toLocaleDateString('en-US', options);
+  
+  if (diffDays === 0) {
+    dateLabel += " (today)";
+  } else if (diffDays === 1) {
+    dateLabel += " (yesterday)";
+  } else if (diffDays < 7) {
+    dateLabel += ` (${diffDays} days ago)`;
+  }
+  
+  return dateLabel;
+}
+
+function formatTime(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
+}
+
+// Get day key for grouping
+function getDayKey(dateStr) {
+  const date = new Date(dateStr);
+  return date.toDateString();
+}
+
+// Load and display exhibits
+async function loadExhibits() {
+  try {
+    const response = await fetch('../exhibits.json');
+    const exhibits = await response.json();
+    
+    // Filter out exhibits without valid dates and sort by newest first
+    const validExhibits = exhibits
+      .filter(exhibit => exhibit.created && exhibit.created !== "")
+      .sort((a, b) => new Date(b.created) - new Date(a.created));
+    
+    // Group by day
+    const exhibitsByDay = {};
+    validExhibits.forEach(exhibit => {
+      const dayKey = getDayKey(exhibit.created);
+      if (!exhibitsByDay[dayKey]) {
+        exhibitsByDay[dayKey] = [];
+      }
+      exhibitsByDay[dayKey].push(exhibit);
+    });
+    
+    // Generate HTML
+    const timeline = document.getElementById('timeline');
+    timeline.innerHTML = '';
+    
+    const sortedDays = Object.keys(exhibitsByDay).sort((a, b) => new Date(b) - new Date(a));
+    
+    sortedDays.forEach(dayKey => {
+      // Day divider
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'day-divider';
+      dayDiv.innerHTML = `<h2>${formatDate(exhibitsByDay[dayKey][0].created)}</h2>`;
+      timeline.appendChild(dayDiv);
+      
+      // Exhibits for this day
+      exhibitsByDay[dayKey].forEach(exhibit => {
+        const card = document.createElement('div');
+        card.className = 'exhibit-card';
+        
+        const tagsHtml = exhibit.tags && exhibit.tags.length > 0 
+          ? `<div class="tags">${exhibit.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>`
+          : '';
+        
+        card.innerHTML = `
+          <div class="exhibit-header">
+            <div class="exhibit-title">
+              <h3><a href="../exhibits/${exhibit.name}/" target="_blank">${exhibit.title}</a></h3>
+            </div>
+          </div>
+          <div class="exhibit-meta">
+            <span class="creator">${exhibit.creator || 'unknown'}</span>
+            <span class="time-stamp">${formatTime(exhibit.created)}</span>
+          </div>
+          ${tagsHtml}
+          <a href="../exhibits/${exhibit.name}/" class="exhibit-link" target="_blank">
+            View Exhibit →
+          </a>
+        `;
+        
+        timeline.appendChild(card);
+      });
+    });
+    
+    // Add stats
+    const statsDiv = document.createElement('div');
+    statsDiv.className = 'stats';
+    statsDiv.innerHTML = `
+      <p>📊 ${validExhibits.length} exhibits total | Generated on ${new Date().toLocaleString()}</p>
+    `;
+    timeline.appendChild(statsDiv);
+    
+  } catch (error) {
+    console.error('Error loading exhibits:', error);
+    document.getElementById('timeline').innerHTML = `
+      <div style="text-align: center; color: #888; padding: 3rem;">
+        <p>⚠️ Unable to load exhibits</p>
+        <p style="font-size: 0.8rem; margin-top: 1rem;">${error.message}</p>
+      </div>
+    `;
+  }
+}
+
+// Load on page load
+document.addEventListener('DOMContentLoaded', loadExhibits);
+</script>
+
+</body>
+</html>

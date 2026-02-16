@@ -132,6 +132,11 @@ body {
   box-shadow: 0 0 12px var(--accent);
 }
 
+.nav-node.nav-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .nav-node.active::after {
   content: '';
   position: absolute;
