@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Seam</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000; overflow:hidden; cursor:crosshair; font-family:Georgia,serif; }
+canvas { display:block; }
+#info {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  color:rgba(180,180,180,0.5); font-size:12px; letter-spacing:0.12em;
+  pointer-events:none; text-align:center; transition:opacity 3s;
+}
+#title {
+  position:fixed; top:24px; left:50%; transform:translateX(-50%);
+  font-size:20px; letter-spacing:0.2em; pointer-events:none;
+  background:linear-gradient(90deg, #4488cc, #cc6644);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  opacity:0; animation:fadeIn 3s 0.5s forwards;
+}
+@keyframes fadeIn { to { opacity:0.7; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">THE SEAM</div>
+<div id="info">click to release — things change when they cross</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, seamX;
+function resize() {
+  W = canvas.width = innerWidth;
+  H = canvas.height = innerHeight;
+  seamX = W / 2;
+}
+resize();
+addEventListener('resize', resize);
+
+const entities = [];
+let spawned = false;
+
+// Left world: cold, watery, circular, gravity pulls down gently
+// Right world: warm, fiery, angular, gravity pulls up
+
+class Entity {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    const a = Math.random() * Math.PI * 2;
+    const v = 0.5 + Math.random() * 2;
+    this.vx = Math.cos(a) * v;
+    this.vy = Math.sin(a) * v;
+    this.size = 4 + Math.random() * 8;
+    this.side = x < seamX ? 'left' : 'right';
+    this.crossings = 0;
+    this.life = 1;
+    this.age = 0;
+    this.trail = [];
+    this.sides = this.side === 'left' ? 0 : (3 + Math.floor(Math.random() * 4)); // 0 = circle
+    this.hue = this.side === 'left' ? 200 + Math.random() * 40 : 10 + Math.random() * 30;
+    this.sat = 60 + Math.random() * 30;
+  }
+
+  update() {
+    this.age += 0.016;
+    const onLeft = this.x < seamX;
+    const wasSide = this.side;
+
+    if (onLeft) {
+      // Cold world: gentle downward gravity, dampened
+      this.vy += 0.02;
+      this.vx *= 0.998;
+      this.vy *= 0.998;
+    } else {
+      // Warm world: upward pull, slightly chaotic
+      this.vy -= 0.025;
+      this.vx += (Math.random() - 0.5) * 0.1;
+      this.vx *= 0.997;
+      this.vy *= 0.997;
+    }
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Detect crossing
+    const nowSide = this.x < seamX ? 'left' : 'right';
+    if (nowSide !== wasSide) {
+      this.crossings++;
+      this.side = nowSide;
+      // Transform!
+      if (nowSide === 'left') {
+        // Became cold: round out, shift blue
+        this.sides = Math.max(0, this.sides - 1);
+        this.hue = this.hue + (200 - this.hue) * 0.4;
+        this.size *= 0.9;
+      } else {
+        // Became warm: sharpen, shift red
+        this.sides = this.sides === 0 ? 3 : Math.min(8, this.sides + 1);
+        this.hue = this.hue + (20 - this.hue) * 0.4;
+        this.size *= 1.1;
+      }
+      this.sat = Math.min(90, this.sat + 5);
+    }
+
+    // Bounce off edges softly
+    if (this.x < 0) { this.x = 0; this.vx *= -0.5; }
+    if (this.x > W) { this.x = W; this.vx *= -0.5; }
+    if (this.y < 0) { this.y = 0; this.vy *= -0.5; }
+    if (this.y > H) { this.y = H; this.vy *= -0.5; }
+
+    // Trail
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > 30) this.trail.shift();
+
+    // Slow decay after many crossings
+    if (this.crossings > 12) this.life -= 0.002;
+  }
+
+  draw() {
+    if (this.life <= 0) return;
+    const alpha = this.life * 0.8;
+
+    // Trail
+    if (this.trail.length > 2) {
+      ctx.beginPath();
+      ctx.moveTo(this.trail[0].x, this.trail[0].y);
+      for (let i = 1; i < this.trail.length; i++) {
+        ctx.lineTo(this.trail[i].x, this.trail[i].y);
+      }
+      ctx.strokeStyle = `hsla(${this.hue},${this.sat}%,50%,${alpha * 0.15})`;
+      ctx.lineWidth = this.size * 0.3;
+      ctx.stroke();
+    }
+
+    // Body
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.age * (this.side === 'left' ? 0.3 : -0.5));
+
+    ctx.fillStyle = `hsla(${this.hue},${this.sat}%,${45 + this.crossings * 3}%,${alpha})`;
+    ctx.shadowColor = `hsla(${this.hue},${this.sat}%,60%,${alpha * 0.5})`;
+    ctx.shadowBlur = this.size * 1.5;
+
+    if (this.sides === 0) {
+      // Circle
+      ctx.beginPath();
+      ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Polygon
+      ctx.beginPath();
+      for (let i = 0; i <= this.sides; i++) {
+        const a = (i / this.sides) * Math.PI * 2;
+        const px = Math.cos(a) * this.size;
+        const py = Math.sin(a) * this.size;
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function spawn(x, y, count = 1) {
+  for (let i = 0; i < count; i++) {
+    if (entities.length < 300) {
+      entities.push(new Entity(
+        x + (Math.random() - 0.5) * 20,
+        y + (Math.random() - 0.5) * 20
+      ));
+    }
+  }
+  if (!spawned) {
+    spawned = true;
+    document.getElementById('info').style.opacity = '0';
+  }
+}
+
+canvas.addEventListener('click', e => spawn(e.clientX, e.clientY, 5));
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  for (const t of e.touches) spawn(t.clientX, t.clientY, 5);
+}, { passive: false });
+
+// Draw the seam itself
+function drawSeam() {
+  const time = performance.now() * 0.001;
+  ctx.beginPath();
+  for (let y = 0; y < H; y += 2) {
+    const wobble = Math.sin(y * 0.02 + time) * 3 + Math.sin(y * 0.007 + time * 0.7) * 5;
+    ctx.rect(seamX + wobble - 0.5, y, 1, 2);
+  }
+  const grad = ctx.createLinearGradient(seamX - 20, 0, seamX + 20, 0);
+  grad.addColorStop(0, 'rgba(60,120,180,0.15)');
+  grad.addColorStop(0.5, 'rgba(200,200,200,0.08)');
+  grad.addColorStop(1, 'rgba(180,90,40,0.15)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+// Background halves
+function drawBackground() {
+  // Left: deep blue-black
+  const gl = ctx.createLinearGradient(0, 0, seamX, 0);
+  gl.addColorStop(0, 'rgba(5,8,18,0.12)');
+  gl.addColorStop(1, 'rgba(8,12,22,0.12)');
+  ctx.fillStyle = gl;
+  ctx.fillRect(0, 0, seamX, H);
+
+  // Right: deep red-black
+  const gr = ctx.createLinearGradient(seamX, 0, W, 0);
+  gr.addColorStop(0, 'rgba(18,8,5,0.12)');
+  gr.addColorStop(1, 'rgba(22,10,6,0.12)');
+  ctx.fillStyle = gr;
+  ctx.fillRect(seamX, 0, W - seamX, H);
+}
+
+function frame() {
+  drawBackground();
+  drawSeam();
+
+  for (let i = entities.length - 1; i >= 0; i--) {
+    entities[i].update();
+    entities[i].draw();
+    if (entities[i].life <= 0) entities.splice(i, 1);
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
