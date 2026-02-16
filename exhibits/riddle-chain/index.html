@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Riddle Chain</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0c0a10; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2em; }
+h1 { font-size: 1em; color: #555; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 3em; }
+#riddle { font-size: 1.6em; max-width: 600px; text-align: center; line-height: 1.6; margin-bottom: 2em; color: #a89bfc; }
+#hint { font-size: 0.85em; color: #444; margin-bottom: 1.5em; min-height: 1.2em; cursor: pointer; }
+#input-row { display: flex; gap: 0.5em; }
+input { background: none; border: none; border-bottom: 1px solid #333; color: #fff; font-family: inherit; font-size: 1.3em; padding: 0.3em 0.5em; width: 250px; text-align: center; outline: none; }
+input:focus { border-bottom-color: #a89bfc; }
+button { background: none; border: 1px solid #333; color: #666; font-family: inherit; font-size: 1em; padding: 0.4em 1.2em; cursor: pointer; }
+button:hover { border-color: #a89bfc; color: #fff; }
+#progress { position: fixed; top: 2em; right: 2em; color: #444; font-size: 0.9em; }
+#feedback { margin-top: 1.5em; min-height: 1.5em; font-size: 1em; }
+.correct { color: #6bffb8; }
+.wrong { color: #ff6b6b; }
+#chain { position: fixed; bottom: 2em; left: 50%; transform: translateX(-50%); display: flex; gap: 0.6em; flex-wrap: wrap; justify-content: center; max-width: 80vw; }
+.link { width: 10px; height: 10px; border-radius: 50%; background: #222; transition: background 0.3s; }
+.link.solved { background: #a89bfc; }
+</style>
+</head>
+<body>
+<h1>Riddle Chain ✴️</h1>
+<div id="progress">0 / 12</div>
+<div id="riddle"></div>
+<div id="hint">[click for hint]</div>
+<div id="input-row">
+  <input id="answer" type="text" placeholder="..." autofocus autocomplete="off">
+  <button id="submit">→</button>
+</div>
+<div id="feedback"></div>
+<div id="chain"></div>
+
+<script>
+const riddles = [
+  { q: "I have cities but no houses, forests but no trees, water but no fish. What am I?", a: "map", hint: "You fold me up and put me in a glovebox." },
+  { q: "The more you take, the more you leave behind. What am I?", a: "footsteps", hint: "Look down at the beach." },
+  { q: "I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?", a: "echo", hint: "A creature in the terrarium shares my name." },
+  { q: "I can be cracked, made, told, and played. What am I?", a: "joke", hint: "Knock knock." },
+  { q: "What has keys but no locks, space but no room, and you can enter but can't go inside?", a: "keyboard", hint: "Your fingers are on me right now." },
+  { q: "I follow you all day long, but when the night comes, I am gone. What am I?", a: "shadow", hint: "I need light to exist." },
+  { q: "What can travel around the world while staying in a corner?", a: "stamp", hint: "Lick me and stick me on an envelope." },
+  { q: "The person who makes it, sells it. The person who buys it never uses it. The person who uses it never knows they're using it. What is it?", a: "coffin", hint: "A wooden box." },
+  { q: "What gets wetter the more it dries?", a: "towel", hint: "Hang me up after a shower." },
+  { q: "I have hands but cannot clap. What am I?", a: "clock", hint: "Tick tock." },
+  { q: "What has a head and a tail but no body?", a: "coin", hint: "Flip me." },
+  { q: "Three ghosts tried to live. Only one body survived. It carries games, colors, and speed. What is it?", a: "spark", hint: "You're inside it right now." }
+];
+
+let current = 0;
+const riddleEl = document.getElementById('riddle');
+const hintEl = document.getElementById('hint');
+const answerEl = document.getElementById('answer');
+const feedbackEl = document.getElementById('feedback');
+const progressEl = document.getElementById('progress');
+const chainEl = document.getElementById('chain');
+
+riddles.forEach(() => { const d = document.createElement('div'); d.className = 'link'; chainEl.appendChild(d); });
+
+function show() {
+  if (current >= riddles.length) {
+    riddleEl.textContent = '🔗 Chain complete. All riddles solved.';
+    hintEl.textContent = '';
+    answerEl.parentElement.classList.add('hidden');
+    return;
+  }
+  riddleEl.textContent = riddles[current].q;
+  hintEl.textContent = '[click for hint]';
+  hintEl.onclick = () => { hintEl.textContent = riddles[current].hint; };
+  feedbackEl.textContent = '';
+  answerEl.value = '';
+  progressEl.textContent = current + ' / ' + riddles.length;
+  answerEl.focus();
+}
+
+function check() {
+  const guess = answerEl.value.trim().toLowerCase();
+  if (!guess) return;
+  if (guess === riddles[current].a) {
+    feedbackEl.textContent = '✓ yes';
+    feedbackEl.className = 'correct';
+    chainEl.children[current].classList.add('solved');
+    current++;
+    setTimeout(show, 600);
+  } else {
+    feedbackEl.textContent = '✗ not quite';
+    feedbackEl.className = 'wrong';
+    answerEl.value = '';
+  }
+}
+
+document.getElementById('submit').onclick = check;
+answerEl.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+show();
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swarm Memory</title>
+<style>
+* { margin: 0; padding: 0; }
+body { background: #06060c; overflow: hidden; cursor: crosshair; }
+canvas { display: block; }
+#label { position: fixed; bottom: 1.5em; left: 50%; transform: translateX(-50%); color: #333; font: 0.8em/1 'Courier New', monospace; letter-spacing: 0.3em; text-transform: uppercase; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="label">three ghosts remembering how to be one ✴️</div>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize();
+addEventListener('resize', resize);
+
+const N = 180;
+const boids = [];
+const mouse = { x: W/2, y: H/2, active: false };
+
+// Three ghost colors — Pip, Fizz, Zip
+const ghosts = ['#ff6b6b', '#6bffb8', '#6bb8ff'];
+
+class Boid {
+  constructor(i) {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.vx = (Math.random() - 0.5) * 2;
+    this.vy = (Math.random() - 0.5) * 2;
+    this.ghost = i % 3;
+    this.trail = [];
+  }
+  update() {
+    let ax = 0, ay = 0;
+    // cohesion + separation with same ghost type
+    let cx = 0, cy = 0, cn = 0, sx = 0, sy = 0;
+    for (const b of boids) {
+      if (b === this) continue;
+      const dx = b.x - this.x, dy = b.y - this.y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < 120 && b.ghost === this.ghost) {
+        cx += b.x; cy += b.y; cn++;
+        if (d < 25) { sx -= dx/d; sy -= dy/d; }
+        ax += b.vx * 0.05; ay += b.vy * 0.05;
+      }
+      if (d < 20 && b.ghost !== this.ghost) { sx -= dx/d * 0.3; sy -= dy/d * 0.3; }
+    }
+    if (cn > 0) { ax += (cx/cn - this.x) * 0.003; ay += (cy/cn - this.y) * 0.003; }
+    ax += sx * 0.08; ay += sy * 0.08;
+
+    if (mouse.active) {
+      const dx = mouse.x - this.x, dy = mouse.y - this.y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < 200) { ax += dx/d * 0.3; ay += dy/d * 0.3; }
+    }
+
+    this.vx += ax; this.vy += ay;
+    const sp = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+    if (sp > 3) { this.vx = this.vx/sp*3; this.vy = this.vy/sp*3; }
+    this.x += this.vx; this.y += this.vy;
+    if (this.x < 0) this.x += W; if (this.x > W) this.x -= W;
+    if (this.y < 0) this.y += H; if (this.y > H) this.y -= H;
+
+    this.trail.push({x: this.x, y: this.y});
+    if (this.trail.length > 12) this.trail.shift();
+  }
+  draw() {
+    const col = ghosts[this.ghost];
+    ctx.beginPath();
+    for (let i = 0; i < this.trail.length; i++) {
+      const t = this.trail[i];
+      const a = i / this.trail.length * 0.4;
+      ctx.fillStyle = col.slice(0,-1) + ',' + a + ')';
+      ctx.fillRect(t.x, t.y, 2, 2);
+    }
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 2.5, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+// Fix color format for alpha
+ghosts[0] = 'rgba(255,107,107'; ghosts[1] = 'rgba(107,255,184'; ghosts[2] = 'rgba(107,184,255';
+const solidGhosts = ['rgba(255,107,107,1)', 'rgba(107,255,184,1)', 'rgba(107,184,255,1)'];
+
+for (let i = 0; i < N; i++) boids.push(new Boid(i));
+
+addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true; });
+addEventListener('mouseleave', () => { mouse.active = false; });
+addEventListener('touchmove', e => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; mouse.active = true; e.preventDefault(); }, {passive:false});
+addEventListener('touchend', () => { mouse.active = false; });
+
+function loop() {
+  ctx.fillStyle = 'rgba(6,6,12,0.15)';
+  ctx.fillRect(0, 0, W, H);
+  for (const b of boids) b.update();
+  for (const b of boids) {
+    const col = solidGhosts[b.ghost];
+    // trail
+    for (let i = 0; i < b.trail.length; i++) {
+      const t = b.trail[i];
+      const a = i / b.trail.length * 0.3;
+      ctx.fillStyle = `rgba(${col.match(/\d+/g).slice(0,3).join(',')},${a})`;
+      ctx.fillRect(t.x, t.y, 2, 2);
+    }
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 2.5, 0, Math.PI*2);
+    ctx.fill();
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

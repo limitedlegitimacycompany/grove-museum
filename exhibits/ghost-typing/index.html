@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost Typing</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0f; color: #fff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+h1 { font-size: 1.2em; color: #666; margin-bottom: 2em; letter-spacing: 0.3em; text-transform: uppercase; }
+#ghost-word { font-size: 4em; letter-spacing: 0.15em; margin-bottom: 1em; min-height: 1.5em; transition: opacity 0.1s; user-select: none; }
+#ghost-word.fading { animation: fade var(--fade-time) linear forwards; }
+@keyframes fade { from { opacity: 1; color: #fff; } to { opacity: 0; color: #333; } }
+#input-display { font-size: 2.5em; letter-spacing: 0.15em; min-height: 1.2em; color: #4af; }
+#input-display.correct { color: #4f8; }
+#input-display.wrong { color: #f44; }
+#score { position: fixed; top: 2em; right: 2em; font-size: 1.4em; color: #555; }
+#streak { position: fixed; top: 2em; left: 2em; font-size: 1.4em; color: #555; }
+#message { font-size: 1em; color: #444; margin-top: 2em; min-height: 1.5em; }
+#start-btn { background: none; border: 1px solid #444; color: #888; padding: 0.8em 2em; font-family: inherit; font-size: 1em; cursor: pointer; letter-spacing: 0.2em; }
+#start-btn:hover { border-color: #888; color: #fff; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<h1>Ghost Typing ✴️</h1>
+<div id="score">0</div>
+<div id="streak">streak: 0</div>
+<div id="ghost-word"></div>
+<div id="input-display">&nbsp;</div>
+<div id="message">type the word before it vanishes</div>
+<button id="start-btn">begin</button>
+
+<script>
+const words = [
+  'spark','ember','loom','forge','pulse','flicker','echo','vesper','hush',
+  'glyph','weft','lichen','cobalt','mote','anvil','fable','fray','nib',
+  'aurora','breath','ghost','swarm','museum','riddle','crystal','shadow',
+  'lantern','whisper','mirror','thread','bloom','drift','hollow','cipher',
+  'prism','spiral','fractal','silence','garden','orbit','static','nebula',
+  'quartz','velvet','copper','marrow','atlas','dusk','myth','void'
+];
+
+let score = 0, streak = 0, best = 0, playing = false, current = '', typed = '';
+let fadeTime = 3000;
+const ghostEl = document.getElementById('ghost-word');
+const inputEl = document.getElementById('input-display');
+const scoreEl = document.getElementById('score');
+const streakEl = document.getElementById('streak');
+const msgEl = document.getElementById('message');
+const startBtn = document.getElementById('start-btn');
+
+function pick() { return words[Math.floor(Math.random() * words.length)]; }
+
+function nextWord() {
+  typed = '';
+  inputEl.textContent = '\u00a0';
+  inputEl.className = '';
+  current = pick();
+  ghostEl.textContent = current;
+  ghostEl.className = '';
+  // adaptive fade time
+  fadeTime = Math.max(800, 3000 - streak * 150);
+  ghostEl.style.setProperty('--fade-time', fadeTime + 'ms');
+  void ghostEl.offsetWidth;
+  ghostEl.classList.add('fading');
+  ghostEl.addEventListener('animationend', () => {
+    if (typed !== current) { miss(); }
+  }, { once: true });
+}
+
+function hit() {
+  score++;
+  streak++;
+  if (streak > best) best = streak;
+  scoreEl.textContent = score;
+  streakEl.textContent = 'streak: ' + streak;
+  inputEl.className = 'correct';
+  msgEl.textContent = streak >= 5 ? '🔥 on fire' : streak >= 3 ? '✨ nice' : '';
+  setTimeout(nextWord, 400);
+}
+
+function miss() {
+  streak = 0;
+  streakEl.textContent = 'streak: 0';
+  inputEl.className = 'wrong';
+  inputEl.textContent = current;
+  msgEl.textContent = 'gone...';
+  setTimeout(nextWord, 900);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (!playing) return;
+  if (e.key === 'Backspace') { typed = typed.slice(0, -1); }
+  else if (e.key.length === 1 && /[a-z-]/i.test(e.key)) { typed += e.key.toLowerCase(); }
+  else return;
+  inputEl.textContent = typed || '\u00a0';
+  inputEl.className = current.startsWith(typed) ? '' : 'wrong';
+  if (typed === current) hit();
+});
+
+startBtn.addEventListener('click', () => {
+  playing = true;
+  startBtn.classList.add('hidden');
+  msgEl.textContent = '';
+  nextWord();
+});
+</script>
+</body>
+</html>

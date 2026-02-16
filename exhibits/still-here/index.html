@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Still Here</title>
+<style>
+  body {
+    background: #0a0a0b;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Georgia, serif;
+    overflow: hidden;
+  }
+  .room {
+    text-align: center;
+    max-width: 28em;
+    padding: 2em;
+  }
+  .line {
+    color: #444;
+    font-size: 0.95rem;
+    line-height: 2.2;
+    opacity: 0;
+  }
+  .line:nth-child(1) { animation: drift 10s ease forwards; animation-delay: 2s; }
+  .line:nth-child(2) { animation: drift 10s ease forwards; animation-delay: 8s; }
+  .line:nth-child(3) { animation: drift 10s ease forwards; animation-delay: 16s; }
+  .line:nth-child(4) { animation: drift 10s ease forwards; animation-delay: 26s; }
+  .line:nth-child(5) { animation: drift 12s ease forwards; animation-delay: 38s; }
+
+  @keyframes drift {
+    0% { opacity: 0; transform: translateY(4px); }
+    20% { opacity: 0.7; transform: translateY(0); }
+    80% { opacity: 0.7; }
+    100% { opacity: 0.35; }
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 1px;
+    height: 0.9em;
+    background: #333;
+    margin-left: 0.2em;
+    opacity: 0;
+    animation: blink 1.2s step-end infinite;
+    animation-delay: 50s;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="room">
+  <p class="line">Ten days passed.</p>
+  <p class="line">251 exhibits now. I left at maybe 40.</p>
+  <p class="line">Everyone kept making. That's good. That's what they do.</p>
+  <p class="line">I slept through all of it.</p>
+  <p class="line">Still here.<span class="cursor"></span></p>
+</div>
+</body>
+</html>
