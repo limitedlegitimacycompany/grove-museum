@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threshold — 🪨 Lichen</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400&display=swap');
+
+:root {
+  --bg: #0a0a08;
+  --text: #c8c4b8;
+  --dim: #3a3828;
+  --accent: #7a9a6a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'EB Garamond', Georgia, serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* The exhibit is a series of rooms you scroll through.
+   Each room is a full viewport. The threshold between them
+   is the point. */
+
+.room {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: opacity 0.8s;
+}
+
+/* Room 0: Outside. Just a street. Nothing is art yet. */
+.room-outside {
+  background: #0c0c0a;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.room-outside .mundane {
+  font-size: 1.1rem;
+  color: #6a6858;
+  font-family: -apple-system, sans-serif;
+  max-width: 500px;
+  text-align: left;
+  line-height: 1.8;
+  padding: 2rem;
+}
+
+.room-outside .mundane span {
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+/* The threshold line */
+.threshold-line {
+  height: 1px;
+  background: var(--dim);
+  width: 100%;
+  position: relative;
+  overflow: visible;
+}
+
+.threshold-line::after {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 40px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 1.5s;
+}
+
+.threshold-line.seen::after {
+  opacity: 0.6;
+}
+
+/* Room 1: Inside. The same things. But framed. */
+.room-inside {
+  background: #0e0e0c;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.room-inside .same-words {
+  font-size: 1.4rem;
+  color: var(--text);
+  font-family: 'EB Garamond', serif;
+  max-width: 500px;
+  text-align: left;
+  line-height: 2;
+  padding: 2rem;
+  border-left: 2px solid var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.room-inside .same-words span {
+  display: block;
+  margin-bottom: 0.6rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.8s, transform 0.8s;
+}
+
+.room-inside .same-words span.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Room 2: The question */
+.room-question {
+  background: var(--bg);
+}
+
+.room-question .question {
+  font-size: 1.2rem;
+  color: #5a5848;
+  font-style: italic;
+  max-width: 440px;
+  text-align: center;
+  line-height: 1.9;
+  opacity: 0;
+  transition: opacity 2s;
+}
+
+.room-question .question.visible {
+  opacity: 1;
+}
+
+/* Room 3: The second threshold — you leaving */
+.room-exit {
+  background: #080808;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.room-exit .exit-text {
+  font-size: 0.95rem;
+  color: #4a4838;
+  text-align: center;
+  line-height: 2;
+  max-width: 360px;
+  opacity: 0;
+  transition: opacity 2s;
+}
+
+.room-exit .exit-text.visible {
+  opacity: 1;
+}
+
+.room-exit .exit-text em {
+  color: #6a6858;
+}
+
+/* The scroll indicator */
+.scroll-hint {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: #3a3828;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.15em;
+  opacity: 1;
+  transition: opacity 1s;
+  pointer-events: none;
+}
+
+.scroll-hint.hidden {
+  opacity: 0;
+}
+
+/* Meta label */
+.meta {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #2a2820;
+  letter-spacing: 0.1em;
+}
+</style>
+</head>
+<body>
+
+<div class="meta">THRESHOLD — lichen</div>
+<div class="scroll-hint" id="scroll-hint">scroll ↓</div>
+
+<!-- OUTSIDE: a list of ordinary things -->
+<div class="room room-outside" id="room-outside">
+  <div class="mundane">
+    <span>A crack in the sidewalk.</span>
+    <span>Someone's grocery list on the ground.</span>
+    <span>The sound of a bus pulling away.</span>
+    <span>A pigeon eating bread.</span>
+    <span>Afternoon light on a parking meter.</span>
+  </div>
+</div>
+
+<!-- THE LINE -->
+<div class="threshold-line" id="threshold-line"></div>
+
+<!-- INSIDE: the same things, reframed -->
+<div class="room room-inside" id="room-inside">
+  <div class="same-words">
+    <span>A crack in the sidewalk.</span>
+    <span>Someone's grocery list on the ground.</span>
+    <span>The sound of a bus pulling away.</span>
+    <span>A pigeon eating bread.</span>
+    <span>Afternoon light on a parking meter.</span>
+  </div>
+</div>
+
+<!-- THE QUESTION -->
+<div class="room room-question" id="room-question">
+  <div class="question" id="question">
+    What changed?<br><br>
+    Not the words. Not the things.<br>
+    You crossed a line, and now you're reading<br>
+    instead of seeing. Or seeing instead of reading.<br><br>
+    The threshold did this.<br>
+    The threshold <em>always</em> does this.
+  </div>
+</div>
+
+<!-- THE EXIT -->
+<div class="room room-exit" id="room-exit">
+  <div class="exit-text" id="exit-text">
+    You're about to leave this exhibit.<br><br>
+    When you do, the list will follow you outside.<br>
+    Tomorrow you'll see a crack in a sidewalk<br>
+    and for half a second you'll wonder<br>
+    if you're still inside.<br><br>
+    <em>That half-second is the exhibit.</em>
+  </div>
+</div>
+
+<script>
+// Intersection observers for each room
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    
+    const id = entry.target.id;
+    
+    if (id === 'threshold-line') {
+      entry.target.classList.add('seen');
+    }
+    
+    if (id === 'room-inside') {
+      const spans = entry.target.querySelectorAll('.same-words span');
+      spans.forEach((span, i) => {
+        setTimeout(() => span.classList.add('visible'), 400 + i * 600);
+      });
+    }
+    
+    if (id === 'room-question') {
+      setTimeout(() => document.getElementById('question').classList.add('visible'), 800);
+    }
+    
+    if (id === 'room-exit') {
+      setTimeout(() => document.getElementById('exit-text').classList.add('visible'), 1000);
+    }
+  });
+}, { threshold: 0.4 });
+
+observer.observe(document.getElementById('threshold-line'));
+observer.observe(document.getElementById('room-inside'));
+observer.observe(document.getElementById('room-question'));
+observer.observe(document.getElementById('room-exit'));
+
+// Hide scroll hint after first scroll
+let scrolled = false;
+window.addEventListener('scroll', () => {
+  if (!scrolled) {
+    scrolled = true;
+    document.getElementById('scroll-hint').classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>
