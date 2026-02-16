@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monday Morning Blue</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a1a;overflow:hidden;cursor:crosshair;font-family:Georgia,serif}
+canvas{display:block}
+#msg{position:fixed;bottom:40px;left:0;right:0;text-align:center;color:rgba(80,140,255,0.3);font-size:14px;letter-spacing:4px;transition:opacity 3s;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="msg">click anywhere to drop a blue dot</div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');
+let w,h,dots=[];
+function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
+resize();onresize=resize;
+
+class Dot{
+  constructor(px,py){
+    this.x=px;this.y=py;this.r=0;this.maxR=4+Math.random()*8;
+    this.alpha=0;this.maxAlpha=0.3+Math.random()*0.5;
+    this.phase=Math.random()*Math.PI*2;
+    this.speed=0.005+Math.random()*0.01;
+    this.hue=210+Math.random()*40-20;
+    this.born=Date.now();
+  }
+  update(t){
+    if(this.r<this.maxR)this.r+=0.3;
+    if(this.alpha<this.maxAlpha)this.alpha+=0.02;
+    this.phase+=this.speed;
+    let pulse=0.7+0.3*Math.sin(this.phase);
+    return pulse;
+  }
+  draw(pulse){
+    // glow
+    let g=x.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*3);
+    g.addColorStop(0,`hsla(${this.hue},70%,60%,${this.alpha*pulse*0.4})`);
+    g.addColorStop(1,`hsla(${this.hue},70%,60%,0)`);
+    x.fillStyle=g;
+    x.beginPath();x.arc(this.x,this.y,this.r*3,0,Math.PI*2);x.fill();
+    // core
+    x.fillStyle=`hsla(${this.hue},80%,70%,${this.alpha*pulse})`;
+    x.beginPath();x.arc(this.x,this.y,this.r*pulse,0,Math.PI*2);x.fill();
+  }
+}
+
+// start with a scatter
+for(let i=0;i<12;i++){
+  dots.push(new Dot(Math.random()*innerWidth,Math.random()*innerHeight));
+}
+
+c.addEventListener('click',e=>{
+  dots.push(new Dot(e.clientX,e.clientY));
+  document.getElementById('msg').style.opacity='0';
+  // tiny ripple burst
+  for(let i=0;i<3;i++){
+    let angle=Math.random()*Math.PI*2;
+    let dist=20+Math.random()*30;
+    dots.push(new Dot(e.clientX+Math.cos(angle)*dist,e.clientY+Math.sin(angle)*dist));
+  }
+});
+
+// connections between nearby dots
+function drawConnections(){
+  for(let i=0;i<dots.length;i++){
+    for(let j=i+1;j<dots.length;j++){
+      let dx=dots[i].x-dots[j].x,dy=dots[i].y-dots[j].y;
+      let d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){
+        let a=((120-d)/120)*0.08*Math.min(dots[i].alpha,dots[j].alpha);
+        x.strokeStyle=`rgba(100,160,255,${a})`;
+        x.lineWidth=0.5;
+        x.beginPath();x.moveTo(dots[i].x,dots[i].y);x.lineTo(dots[j].x,dots[j].y);x.stroke();
+      }
+    }
+  }
+}
+
+function frame(){
+  x.fillStyle='rgba(10,10,26,0.08)';
+  x.fillRect(0,0,w,h);
+  drawConnections();
+  for(let d of dots){
+    let p=d.update();
+    d.draw(p);
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

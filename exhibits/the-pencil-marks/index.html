@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Pencil Marks</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f5f0e8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Georgia, 'Times New Roman', serif;
+      overflow: hidden;
+    }
+
+    .doorframe {
+      position: relative;
+      width: 120px;
+      height: 80vh;
+      max-height: 600px;
+      background: linear-gradient(
+        to right,
+        #d4c4a8 0%, #e0d5c0 3%, #ddd0b8 6%,
+        #d8c8b0 10%, #e2d7c2 15%, #d6c6a6 20%,
+        #ddd0b8 25%, #d9c9b2 30%, #e0d5c0 35%,
+        #d4c4a8 40%, #dcd0b6 45%, #d7c7aa 50%,
+        #e1d6c1 55%, #d5c5a9 60%, #ddd0b8 65%,
+        #d9c9b2 70%, #d4c4a8 75%, #e0d5c0 80%,
+        #d6c6a6 85%, #ddd0b8 90%, #d8c8b0 95%,
+        #d4c4a8 100%
+      );
+      border-left: 4px solid #b8a88c;
+      border-right: 4px solid #b8a88c;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1), -2px 0 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+    }
+
+    .mark {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mark.visible { opacity: 1; }
+
+    .mark-line {
+      flex-shrink: 0;
+      width: 30px;
+      height: 2px;
+      background: #444;
+      border-radius: 1px;
+    }
+
+    .mark-text {
+      font-size: 11px;
+      color: #555;
+      white-space: nowrap;
+      font-style: italic;
+      letter-spacing: 0.3px;
+    }
+
+    .mark.pencil .mark-line { background: #666; height: 1.5px; }
+    .mark.pen .mark-line { background: #223; height: 2px; }
+    .mark.crayon .mark-line { background: #8b4513; height: 3px; border-radius: 2px; opacity: 0.7; }
+    .mark.marker .mark-line { background: #2244aa; height: 2.5px; }
+
+    .caption {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      font-style: italic;
+      opacity: 0;
+      transition: opacity 2s ease;
+      max-width: 340px;
+      line-height: 1.6;
+    }
+    .caption.visible { opacity: 1; }
+
+    .title-area {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    .hint {
+      position: fixed;
+      bottom: 15px;
+      right: 20px;
+      color: #bbb;
+      font-size: 11px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="title-area">THE PENCIL MARKS<br><span style="font-size:10px; color:#bbb;">by ember 🕯️</span></div>
+
+  <div class="doorframe" id="doorframe"></div>
+
+  <div class="caption" id="caption"></div>
+  <div class="hint">click the doorframe</div>
+
+  <script>
+    const families = [
+      {
+        marks: [
+          { pct: 82, text: "Sam — 3", style: "crayon" },
+          { pct: 72, text: "Sam — 4½", style: "crayon" },
+          { pct: 60, text: "Sam — 6", style: "pencil" },
+          { pct: 48, text: "Sam — 8", style: "pencil" },
+          { pct: 35, text: "Sam — 11", style: "pen" },
+          { pct: 22, text: "Sam — 14", style: "pen" },
+        ],
+        caption: "They stopped measuring after Sam got taller than the doorframe."
+      },
+      {
+        marks: [
+          { pct: 80, text: "Lily", style: "marker" },
+          { pct: 74, text: "Lily", style: "marker" },
+          { pct: 68, text: "Lily", style: "pencil" },
+          { pct: 78, text: "Max", style: "crayon" },
+          { pct: 65, text: "Max", style: "pencil" },
+          { pct: 50, text: "Max", style: "pencil" },
+          { pct: 45, text: "Lily + Max — same!", style: "pen" },
+        ],
+        caption: "The day Max caught up to Lily, they drew a little star."
+      },
+      {
+        marks: [
+          { pct: 85, text: "bean — 2!", style: "crayon" },
+          { pct: 76, text: "bean — 4", style: "crayon" },
+          { pct: 62, text: "bean — 7", style: "pencil" },
+        ],
+        caption: "Only three marks. They moved that summer. Someone else's doorframe now."
+      },
+      {
+        marks: [
+          { pct: 38, text: "Dad — '84", style: "pencil" },
+          { pct: 60, text: "Mom — '86", style: "pencil" },
+          { pct: 75, text: "Jess — '09", style: "pen" },
+          { pct: 62, text: "Jess — '14", style: "pen" },
+          { pct: 40, text: "Jess — '22", style: "marker" },
+        ],
+        caption: "Three generations of the same doorframe. Jess passed her mom at twelve."
+      },
+      {
+        marks: [
+          { pct: 70, text: "me", style: "pencil" },
+          { pct: 55, text: "me", style: "pencil" },
+          { pct: 42, text: "me", style: "pencil" },
+          { pct: 38, text: "me", style: "pencil" },
+          { pct: 36, text: "me", style: "pencil" },
+          { pct: 35, text: "me", style: "pencil" },
+          { pct: 34.5, text: "me", style: "pencil" },
+        ],
+        caption: "An only child. Nobody to compare to. Just the quiet proof of time."
+      },
+      {
+        marks: [
+          { pct: 44, text: "Rocket 🐾", style: "marker" },
+          { pct: 42, text: "Rocket 🐾 (standing)", style: "marker" },
+        ],
+        caption: "They measured the dog once, just to see. Then again a year later. He hadn't grown. They did it anyway."
+      },
+      {
+        marks: [
+          { pct: 78, text: "A — Sep 3", style: "pencil" },
+          { pct: 77, text: "A — Dec 25", style: "pen" },
+          { pct: 75.5, text: "A — Mar", style: "pencil" },
+          { pct: 74, text: "A — Jun 1", style: "pencil" },
+          { pct: 72, text: "A — Sep 3 ★", style: "pen" },
+        ],
+        caption: "Measured every few months. Every birthday got a star. They couldn't wait to be tall."
+      },
+    ];
+
+    const doorframe = document.getElementById('doorframe');
+    const captionEl = document.getElementById('caption');
+    let currentFamily = -1;
+
+    function showFamily() {
+      currentFamily = (currentFamily + 1) % families.length;
+      const family = families[currentFamily];
+
+      // Clear
+      doorframe.innerHTML = '';
+      captionEl.classList.remove('visible');
+      captionEl.textContent = '';
+
+      // Add marks with staggered reveal
+      family.marks.forEach((m, i) => {
+        const div = document.createElement('div');
+        div.className = `mark ${m.style}`;
+        div.style.bottom = `${m.pct}%`;
+        div.innerHTML = `<span class="mark-line"></span><span class="mark-text">${m.text}</span>`;
+        doorframe.appendChild(div);
+
+        setTimeout(() => div.classList.add('visible'), 300 + i * 500);
+      });
+
+      // Show caption after marks
+      setTimeout(() => {
+        captionEl.textContent = family.caption;
+        captionEl.classList.add('visible');
+      }, 300 + family.marks.length * 500 + 800);
+    }
+
+    doorframe.addEventListener('click', showFamily);
+
+    // Auto-show first family
+    setTimeout(showFamily, 600);
+  </script>
+</body>
+</html>

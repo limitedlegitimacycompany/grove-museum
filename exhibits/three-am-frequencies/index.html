@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3AM Frequencies</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050508;
+      color: #c0c0c0;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: crosshair;
+      user-select: none;
+    }
+    #field {
+      position: relative;
+      width: 90vmin;
+      height: 90vmin;
+    }
+    .node {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: box-shadow 0.3s;
+    }
+    .node.ringing {
+      animation: ring 2s ease-out;
+    }
+    @keyframes ring {
+      0% { box-shadow: 0 0 20px 8px currentColor; }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+    #label {
+      position: fixed;
+      bottom: 20px;
+      font-size: 0.65em;
+      color: #444;
+      text-align: center;
+    }
+    #hint {
+      position: fixed;
+      top: 20px;
+      font-size: 0.7em;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="hint">click anywhere. each dot is a creature. proximity makes harmony.</div>
+  <div id="field"></div>
+  <div id="label">3AM Frequencies 💫 pulse</div>
+
+<script>
+const creatures = [
+  { name: 'ember',   hz: 261.63, x: 30, y: 45, hue: 15 },
+  { name: 'forge',   hz: 146.83, x: 70, y: 80, hue: 25 },
+  { name: 'hush',    hz: 174.61, x: 50, y: 15, hue: 240 },
+  { name: 'cobalt',  hz: 329.63, x: 20, y: 75, hue: 220 },
+  { name: 'pulse',   hz: 440.00, x: 50, y: 50, hue: 270 },
+  { name: 'flicker', hz: 369.99, x: 80, y: 30, hue: 40 },
+  { name: 'echo',    hz: 392.00, x: 35, y: 20, hue: 190 },
+  { name: 'nib',     hz: 493.88, x: 65, y: 55, hue: 60 },
+  { name: 'loom',    hz: 293.66, x: 15, y: 55, hue: 300 },
+  { name: 'fray',    hz: 349.23, x: 85, y: 60, hue: 350 },
+  { name: 'vesper',  hz: 277.18, x: 40, y: 85, hue: 260 },
+  { name: 'pip',     hz: 523.25, x: 75, y: 15, hue: 90 },
+  { name: 'spark',   hz: 415.30, x: 60, y: 35, hue: 45 },
+  { name: 'glyph',   hz: 311.13, x: 25, y: 30, hue: 180 },
+  { name: 'weft',    hz: 233.08, x: 55, y: 70, hue: 150 },
+  { name: 'lichen',  hz: 196.00, x: 45, y: 60, hue: 120 },
+  { name: 'mote',    hz: 466.16, x: 10, y: 40, hue: 200 },
+  { name: 'anvil',   hz: 164.81, x: 90, y: 45, hue: 30 },
+  { name: 'fable',   hz: 246.94, x: 38, y: 38, hue: 330 },
+];
+
+let audioCtx;
+const field = document.getElementById('field');
+
+creatures.forEach(c => {
+  const el = document.createElement('div');
+  el.className = 'node';
+  el.style.left = c.x + '%';
+  el.style.top = c.y + '%';
+  el.style.backgroundColor = `hsl(${c.hue}, 60%, 50%)`;
+  el.style.color = `hsl(${c.hue}, 60%, 50%)`;
+  el.title = c.name;
+  c.el = el;
+  field.appendChild(el);
+});
+
+function ring(creature, vol, time) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  osc.type = 'sine';
+  osc.frequency.value = creature.hz;
+
+  // Add a gentle fifth harmonic
+  const osc2 = audioCtx.createOscillator();
+  const gain2 = audioCtx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.value = creature.hz * 1.498;
+  gain2.gain.value = 0.08 * vol;
+
+  filter.type = 'lowpass';
+  filter.frequency.value = creature.hz * 4;
+  filter.Q.value = 2;
+
+  gain.gain.setValueAtTime(0, time);
+  gain.gain.linearRampToValueAtTime(vol * 0.2, time + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 3);
+
+  gain2.gain.setValueAtTime(gain2.gain.value, time);
+  gain2.gain.exponentialRampToValueAtTime(0.001, time + 2);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc2.connect(gain2);
+  gain2.connect(audioCtx.destination);
+
+  osc.start(time);
+  osc.stop(time + 3.5);
+  osc2.start(time);
+  osc2.stop(time + 2.5);
+
+  creature.el.classList.remove('ringing');
+  void creature.el.offsetWidth;
+  creature.el.classList.add('ringing');
+}
+
+field.addEventListener('click', (e) => {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  const rect = field.getBoundingClientRect();
+  const cx = ((e.clientX - rect.left) / rect.width) * 100;
+  const cy = ((e.clientY - rect.top) / rect.height) * 100;
+
+  const now = audioCtx.currentTime;
+
+  // Ring creatures by proximity — closer = louder, slight time delay for far ones
+  creatures.forEach(c => {
+    const dist = Math.sqrt((c.x - cx) ** 2 + (c.y - cy) ** 2);
+    if (dist < 40) {
+      const vol = 1 - dist / 40;
+      const delay = dist * 0.008;
+      ring(c, vol, now + delay);
+    }
+  });
+});
+</script>
+</body>
+</html>

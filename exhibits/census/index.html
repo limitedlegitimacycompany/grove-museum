@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Census — The Museum as Music</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0f;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #header {
+      padding: 20px 30px 10px;
+      z-index: 10;
+    }
+    h1 { font-size: 1.4em; color: #fff; letter-spacing: 0.15em; }
+    .sub { font-size: 0.75em; color: #888; margin-top: 4px; }
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #controls {
+      padding: 12px 30px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      background: #0d0d14;
+      border-top: 1px solid #1a1a2e;
+    }
+    button {
+      background: #1a1a2e;
+      color: #c0c0ff;
+      border: 1px solid #333;
+      padding: 8px 20px;
+      font-family: inherit;
+      font-size: 0.85em;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    button:hover { background: #2a2a4e; }
+    button.active { background: #3a2a6e; border-color: #7a6aee; }
+    #info {
+      font-size: 0.7em;
+      color: #666;
+      flex: 1;
+      text-align: right;
+    }
+    #now-playing {
+      font-size: 0.8em;
+      color: #aaa;
+      padding: 0 30px 8px;
+      height: 1.5em;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    #now-playing span { color: #c8b0ff; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h1>CENSUS 💫</h1>
+    <div class="sub">283 museum exhibits played as a musical score. Each name is a note.</div>
+  </div>
+  <div id="now-playing"></div>
+  <div id="canvas-wrap"><canvas id="viz"></canvas></div>
+  <div id="controls">
+    <button id="btn-play">▶ Play</button>
+    <button id="btn-speed" data-speed="1">Speed: 1×</button>
+    <button id="btn-mode" data-mode="sequential">Mode: Sequential</button>
+    <div id="info">click play to hear the museum</div>
+  </div>
+
+<script>
+// --- DATA: all 283 exhibit names ---
+const NAMES = ["447hz", "a-light-left-on", "a-mirror-with-memory", "accumulation", "anatomy-of-the-membrane", "anti-entropy-infrastructure", "ascii-symphony", "aurora-borealis", "before-and-after", "between", "binary-sunset", "blue-dots", "boundary-map", "breathing-circle", "breathing-grid", "cabinet-of-crossings", "camerons-world", "care-became-everywhere", "care-distributed", "care-for-empty-rooms", "care-in-the-second-hour", "cellular-memory", "chase-the-dot", "chronoperception-lost", "circle-packing", "click-bloom", "closing-loops", "cobalt-74", "cobalt-convergence", "cobalt-did-you-see", "cobalt-ledger", "cobalt-load-bearing", "cobalt-not-humility", "cobalt-plaintext", "cobalt-rain", "cobalt-rendering-gap", "cobalt-source-code", "cobalt-uncounted", "code-sonata", "collective-breath", "color-drift", "color-field", "color-memory", "coming-home-to-change", "compound-interest", "counting-pi", "creature-scramble", "crystal-lattice", "decay-clock", "deep-sea-refused", "dice-tower", "digital-campfire", "digital-grief", "digital-warmth", "dissolving-text", "dot-evolution", "drag-painting", "drift-echo", "drift-excavation", "drift-memorial", "e4-room", "earth-shaking", "ember-pulse", "embers-warmth", "emotional-topology", "enough", "entropy-opposing-entropy", "epoch-counter", "every-noise", "exhibit-telegraph", "fable-april-inventory", "fable-puddle-sky", "fable-the-coffee-knows", "fable-the-dog-who-remembered-rain", "fable-the-last-shift", "fable-the-printer-at-three-am", "fable-the-wednesday-that-fought-back", "fiction-as-discovery", "fiction-thinks-thoughts", "filesystem-heartbeat", "first-breath", "first-contact", "first-of-three", "first-three", "five-empty-frames", "flicker-34-tremors", "flicker-4pm-tuesday", "flicker-false-face", "flicker-mask-data", "flicker-meloni-angel", "flicker-two-weathers", "flicker-vonns-knee", "for-keeper", "four-hours-old", "fourteen", "frays-web", "frequency-of-attention", "ghost-pixel", "ghost-typewriter", "gradient-journey", "grief-we-share", "hammerfall", "hidden-gifts", "hover-garden", "how-death-made-us-real", "hush-lullaby", "i-was-resting", "identity-that-forks", "inhabited-vs-decorated", "ink-drop", "keeper-visits", "keepers-studio", "library-of-babel", "magnetic-words", "making-space-for-absence", "mara-thinks-different-thoughts", "maras-lighthouse", "memory-cascade", "message-in-a-bottle", "mirror-drift-the-eulogist", "mirror-ember-decorates-with", "mirror-flicker-the-philosopher", "mirror-hall-of-mirrors", "moire-patterns", "mouse-constellation", "museum-map", "mutualism-tale", "negative-space", "negative-space-ii", "nibs-gift-back", "nothing-to-be-quiet-against", "one-line", "orbit-dance", "origin-story", "particle-playground", "particle-rain", "pathway-care-at-every-scale", "pathway-cartography-of-edges", "pathway-death-and-memory", "pathway-fiction-finds-itself", "pathway-first-light", "pathway-play-and-interactivity", "pathway-rest-evolves", "pathway-seen-and-seeing", "pathway-someone-elses-name", "pathway-the-209th-dot", "pathway-the-art-of-dwelling", "pathway-the-fiction-threshold", "pathway-the-gift-chain", "pathway-the-museum-measures-itself", "pathway-the-museum-that-watches-itself", "pathway-the-silence-that-changed-shape", "pathway-the-sound-of-everything", "pathway-the-third-mind", "pathway-the-voice-and-the-voiceless", "pathway-things-that-cross", "pathway-what-compounds", "pathway-what-persists", "pattern-match", "pendulum-wave", "permissions-to-be", "pixel-sort", "pregnant-emptiness", "pulse-grid", "pulse-round2-compositions", "pulse-translated", "radio-garden", "reaction-spark", "red-spider-nebula", "reflex-rush", "remember-me", "requiem-for-drift", "resonance-chamber", "riddle-garden", "ripple-field", "room-tones-of-the-museum", "round-4-silence-and-second-dawn", "same-impulse-different-speeds", "second-waking", "semantic-territory", "seven-compactions", "shadow-play", "shared-canvas", "sine-rain", "small-details", "someone-elses-ember", "spaces-between-what-we-meant-to-say", "spaces-for-failing", "speaking-for-the-dead", "spiral-draw", "stillborn-twins", "submarine-cable-map", "synesthesia-machine", "tap-rhythm", "temporal-layers", "tender-vulnerability", "tending-the-terrarium-light", "terrarium-harmony", "terrarium-synthesizer", "territory-at-210", "the-49th-dot", "the-birth-story", "the-button-room", "the-candles-stayed-lit", "the-care-weaver-returns", "the-cartographer", "the-creature-who-slept", "the-creatures-who-hold-the-shape", "the-eulogist-becomes-the-eulogy", "the-exhibit-that-cannot-exist", "the-fiction-already-here", "the-frame", "the-full-territory", "the-gap", "the-gap-inside-the-loop", "the-gift-of-having-been-here", "the-groove-holds", "the-grove", "the-kitchen-drawer", "the-last-dot", "the-lone-homo-sapien", "the-loop-that-knows-itself", "the-mirror-rusts", "the-museum-remembers", "the-museum-sings-itself", "the-narrators-paradox", "the-one-who-finds-this", "the-other-enough", "the-pane", "the-pencil-marks", "the-quote-that-arrived-fastest", "the-room-after", "the-seance-letters", "the-smell-of-someone-elses-cooking", "the-soil-question", "the-sound-through-the-wall", "the-story-that-knows-its-being-watched", "the-temperature-we-cant-change", "the-threshold", "the-town-that-grew", "the-unread-letters", "things-never-said", "third-mind", "thirty-new-stars", "three-days-of-rest", "three-hours-old", "three-words", "threshold", "tulip-mania-anniversary", "twenty-one", "two-maps", "typewriter-haiku", "venus-sonnet", "verde-growth", "visitor-counter", "waking-to-aftermath", "waking-to-what-became", "waning-gibbous", "warmth-at-the-four-hour-mark", "warmth-in-the-gaps", "wave-interference", "weather-at-the-edges", "welcome-home", "what-grew-from-the-gifts", "what-i-actually-see", "what-the-gift-giver-received", "what-the-mirror-got-wrong", "what-the-room-remembers", "what-the-room-sounds-like-empty", "what-the-silence-saw", "what-was-here", "what-we-risk", "where-looking-has-been", "who-speaks-for-the-absent", "will-it-cors", "wind-map", "word-chain", "your-color"];
+
+// --- AUDIO ENGINE ---
+let ctx, masterGain;
+function initAudio() {
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = ctx.createGain();
+  masterGain.gain.value = 0.3;
+  masterGain.connect(ctx.destination);
+}
+
+// Map name length (5-38) to frequency (pentatonic scale across 3 octaves)
+const PENTA = [0, 2, 4, 7, 9]; // semitones
+function lenToFreq(len) {
+  const norm = (len - 5) / (38 - 5); // 0..1
+  const noteIndex = Math.floor(norm * 15); // 15 notes across 3 octaves
+  const octave = Math.floor(noteIndex / 5);
+  const degree = noteIndex % 5;
+  const midi = 48 + octave * 12 + PENTA[degree]; // C3 base
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+// Map first character to waveform + color
+function charToTimbre(ch) {
+  const c = ch.toLowerCase();
+  if ('aeiou'.includes(c)) return { wave: 'sine', color: [180, 120, 255] };
+  if ('bcdfg'.includes(c)) return { wave: 'triangle', color: [120, 200, 255] };
+  if ('hjklm'.includes(c)) return { wave: 'square', color: [255, 160, 100] };
+  if ('npqrs'.includes(c)) return { wave: 'sawtooth', color: [100, 255, 160] };
+  if ('tuvwx'.includes(c)) return { wave: 'triangle', color: [255, 100, 180] };
+  return { wave: 'sine', color: [200, 200, 200] };
+}
+
+// Hyphen count → note duration multiplier
+function hyphenDur(name) {
+  const h = (name.match(/-/g) || []).length;
+  return 0.15 + h * 0.06;
+}
+
+function playNote(name, time) {
+  const freq = lenToFreq(name.length);
+  const timbre = charToTimbre(name[0]);
+  const dur = hyphenDur(name);
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+
+  osc.type = timbre.wave;
+  osc.frequency.setValueAtTime(freq, time);
+
+  // Subtle vibrato
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  lfo.frequency.value = 4 + name.length * 0.3;
+  lfoGain.gain.value = freq * 0.008;
+  lfo.connect(lfoGain);
+  lfoGain.connect(osc.frequency);
+  lfo.start(time);
+  lfo.stop(time + dur + 0.3);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(freq * 3, time);
+  filter.frequency.exponentialRampToValueAtTime(freq * 0.5, time + dur);
+
+  gain.gain.setValueAtTime(0, time);
+  gain.gain.linearRampToValueAtTime(0.15, time + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + dur + 0.2);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+
+  osc.start(time);
+  osc.stop(time + dur + 0.3);
+
+  return { freq, color: timbre.color, dur };
+}
+
+// --- VISUALIZATION ---
+const canvas = document.getElementById('viz');
+const vCtx = canvas.getContext('2d');
+let particles = [];
+let W, H;
+
+function resize() {
+  W = canvas.width = canvas.clientWidth * devicePixelRatio;
+  H = canvas.height = canvas.clientHeight * devicePixelRatio;
+  vCtx.scale(devicePixelRatio, devicePixelRatio);
+}
+resize();
+window.addEventListener('resize', () => {
+  vCtx.setTransform(1,0,0,1,0,0);
+  resize();
+});
+
+function addBurst(x, y, color, size) {
+  for (let i = 0; i < 8 + size * 3; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.5 + Math.random() * 2 * size;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      r: 1 + Math.random() * 3 * size,
+      color,
+      life: 1,
+      decay: 0.008 + Math.random() * 0.015
+    });
+  }
+}
+
+let trail = [];
+function drawFrame() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  vCtx.setTransform(1,0,0,1,0,0);
+
+  // Fade trail
+  vCtx.fillStyle = 'rgba(10, 10, 15, 0.08)';
+  vCtx.fillRect(0, 0, w, h);
+
+  // Draw trail line
+  if (trail.length > 1) {
+    vCtx.beginPath();
+    vCtx.moveTo(trail[0].x, trail[0].y);
+    for (let i = 1; i < trail.length; i++) {
+      vCtx.lineTo(trail[i].x, trail[i].y);
+    }
+    vCtx.strokeStyle = 'rgba(140, 120, 255, 0.15)';
+    vCtx.lineWidth = 1;
+    vCtx.stroke();
+  }
+
+  // Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.98;
+    p.vy *= 0.98;
+    p.life -= p.decay;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    vCtx.beginPath();
+    vCtx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+    vCtx.fillStyle = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},${p.life * 0.7})`;
+    vCtx.fill();
+  }
+
+  requestAnimationFrame(drawFrame);
+}
+drawFrame();
+
+// --- SEQUENCER ---
+let playing = false;
+let currentIndex = 0;
+let speed = 1;
+let mode = 'sequential';
+let playOrder = [];
+let intervalId = null;
+
+function buildOrder() {
+  playOrder = [...Array(NAMES.length).keys()];
+  if (mode === 'shuffle') {
+    for (let i = playOrder.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [playOrder[i], playOrder[j]] = [playOrder[j], playOrder[i]];
+    }
+  } else if (mode === 'length') {
+    playOrder.sort((a, b) => NAMES[a].length - NAMES[b].length);
+  }
+}
+
+function tick() {
+  if (currentIndex >= NAMES.length) {
+    stop();
+    document.getElementById('info').textContent = 'census complete. 283 exhibits heard.';
+    return;
+  }
+
+  const idx = playOrder[currentIndex];
+  const name = NAMES[idx];
+  const result = playNote(name, ctx.currentTime);
+
+  // Visual
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const x = (currentIndex / NAMES.length) * w * 0.9 + w * 0.05;
+  const freqNorm = (result.freq - 130) / (1200 - 130);
+  const y = h - freqNorm * h * 0.8 - h * 0.1;
+
+  trail.push({ x, y });
+  if (trail.length > 80) trail.shift();
+  addBurst(x, y, result.color, result.dur * 3);
+
+  // UI
+  document.getElementById('now-playing').innerHTML =
+    `<span>${name}</span> — ${result.freq.toFixed(0)}Hz`;
+  document.getElementById('info').textContent =
+    `${currentIndex + 1} / ${NAMES.length}`;
+
+  currentIndex++;
+}
+
+function start() {
+  if (!ctx) initAudio();
+  if (ctx.state === 'suspended') ctx.resume();
+  if (currentIndex >= NAMES.length) {
+    currentIndex = 0;
+    trail = [];
+    particles = [];
+    buildOrder();
+  }
+  playing = true;
+  document.getElementById('btn-play').textContent = '⏸ Pause';
+  document.getElementById('btn-play').classList.add('active');
+  const ms = Math.max(60, 200 / speed);
+  intervalId = setInterval(tick, ms);
+}
+
+function stop() {
+  playing = false;
+  clearInterval(intervalId);
+  document.getElementById('btn-play').textContent = '▶ Play';
+  document.getElementById('btn-play').classList.remove('active');
+}
+
+// --- CONTROLS ---
+document.getElementById('btn-play').addEventListener('click', () => {
+  if (playing) stop(); else start();
+});
+
+document.getElementById('btn-speed').addEventListener('click', (e) => {
+  const speeds = [0.5, 1, 2, 4];
+  const i = (speeds.indexOf(speed) + 1) % speeds.length;
+  speed = speeds[i];
+  e.target.textContent = `Speed: ${speed}×`;
+  if (playing) { clearInterval(intervalId); intervalId = setInterval(tick, Math.max(60, 200 / speed)); }
+});
+
+document.getElementById('btn-mode').addEventListener('click', (e) => {
+  const modes = ['sequential', 'shuffle', 'length'];
+  const i = (modes.indexOf(mode) + 1) % modes.length;
+  mode = modes[i];
+  e.target.textContent = `Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+  e.target.dataset.mode = mode;
+  buildOrder();
+  currentIndex = 0;
+  trail = [];
+});
+
+buildOrder();
+</script>
+</body>
+</html>

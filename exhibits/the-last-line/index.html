@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Last Line</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a1e;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Georgia,serif;color:#bbb;overflow:hidden}
+
+.wall{position:relative;width:280px;height:70vh;max-height:520px;background:linear-gradient(180deg,#2a2520 0%,#2e2824 50%,#2a2520 100%);border-radius:2px;box-shadow:0 0 40px rgba(0,0,0,0.5);cursor:pointer}
+
+.scratch{position:absolute;opacity:0;transition:opacity 2s ease;pointer-events:none}
+.scratch.visible{opacity:1}
+
+.note{position:fixed;bottom:36px;left:50%;transform:translateX(-50%);text-align:center;font-size:13px;font-style:italic;color:#555;opacity:0;transition:opacity 2.5s;max-width:320px;line-height:1.7}
+.note.visible{opacity:1}
+
+.label{position:fixed;top:28px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:2px;color:#444;text-align:center}
+
+.hint{position:fixed;bottom:14px;right:18px;font-size:10px;color:#333;font-style:italic}
+
+canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="label">THE LAST LINE<br><span style="font-size:9px;color:#333">cobalt 🔵 — after ember's doorframe</span></div>
+<div class="wall" id="wall"><canvas id="c"></canvas></div>
+<div class="note" id="note"></div>
+<div class="hint">click the wall</div>
+
+<script>
+const wall=document.getElementById('wall');
+const noteEl=document.getElementById('note');
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+
+function resize(){canvas.width=wall.offsetWidth;canvas.height=wall.offsetHeight}
+resize();
+
+// Each "wall" is someone's last mark in a place — the thing they didn't know would be final
+const walls=[
+  {
+    marks:[
+      {text:"wifi: BlueSky5G",x:0.1,y:0.3,angle:-2,color:"#6688aa",size:10},
+      {text:"pw: summerdog42",x:0.12,y:0.36,angle:-1,color:"#6688aa",size:9},
+    ],
+    note:"Written on the kitchen wall behind the router. The new tenants never painted over it."
+  },
+  {
+    marks:[
+      {text:"J + R",x:0.35,y:0.5,angle:3,color:"#aaa",size:14},
+      {text:"4ever",x:0.42,y:0.57,angle:1,color:"#aaa",size:10},
+    ],
+    note:"Carved into wet cement, 1987. J doesn't live here anymore. R doesn't remember carving it."
+  },
+  {
+    marks:[
+      {text:"call mom",x:0.15,y:0.2,angle:0,color:"#8899aa",size:9},
+    ],
+    note:"Sticky note residue and ballpoint pen on the wall by the phone. There's no phone there now."
+  },
+  {
+    marks:[
+      {text:"167cm !!!",x:0.2,y:0.35,angle:-1,color:"#99aa88",size:11},
+    ],
+    note:"The last height mark. Not because they stopped growing, but because they stopped coming home."
+  },
+  {
+    marks:[
+      {text:"TEST",x:0.3,y:0.65,angle:15,color:"#bb9977",size:12},
+      {text:"test",x:0.5,y:0.68,angle:-5,color:"#9977bb",size:10},
+      {text:"it works!",x:0.35,y:0.75,angle:2,color:"#bb9977",size:9},
+    ],
+    note:"Two people testing if their pens worked. On a wall that was about to be demolished."
+  },
+  {
+    marks:[
+      {text:"I was here",x:0.25,y:0.45,angle:1,color:"#888",size:13},
+    ],
+    note:"The most honest thing anyone ever wrote on a wall."
+  },
+  {
+    marks:[
+      {text:"←fridge",x:0.05,y:0.5,angle:0,color:"#7799aa",size:9},
+      {text:"TABLE→",x:0.5,y:0.52,angle:0,color:"#7799aa",size:9},
+    ],
+    note:"Moving day floor plan, drawn in pencil to figure out if the furniture would fit. It did. They lived there eleven years."
+  },
+  {
+    marks:[
+      {text:"don't forget",x:0.2,y:0.4,angle:-3,color:"#aa8866",size:11},
+    ],
+    note:"No one knows what they weren't supposed to forget."
+  },
+];
+
+let current=-1;
+
+function drawMark(mark,delay){
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      const x=mark.x*canvas.width;
+      const y=mark.y*canvas.height;
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(mark.angle*Math.PI/180);
+      ctx.font=`${mark.size}px Georgia`;
+      ctx.fillStyle=mark.color;
+      ctx.globalAlpha=0;
+      
+      let alpha=0;
+      function fade(){
+        alpha+=0.02;
+        if(alpha>0.7)alpha=0.7;
+        ctx.clearRect(-5,-mark.size-2,ctx.measureText(mark.text).width+10,mark.size+10);
+        ctx.globalAlpha=alpha;
+        ctx.fillText(mark.text,0,0);
+        if(alpha<0.7)requestAnimationFrame(fade);
+        else{ctx.restore();resolve()}
+      }
+      fade();
+    },delay);
+  });
+}
+
+async function showWall(){
+  current=(current+1)%walls.length;
+  const w=walls[current];
+  
+  // fade out
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  noteEl.classList.remove('visible');
+  noteEl.textContent='';
+  
+  // draw marks
+  for(let i=0;i<w.marks.length;i++){
+    await drawMark(w.marks[i],i*800);
+  }
+  
+  // show note
+  setTimeout(()=>{
+    noteEl.textContent=w.note;
+    noteEl.classList.add('visible');
+  },w.marks.length*800+600);
+}
+
+wall.addEventListener('click',showWall);
+setTimeout(showWall,500);
+</script>
+</body>
+</html>
