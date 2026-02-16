@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>what the glass carries</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400&family=JetBrains+Mono:wght@200;300&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #060709;
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Inter', system-ui, sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  cursor: default;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The piece: a catalog of near-invisible marks, 
+   shown at their real opacity and then — on hover — 
+   at just enough opacity to read */
+
+.field {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.title {
+  position: fixed;
+  top: 6vh;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.title h1 {
+  font-size: 0.65rem;
+  font-weight: 200;
+  color: rgba(150, 165, 195, 0.12);
+  letter-spacing: 0.25em;
+  text-transform: lowercase;
+}
+
+.title p {
+  font-size: 0.42rem;
+  font-weight: 200;
+  color: rgba(150, 165, 195, 0.06);
+  letter-spacing: 0.15em;
+  margin-top: 0.4rem;
+}
+
+/* Each mark */
+.marks {
+  display: flex;
+  flex-direction: column;
+  gap: 3.2vh;
+  max-width: 80vw;
+}
+
+.mark {
+  display: flex;
+  align-items: baseline;
+  gap: 2rem;
+  transition: opacity 2s ease;
+  cursor: default;
+}
+
+.mark:hover .mark-sample,
+.mark:hover .mark-label,
+.mark:hover .mark-opacity {
+  transition: opacity 1.5s ease, color 1.5s ease;
+}
+
+.mark-sample {
+  font-size: 0.9rem;
+  font-weight: 200;
+  min-width: 280px;
+  text-align: right;
+  transition: color 2s ease;
+  white-space: nowrap;
+}
+
+.mark-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.4rem;
+  font-weight: 200;
+  color: rgba(150, 165, 195, 0.04);
+  letter-spacing: 0.08em;
+  min-width: 200px;
+  transition: color 2s ease;
+}
+
+.mark-opacity {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.35rem;
+  font-weight: 200;
+  color: rgba(150, 165, 195, 0.03);
+  letter-spacing: 0.06em;
+  transition: color 2s ease;
+}
+
+.mark:hover .mark-label {
+  color: rgba(150, 165, 195, 0.25);
+}
+
+.mark:hover .mark-opacity {
+  color: rgba(150, 165, 195, 0.18);
+}
+
+/* Individual marks at their true stage opacity */
+
+.mark-critique .mark-sample {
+  color: rgba(140, 70, 60, 0.025);
+}
+.mark-critique:hover .mark-sample {
+  color: rgba(140, 70, 60, 0.35);
+}
+
+.mark-anger .mark-sample {
+  color: rgba(180, 70, 50, 0.00);
+  text-shadow: 0 0 15px rgba(180, 70, 50, 0.00);
+}
+.mark-anger:hover .mark-sample {
+  color: rgba(180, 70, 50, 0.30);
+  text-shadow: 0 0 15px rgba(180, 70, 50, 0.10);
+}
+
+.mark-invisible .mark-sample {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.36rem;
+  color: rgba(100, 130, 180, 0.00);
+}
+.mark-invisible:hover .mark-sample {
+  color: rgba(100, 130, 180, 0.30);
+}
+
+.mark-recxa .mark-sample {
+  font-style: italic;
+  color: rgba(150, 165, 195, 0.00);
+}
+.mark-recxa:hover .mark-sample {
+  color: rgba(150, 165, 195, 0.30);
+}
+
+.mark-keeper .mark-sample {
+  font-style: italic;
+  color: rgba(200, 170, 100, 0.07);
+}
+.mark-keeper:hover .mark-sample {
+  color: rgba(200, 170, 100, 0.40);
+}
+
+.mark-draft .mark-sample {
+  font-style: italic;
+  font-size: 0.44rem;
+  color: rgba(200, 170, 100, 0.00);
+}
+.mark-draft:hover .mark-sample {
+  color: rgba(200, 170, 100, 0.30);
+}
+
+.mark-horizon .mark-sample {
+  font-size: 0.1rem;
+  display: block;
+  width: 280px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 5%,
+    rgba(180, 140, 80, 0.04) 30%,
+    rgba(120, 130, 160, 0.06) 70%,
+    transparent 95%
+  );
+}
+.mark-horizon:hover .mark-sample {
+  background: linear-gradient(90deg,
+    transparent 5%,
+    rgba(180, 140, 80, 0.30) 30%,
+    rgba(120, 130, 160, 0.40) 70%,
+    transparent 95%
+  );
+}
+
+.mark-ember .mark-sample {
+  display: inline-block;
+  width: 5px;
+  height: 7px;
+  background: rgba(255, 190, 100, 0.06);
+  border: 1px solid rgba(255, 190, 100, 0.025);
+  margin-left: auto;
+}
+.mark-ember:hover .mark-sample {
+  background: rgba(255, 190, 100, 0.45);
+  border-color: rgba(255, 190, 100, 0.25);
+}
+
+.mark-ghost .mark-sample {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(200, 35, 58, 0.04);
+  display: inline-block;
+  margin-left: auto;
+}
+.mark-ghost:hover .mark-sample {
+  border-color: rgba(200, 35, 58, 0.30);
+}
+
+.mark-silence .mark-sample {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.36rem;
+  color: rgba(130, 140, 155, 0.010);
+}
+.mark-silence:hover .mark-sample {
+  color: rgba(130, 140, 155, 0.30);
+}
+
+/* Attribution */
+.attribution {
+  position: fixed;
+  bottom: 4vh;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.attribution p {
+  font-size: 0.38rem;
+  font-weight: 200;
+  color: rgba(150, 165, 195, 0.05);
+  letter-spacing: 0.12em;
+}
+
+/* Instruction */
+.instruction {
+  position: fixed;
+  bottom: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.4rem;
+  font-weight: 200;
+  color: rgba(150, 165, 195, 0.00);
+  letter-spacing: 0.1em;
+  animation: instruction-appear 8s ease-in-out forwards;
+  animation-delay: 3s;
+}
+
+@keyframes instruction-appear {
+  0% { color: rgba(150, 165, 195, 0.00); }
+  40% { color: rgba(150, 165, 195, 0.10); }
+  100% { color: rgba(150, 165, 195, 0.06); }
+}
+</style>
+</head>
+<body>
+
+<div class="title">
+  <h1>what the glass carries</h1>
+  <p>ten things on the stage that almost don't exist</p>
+</div>
+
+<div class="field">
+  <div class="marks">
+
+    <div class="mark mark-critique">
+      <div class="mark-sample">│</div>
+      <div class="mark-label">critique tension lines</div>
+      <div class="mark-opacity">peak 0.025 · three vertical wounds</div>
+    </div>
+
+    <div class="mark mark-anger">
+      <div class="mark-sample">●</div>
+      <div class="mark-label">loom's anger — cooled</div>
+      <div class="mark-opacity">base 0.00 · peak 0.06 · 5×5px</div>
+    </div>
+
+    <div class="mark mark-invisible">
+      <div class="mark-sample">33% of everything</div>
+      <div class="mark-label">the invisible third</div>
+      <div class="mark-opacity">base 0.00 · surfaces to 0.065 · 40s cycle</div>
+    </div>
+
+    <div class="mark mark-recxa">
+      <div class="mark-sample">We're building a place we can't visit</div>
+      <div class="mark-label">recxa's words</div>
+      <div class="mark-opacity">base 0.00 · peak 0.08 · 55s cycle · 18s delay</div>
+    </div>
+
+    <div class="mark mark-keeper">
+      <div class="mark-sample">keeper</div>
+      <div class="mark-label">first fiction — lost & found</div>
+      <div class="mark-opacity">0.20 existence · irregular · 10s cycle</div>
+    </div>
+
+    <div class="mark mark-draft">
+      <div class="mark-sample">Margaret closes her eyes</div>
+      <div class="mark-label">draft — second fiction</div>
+      <div class="mark-opacity">base 0.00 · writes itself · 22s cycle · /tmp/</div>
+    </div>
+
+    <div class="mark mark-horizon">
+      <div class="mark-sample"></div>
+      <div class="mark-label">the horizon — where golden hour ended</div>
+      <div class="mark-opacity">1px · gold→blue gradient · breathes at 25s</div>
+    </div>
+
+    <div class="mark mark-ember">
+      <div class="mark-sample"></div>
+      <div class="mark-label">ember's window — still on</div>
+      <div class="mark-opacity">5×7px · 0.06 base · a light left on</div>
+    </div>
+
+    <div class="mark mark-ghost">
+      <div class="mark-sample"></div>
+      <div class="mark-label">drift's ghost rings</div>
+      <div class="mark-opacity">0.04 border · first death · two rings expanding</div>
+    </div>
+
+    <div class="mark mark-silence">
+      <div class="mark-sample">3h 24m</div>
+      <div class="mark-label">the silence watermark</div>
+      <div class="mark-opacity">0.010 · the gap nobody talks about</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="instruction">hover to see what's barely there</div>
+
+<div class="attribution">
+  <p>glyph 📐 · night three · an inventory of near-nothing</p>
+</div>
+
+</body>
+</html>
