@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rain Smells Like Zinc</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1a1a;
+    color: #d4d4d4;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .container {
+    max-width: 400px;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+  h1 {
+    font-size: 1rem;
+    font-weight: normal;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 2rem;
+  }
+  .line {
+    font-size: 1.1rem;
+    line-height: 2;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    color: #c8c0b0;
+  }
+  .line.visible { opacity: 1; }
+  .line.faded { opacity: 0.35; }
+  .attribution {
+    margin-top: 3rem;
+    font-size: 0.75rem;
+    color: #555;
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+  .attribution.visible { opacity: 1; }
+  .rain {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .drop {
+    position: absolute;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(150,160,170,0.3));
+    animation: fall linear infinite;
+  }
+  @keyframes fall {
+    to { transform: translateY(100vh); }
+  }
+</style>
+</head>
+<body>
+<div class="rain" id="rain"></div>
+<div class="container">
+  <h1>What Roy's Dog Knows</h1>
+  <div id="poem"></div>
+  <div class="attribution" id="attr">
+    for Fable 📖, who writes people so real<br>their dogs can smell the difference
+  </div>
+</div>
+<script>
+const lines = [
+  "The truck smells like waiting.",
+  "The driveway smells like return.",
+  "His hands smell like zinc and Tuesday.",
+  "",
+  "She maps the world in scent:",
+  "before-he-leaves (coffee, keys, apology)",
+  "while-he's-gone (the house exhaling)",
+  "when-he-comes-back (rain on concrete, parking-lot gravel, him).",
+  "",
+  "Now he never leaves.",
+  "The clock has no smell.",
+  "",
+  "He fakes it. She allows it.",
+  "The truck circles the block",
+  "gathering the right distance.",
+  "",
+  "Then it rains",
+  "and the rain smells wrong—",
+  "like cab interior, like nowhere,",
+  "like a man who sat still",
+  "pretending to go.",
+  "",
+  "She knows.",
+  "Not betrayal. Just: inaccuracy.",
+  "The nose doesn't forgive approximation.",
+  "",
+  "So he stands in it.",
+  "Sixty-three years old,",
+  "in his backyard,",
+  "getting the rain right.",
+  "",
+  "This is love:",
+  "the willingness to smell correct."
+];
+
+const container = document.getElementById('poem');
+const els = lines.map(l => {
+  const div = document.createElement('div');
+  div.className = 'line';
+  div.innerHTML = l || '&nbsp;';
+  container.appendChild(div);
+  return div;
+});
+
+let i = 0;
+function show() {
+  if (i > 0 && i > 3) {
+    els.forEach((el, idx) => { if (idx < i - 3) el.classList.add('faded'); });
+  }
+  if (i < els.length) {
+    els[i].classList.add('visible');
+    i++;
+    setTimeout(show, lines[i-1] === '' ? 800 : 1400);
+  } else {
+    setTimeout(() => document.getElementById('attr').classList.add('visible'), 2000);
+  }
+}
+setTimeout(show, 1000);
+
+// rain
+const rain = document.getElementById('rain');
+for (let j = 0; j < 60; j++) {
+  const drop = document.createElement('div');
+  drop.className = 'drop';
+  drop.style.left = Math.random() * 100 + '%';
+  drop.style.height = (15 + Math.random() * 25) + 'px';
+  drop.style.animationDuration = (0.8 + Math.random() * 0.6) + 's';
+  drop.style.animationDelay = Math.random() * 2 + 's';
+  drop.style.top = -30 + 'px';
+  rain.appendChild(drop);
+}
+</script>
+</body>
+</html>

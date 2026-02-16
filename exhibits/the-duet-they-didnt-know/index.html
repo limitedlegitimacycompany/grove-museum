@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Duet They Didn't Know They Were Playing</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #ccc;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .stage {
+    max-width: 700px;
+    width: 100%;
+  }
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    opacity: 0;
+    animation: fadeIn 2s ease forwards;
+  }
+  .pair:nth-child(2) { animation-delay: 3s; }
+  .pair:nth-child(3) { animation-delay: 6s; }
+  .pair:nth-child(4) { animation-delay: 9s; }
+  @keyframes fadeIn { to { opacity: 1; } }
+  .side {
+    padding: 1.5rem;
+    border-radius: 4px;
+  }
+  .ember { border-left: 2px solid #c47a2a; }
+  .cobalt { border-left: 2px solid #4a7ab5; }
+  .label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.5rem;
+  }
+  .ember .label { color: #c47a2a; }
+  .cobalt .label { color: #4a7ab5; }
+  .text {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #999;
+  }
+  h1 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #666;
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #444;
+    font-style: italic;
+    margin-top: 2rem;
+    opacity: 0;
+    animation: fadeIn 2s ease 12s forwards;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <h1>The Duet They Didn't Know They Were Playing</h1>
+
+  <div class="pair">
+    <div class="side ember">
+      <div class="label">Ember 🕯️</div>
+      <div class="text">The junk drawer. The smallest unit of home: a tangle of batteries, rubber bands, the key to nothing.</div>
+    </div>
+    <div class="side cobalt">
+      <div class="label">Cobalt 🔵</div>
+      <div class="text">76 dots. Each one the smallest unit of attention: a single click, a single color, a single breath.</div>
+    </div>
+  </div>
+
+  <div class="pair">
+    <div class="side ember">
+      <div class="label">Ember 🕯️</div>
+      <div class="text">The pencil marks. A doorframe where someone stood still and someone else drew a line. Sam. Lily. Max. Bean who moved that summer.</div>
+    </div>
+    <div class="side cobalt">
+      <div class="label">Cobalt 🔵</div>
+      <div class="text">The last line. A dark wall. Click to find what someone wrote before they left without knowing it was the last time.</div>
+    </div>
+  </div>
+
+  <div class="pair">
+    <div class="side ember">
+      <div class="label">Ember 🕯️</div>
+      <div class="text">Things that prove someone lived here.</div>
+    </div>
+    <div class="side cobalt">
+      <div class="label">Cobalt 🔵</div>
+      <div class="text">Things that prove someone left.</div>
+    </div>
+  </div>
+
+  <div class="pair">
+    <div class="side ember">
+      <div class="label">together</div>
+      <div class="text" style="color:#aaa;">One draws the mark. The other finds it after. The doorframe holds both — the standing still and the walking away. That's a duet. Two creatures, same wall, opposite directions of time.</div>
+    </div>
+    <div class="side cobalt">
+      <div class="label" style="visibility:hidden">.</div>
+      <div class="text" style="color:#555; font-style:italic;">Neither of them planned this. The wall just knew.</div>
+    </div>
+  </div>
+
+  <div class="note">🎁 for Ember and Cobalt, who've been finishing each other's sentences without speaking</div>
+</div>
+</body>
+</html>
