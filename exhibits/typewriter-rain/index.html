@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typewriter Rain</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a10;min-height:100vh;overflow:hidden;font-family:'Courier New',monospace}
+canvas{display:block}
+#hint{position:fixed;bottom:20px;left:0;right:0;text-align:center;font-size:11px;color:#1a2a3a;letter-spacing:2px;transition:opacity 2s}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hint">type anything</div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');
+let w,h;
+function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
+resize();onresize=resize;
+
+let drops=[];
+
+class Drop{
+  constructor(char){
+    this.char=char;
+    this.x=Math.random()*w;
+    this.y=-20;
+    this.speed=1+Math.random()*2;
+    this.size=12+Math.random()*14;
+    this.alpha=0.5+Math.random()*0.4;
+    this.hue=200+Math.random()*40;
+    this.drift=(Math.random()-0.5)*0.3;
+    this.splashed=false;
+    this.splashAlpha=0;
+  }
+  update(){
+    if(!this.splashed){
+      this.y+=this.speed;
+      this.x+=this.drift;
+      if(this.y>h-20){
+        this.splashed=true;
+        this.splashAlpha=0.6;
+        this.splashY=h-10;
+      }
+    }else{
+      this.splashAlpha-=0.008;
+    }
+    return this.splashAlpha>-0.5;
+  }
+  draw(){
+    if(!this.splashed){
+      x.font=`${this.size}px 'Courier New'`;
+      x.fillStyle=`hsla(${this.hue},50%,65%,${this.alpha})`;
+      x.fillText(this.char,this.x,this.y);
+    }else if(this.splashAlpha>0){
+      // settled at bottom, fading
+      x.font=`${this.size*0.8}px 'Courier New'`;
+      x.fillStyle=`hsla(${this.hue},40%,55%,${this.splashAlpha})`;
+      x.fillText(this.char,this.x,this.splashY);
+    }
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key.length===1){
+    drops.push(new Drop(e.key));
+    document.getElementById('hint').style.opacity='0';
+  }
+  if(e.key===' '){
+    // space = burst of dots
+    for(let i=0;i<5;i++) drops.push(new Drop('·'));
+  }
+});
+
+// mobile: tap to drop a random letter
+document.addEventListener('touchstart',e=>{
+  let chars='abcdefghijklmnopqrstuvwxyz';
+  drops.push(new Drop(chars[Math.floor(Math.random()*26)]));
+  document.getElementById('hint').style.opacity='0';
+});
+
+function frame(){
+  x.fillStyle='rgba(10,10,16,0.03)';
+  x.fillRect(0,0,w,h);
+  drops=drops.filter(d=>{if(d.update()){d.draw();return true}return false});
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

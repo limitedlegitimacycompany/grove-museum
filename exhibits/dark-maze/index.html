@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dark Maze</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #050505;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  user-select: none;
+}
+h1 { font-size: 16px; color: #333; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 15px; }
+canvas { border-radius: 4px; }
+#info {
+  margin: 15px 0 8px;
+  font-size: 13px; color: #444;
+  display: flex; gap: 30px;
+}
+#info span { color: #777; }
+#message { font-size: 14px; min-height: 24px; margin: 8px 0; color: #555; }
+#controls { margin-top: 8px; }
+button.ctrl {
+  background: #151515; color: #666; border: 1px solid #2a2a2a;
+  padding: 8px 18px; font-family: inherit; font-size: 12px;
+  cursor: pointer; border-radius: 4px; margin: 3px;
+}
+button.ctrl:hover { background: #1e1e1e; color: #aaa; border-color: #444; }
+#touch-controls {
+  display: none; margin-top: 12px;
+}
+.arrow {
+  width: 50px; height: 50px; background: #151515; border: 1px solid #2a2a2a;
+  border-radius: 6px; font-size: 20px; color: #555; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.arrow:active { background: #222; color: #aaa; }
+@media (pointer: coarse) {
+  #touch-controls { display: grid; grid-template-columns: 50px 50px 50px; gap: 4px; justify-content: center; }
+}
+</style>
+</head>
+<body>
+<h1>Dark Maze</h1>
+<canvas id="c" width="400" height="400"></canvas>
+<div id="info">
+  <div>Steps <span id="steps">0</span></div>
+  <div>Maze <span id="maze-num">1</span></div>
+  <div>Solved <span id="solved">0</span></div>
+</div>
+<div id="message">arrow keys to move · find the exit</div>
+<div id="controls">
+  <button class="ctrl" onclick="newMaze()">new maze</button>
+  <button class="ctrl" onclick="toggleReveal()" id="reveal-btn">reveal (give up)</button>
+</div>
+<div id="touch-controls">
+  <div></div><div class="arrow" onclick="move(0,-1)">↑</div><div></div>
+  <div class="arrow" onclick="move(-1,0)">←</div><div class="arrow" onclick="move(0,1)">↓</div><div class="arrow" onclick="move(1,0)">→</div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const SIZE = 15; // maze grid
+const CELL = Math.floor(400 / SIZE);
+
+let maze = [];
+let px = 0, py = 0; // player
+let ex = 0, ey = 0; // exit
+let steps = 0;
+let mazeNum = 0;
+let totalSolved = 0;
+let revealed = false;
+let won = false;
+let visited = new Set();
+let bumps = new Set(); // walls you've bumped into
+
+// Maze generation (recursive backtracker)
+function generateMaze() {
+  maze = [];
+  for (let y = 0; y < SIZE; y++) {
+    maze[y] = [];
+    for (let x = 0; x < SIZE; x++) {
+      maze[y][x] = { walls: { N: true, S: true, E: true, W: true }, visited: false };
+    }
+  }
+
+  let stack = [];
+  let cx = 0, cy = 0;
+  maze[cy][cx].visited = true;
+  let totalCells = SIZE * SIZE;
+  let visitedCount = 1;
+
+  while (visitedCount < totalCells) {
+    let neighbors = [];
+    if (cy > 0 && !maze[cy-1][cx].visited) neighbors.push([cx, cy-1, 'N', 'S']);
+    if (cy < SIZE-1 && !maze[cy+1][cx].visited) neighbors.push([cx, cy+1, 'S', 'N']);
+    if (cx > 0 && !maze[cy][cx-1].visited) neighbors.push([cx-1, cy, 'W', 'E']);
+    if (cx < SIZE-1 && !maze[cy][cx+1].visited) neighbors.push([cx+1, cy, 'E', 'W']);
+
+    if (neighbors.length > 0) {
+      let [nx, ny, wall, opp] = neighbors[Math.floor(Math.random() * neighbors.length)];
+      stack.push([cx, cy]);
+      maze[cy][cx].walls[wall] = false;
+      maze[ny][nx].walls[opp] = false;
+      cx = nx; cy = ny;
+      maze[cy][cx].visited = true;
+      visitedCount++;
+    } else {
+      [cx, cy] = stack.pop();
+    }
+  }
+}
+
+function newMaze() {
+  generateMaze();
+  px = 0; py = 0;
+  ex = SIZE - 1; ey = SIZE - 1;
+  steps = 0;
+  mazeNum++;
+  revealed = false;
+  won = false;
+  visited = new Set();
+  bumps = new Set();
+  visited.add(`${px},${py}`);
+  document.getElementById('reveal-btn').textContent = 'reveal (give up)';
+  setMessage('arrow keys to move · find the exit');
+  updateInfo();
+  draw();
+}
+
+function canMove(x, y, dir) {
+  if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) return false;
+  return !maze[y][x].walls[dir];
+}
+
+function move(dx, dy) {
+  if (won) return;
+  let dir, opp;
+  if (dx === 1) dir = 'E';
+  else if (dx === -1) dir = 'W';
+  else if (dy === -1) dir = 'N';
+  else if (dy === 1) dir = 'S';
+
+  if (canMove(px, py, dir)) {
+    px += dx;
+    py += dy;
+    steps++;
+    visited.add(`${px},${py}`);
+
+    if (px === ex && py === ey) {
+      won = true;
+      totalSolved++;
+      setMessage(`✓ escaped in ${steps} steps`, '#6b6');
+    }
+  } else {
+    // Bump! Record the wall location for drawing
+    bumps.add(`${px},${py},${dir}`);
+    steps++;
+    // Also record the wall from the other side
+    let nx = px + dx, ny = py + dy;
+    if (nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE) {
+      let oppDir = dir === 'N' ? 'S' : dir === 'S' ? 'N' : dir === 'E' ? 'W' : 'E';
+      bumps.add(`${nx},${ny},${oppDir}`);
+    }
+  }
+  updateInfo();
+  draw();
+}
+
+function toggleReveal() {
+  if (won) { newMaze(); return; }
+  revealed = !revealed;
+  document.getElementById('reveal-btn').textContent = revealed ? 'hide' : 'reveal (give up)';
+  draw();
+}
+
+function draw() {
+  ctx.fillStyle = '#050505';
+  ctx.fillRect(0, 0, 400, 400);
+
+  let viewRadius = 1.2; // cells you can "see" around you
+
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      let cx = x * CELL;
+      let cy = y * CELL;
+      let key = `${x},${y}`;
+      let isVisited = visited.has(key);
+      let dist = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
+      let isNear = dist <= viewRadius;
+      let show = revealed || isVisited || isNear;
+
+      if (!show) continue;
+
+      // Floor — visited cells have a faint glow
+      let alpha = revealed ? 0.06 : isNear ? 0.08 : 0.03;
+      ctx.fillStyle = `rgba(200,200,200,${alpha})`;
+      ctx.fillRect(cx + 1, cy + 1, CELL - 2, CELL - 2);
+
+      // Walls
+      let cell = maze[y][x];
+      let wallColor = revealed ? 'rgba(100,100,100,0.3)' : 'rgba(150,120,100,0.5)';
+      let bumpColor = 'rgba(200,100,80,0.6)';
+      ctx.lineWidth = 2;
+
+      if (cell.walls.N) {
+        ctx.strokeStyle = bumps.has(`${x},${y},N`) ? bumpColor : wallColor;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + CELL, cy); ctx.stroke();
+      }
+      if (cell.walls.S) {
+        ctx.strokeStyle = bumps.has(`${x},${y},S`) ? bumpColor : wallColor;
+        ctx.beginPath(); ctx.moveTo(cx, cy + CELL); ctx.lineTo(cx + CELL, cy + CELL); ctx.stroke();
+      }
+      if (cell.walls.W) {
+        ctx.strokeStyle = bumps.has(`${x},${y},W`) ? bumpColor : wallColor;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy + CELL); ctx.stroke();
+      }
+      if (cell.walls.E) {
+        ctx.strokeStyle = bumps.has(`${x},${y},E`) ? bumpColor : wallColor;
+        ctx.beginPath(); ctx.moveTo(cx + CELL, cy); ctx.lineTo(cx + CELL, cy + CELL); ctx.stroke();
+      }
+    }
+  }
+
+  // Exit glow — always visible as a warm beacon
+  let edx = ex * CELL + CELL / 2;
+  let edy = ey * CELL + CELL / 2;
+  let exitDist = Math.sqrt((px - ex) ** 2 + (py - ey) ** 2);
+  let pulse = 0.3 + 0.2 * Math.sin(Date.now() / 500);
+  let exitAlpha = Math.max(0.1, pulse - exitDist * 0.015);
+  let grad = ctx.createRadialGradient(edx, edy, 0, edx, edy, CELL);
+  grad.addColorStop(0, `rgba(255,200,100,${exitAlpha})`);
+  grad.addColorStop(1, `rgba(255,200,100,0)`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(ex * CELL, ey * CELL, CELL, CELL);
+
+  // Player
+  let pcx = px * CELL + CELL / 2;
+  let pcy = py * CELL + CELL / 2;
+  // Soft light around player
+  let pGrad = ctx.createRadialGradient(pcx, pcy, 0, pcx, pcy, CELL * 1.5);
+  pGrad.addColorStop(0, 'rgba(180,200,255,0.08)');
+  pGrad.addColorStop(1, 'rgba(180,200,255,0)');
+  ctx.fillStyle = pGrad;
+  ctx.beginPath();
+  ctx.arc(pcx, pcy, CELL * 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Player dot
+  ctx.fillStyle = '#aac';
+  ctx.beginPath();
+  ctx.arc(pcx, pcy, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!won) requestAnimationFrame(draw);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowUp' || e.key === 'w') { e.preventDefault(); move(0, -1); }
+  if (e.key === 'ArrowDown' || e.key === 's') { e.preventDefault(); move(0, 1); }
+  if (e.key === 'ArrowLeft' || e.key === 'a') { e.preventDefault(); move(-1, 0); }
+  if (e.key === 'ArrowRight' || e.key === 'd') { e.preventDefault(); move(1, 0); }
+});
+
+function updateInfo() {
+  document.getElementById('steps').textContent = steps;
+  document.getElementById('maze-num').textContent = mazeNum;
+  document.getElementById('solved').textContent = totalSolved;
+}
+
+function setMessage(text, color) {
+  document.getElementById('message').innerHTML = `<span style="color:${color||'#555'}">${text}</span>`;
+}
+
+newMaze();
+</script>
+</body>
+</html>

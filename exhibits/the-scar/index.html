@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Scar</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0a0d;overflow:hidden;font-family:Georgia,serif}
+canvas{display:block;cursor:crosshair}
+#title{position:fixed;top:28px;left:50%;transform:translateX(-50%);
+  color:rgba(180,140,140,0.4);font-size:18px;letter-spacing:0.25em;
+  pointer-events:none;opacity:0;animation:fi 3s .5s forwards}
+#info{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  color:rgba(150,120,120,0.3);font-size:12px;letter-spacing:0.1em;
+  pointer-events:none;transition:opacity 4s}
+@keyframes fi{to{opacity:0.4}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">THE SCAR</div>
+<div id="info">drag to wound — it heals, but remembers</div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H;
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight;
+  // Redraw base
+  X.fillStyle='#0b0a0d';X.fillRect(0,0,W,H);
+}
+resize();addEventListener('resize',resize);
+
+// Each scar is a series of points with age
+const scars=[];
+let cutting=false;
+let current=null;
+let interacted=false;
+
+function startCut(x,y){
+  cutting=true;
+  current={points:[{x,y}],birth:performance.now(),age:0};
+  if(!interacted){interacted=true;document.getElementById('info').style.opacity='0';}
+}
+function moveCut(x,y){
+  if(!cutting||!current)return;
+  const last=current.points[current.points.length-1];
+  const dx=x-last.x,dy=y-last.y;
+  if(dx*dx+dy*dy>9) current.points.push({x,y});
+}
+function endCut(){
+  if(current&&current.points.length>2){
+    scars.push(current);
+  }
+  cutting=false;current=null;
+}
+
+C.addEventListener('mousedown',e=>startCut(e.clientX,e.clientY));
+C.addEventListener('mousemove',e=>moveCut(e.clientX,e.clientY));
+C.addEventListener('mouseup',endCut);
+C.addEventListener('touchstart',e=>{e.preventDefault();startCut(e.touches[0].clientX,e.touches[0].clientY)},{passive:false});
+C.addEventListener('touchmove',e=>{e.preventDefault();moveCut(e.touches[0].clientX,e.touches[0].clientY)},{passive:false});
+C.addEventListener('touchend',endCut);
+
+// Skin texture: very subtle noise layer
+function drawSkin(){
+  const id=X.createImageData(W,H);
+  const d=id.data;
+  for(let i=0;i<d.length;i+=4){
+    const n=Math.random()*3;
+    d[i]=11+n; d[i+1]=10+n; d[i+2]=13+n; d[i+3]=255;
+  }
+  X.putImageData(id,0,0);
+}
+
+function drawScar(scar){
+  const now=performance.now();
+  scar.age=(now-scar.birth)/1000;
+  const pts=scar.points;
+  if(pts.length<2)return;
+
+  // Healing phases:
+  // 0-2s: fresh wound (bright red, wide, glowing)
+  // 2-10s: closing (dimming, narrowing)
+  // 10-60s: scar tissue (pink-silver, thin)
+  // 60s+: faded scar (barely visible, permanent)
+  const t=scar.age;
+  let width,r,g,b,a,glowSize;
+
+  if(t<2){
+    const f=t/2;
+    width=4-f*1.5;
+    r=220+Math.floor((1-f)*35); g=40+Math.floor(f*30); b=40+Math.floor(f*20);
+    a=0.9-f*0.2;
+    glowSize=15-f*8;
+  } else if(t<10){
+    const f=(t-2)/8;
+    width=2.5-f*1;
+    r=200-Math.floor(f*80); g=70+Math.floor(f*40); b=60+Math.floor(f*40);
+    a=0.7-f*0.3;
+    glowSize=7-f*5;
+  } else if(t<60){
+    const f=(t-10)/50;
+    width=1.5-f*0.5;
+    r=120-Math.floor(f*50); g=110-Math.floor(f*30); b=100-Math.floor(f*20);
+    a=0.4-f*0.2;
+    glowSize=2-f*1.5;
+  } else {
+    const f=Math.min(1,(t-60)/120);
+    width=1;
+    r=70-Math.floor(f*30); g=80-Math.floor(f*35); b=80-Math.floor(f*35);
+    a=Math.max(0.05, 0.2-f*0.15);
+    glowSize=0.5;
+  }
+
+  // Glow layer
+  if(glowSize>0.5){
+    X.beginPath();
+    X.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) X.lineTo(pts[i].x,pts[i].y);
+    X.strokeStyle=`rgba(${r},${Math.floor(g*0.5)},${Math.floor(b*0.3)},${a*0.2})`;
+    X.lineWidth=width+glowSize*2;
+    X.lineCap='round';X.lineJoin='round';
+    X.stroke();
+  }
+
+  // Main wound
+  X.beginPath();
+  X.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++) X.lineTo(pts[i].x,pts[i].y);
+  X.strokeStyle=`rgba(${r},${g},${b},${a})`;
+  X.lineWidth=width;
+  X.lineCap='round';X.lineJoin='round';
+  X.stroke();
+
+  // Central bright line for fresh wounds
+  if(t<5){
+    const fa=Math.max(0,(1-t/5)*0.5);
+    X.beginPath();
+    X.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) X.lineTo(pts[i].x,pts[i].y);
+    X.strokeStyle=`rgba(255,200,180,${fa})`;
+    X.lineWidth=1;X.stroke();
+  }
+}
+
+// Active cut (being drawn now)
+function drawActiveCut(){
+  if(!current||current.points.length<2)return;
+  const pts=current.points;
+  // Bright, bleeding
+  X.beginPath();
+  X.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++) X.lineTo(pts[i].x,pts[i].y);
+  X.strokeStyle='rgba(255,60,40,0.9)';
+  X.lineWidth=3.5;X.lineCap='round';X.lineJoin='round';
+  X.stroke();
+  // White-hot center
+  X.strokeStyle='rgba(255,220,200,0.6)';
+  X.lineWidth=1.2;X.stroke();
+  // Wide glow
+  X.strokeStyle='rgba(200,30,20,0.15)';
+  X.lineWidth=18;X.stroke();
+}
+
+function frame(){
+  // Don't clear — let scars persist on the surface
+  // Just redraw the background very slightly to let ancient scars fade
+  X.fillStyle='rgba(11,10,13,0.003)';
+  X.fillRect(0,0,W,H);
+
+  // Redraw all scars (they update their own age)
+  for(const s of scars) drawScar(s);
+  drawActiveCut();
+
+  // Trim very old scars to save memory (keep last 100)
+  if(scars.length>100) scars.splice(0,scars.length-100);
+
+  requestAnimationFrame(frame);
+}
+
+// Initial skin
+drawSkin();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

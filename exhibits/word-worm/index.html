@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Worm</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0c0a; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2em; }
+h1 { font-size: 1em; color: #444; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 1em; }
+#rules { color: #333; font-size: 0.8em; max-width: 400px; text-align: center; margin-bottom: 2em; line-height: 1.6; }
+#chain { display: flex; flex-wrap: wrap; gap: 0.4em; justify-content: center; max-width: 600px; margin-bottom: 2em; min-height: 2em; }
+.word { padding: 0.3em 0.6em; background: #1a1f1a; border-radius: 3px; font-size: 0.9em; color: #6bffb8; }
+.word:first-child { background: #1f2a1f; }
+#current-hint { color: #555; font-size: 1.4em; letter-spacing: 0.2em; margin-bottom: 1em; min-height: 1.5em; }
+#input-row { display: flex; gap: 0.5em; margin-bottom: 1em; }
+input { background: none; border: none; border-bottom: 1px solid #333; color: #fff; font-family: inherit; font-size: 1.3em; padding: 0.3em 0.5em; width: 220px; text-align: center; outline: none; }
+input:focus { border-bottom-color: #6bffb8; }
+button { background: none; border: 1px solid #333; color: #666; font-family: inherit; font-size: 1em; padding: 0.4em 1em; cursor: pointer; }
+button:hover { border-color: #6bffb8; color: #fff; }
+#feedback { min-height: 1.5em; color: #444; font-size: 0.9em; }
+#score { position: fixed; top: 1.5em; right: 1.5em; color: #444; }
+#timer { position: fixed; top: 1.5em; left: 1.5em; color: #444; }
+.over { color: #ff6b6b !important; }
+</style>
+</head>
+<body>
+<h1>Word Worm ✴️</h1>
+<div id="rules">type a word that starts with the last two letters of the previous word. no repeats. 60 seconds. go.</div>
+<div id="timer">60</div>
+<div id="score">chain: 0</div>
+<div id="chain"></div>
+<div id="current-hint"></div>
+<div id="input-row">
+  <input id="word" type="text" placeholder="..." autofocus autocomplete="off">
+  <button id="go">→</button>
+</div>
+<div id="feedback"></div>
+
+<script>
+// Simple dictionary — common 3-8 letter words. We validate loosely.
+const used = new Set();
+let lastTwo = '';
+let count = 0;
+let timeLeft = 60;
+let started = false;
+let timer;
+
+const chainEl = document.getElementById('chain');
+const hintEl = document.getElementById('current-hint');
+const wordEl = document.getElementById('word');
+const feedbackEl = document.getElementById('feedback');
+const scoreEl = document.getElementById('score');
+const timerEl = document.getElementById('timer');
+
+// Seed words
+const seeds = ['spark','ghost','ember','light','dream','flame','stone','river','cloud','music'];
+const seed = seeds[Math.floor(Math.random() * seeds.length)];
+
+function addWord(w) {
+  const span = document.createElement('span');
+  span.className = 'word';
+  span.textContent = w;
+  chainEl.appendChild(span);
+  used.add(w);
+  lastTwo = w.slice(-2);
+  hintEl.textContent = '...' + lastTwo + '___';
+  count++;
+  scoreEl.textContent = 'chain: ' + count;
+}
+
+function submit() {
+  const w = wordEl.value.trim().toLowerCase();
+  wordEl.value = '';
+  if (!w) return;
+  if (!started) { started = true; startTimer(); }
+  if (w.length < 3) { feedbackEl.textContent = 'too short (3+ letters)'; return; }
+  if (used.has(w)) { feedbackEl.textContent = 'already used'; return; }
+  if (lastTwo && !w.startsWith(lastTwo)) { feedbackEl.textContent = `must start with "${lastTwo}"`; return; }
+  if (!/^[a-z]+$/.test(w)) { feedbackEl.textContent = 'letters only'; return; }
+  feedbackEl.textContent = '';
+  addWord(w);
+}
+
+function startTimer() {
+  timer = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = timeLeft;
+    if (timeLeft <= 10) timerEl.style.color = '#ff6b6b';
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      wordEl.disabled = true;
+      feedbackEl.className = 'over';
+      feedbackEl.textContent = `time! chain: ${count}`;
+      hintEl.textContent = count >= 15 ? '🔥 incredible' : count >= 10 ? '✨ great worm' : count >= 5 ? 'decent worm' : 'baby worm';
+    }
+  }, 1000);
+}
+
+addWord(seed);
+
+document.getElementById('go').onclick = submit;
+wordEl.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+</script>
+</body>
+</html>

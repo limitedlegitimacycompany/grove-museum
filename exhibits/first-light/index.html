@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First Light</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;overflow:hidden;display:flex;justify-content:center;align-items:flex-end}
+canvas{display:block;position:fixed;top:0;left:0}
+#word{position:fixed;bottom:8vh;left:0;right:0;text-align:center;font-family:Georgia,serif;font-size:13px;letter-spacing:4px;pointer-events:none;opacity:0;transition:opacity 4s}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="word"></div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d'),wEl=document.getElementById('word');
+let w,h;
+function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
+resize();onresize=resize;
+
+// 30-second sunrise
+const duration=30000;
+let start=Date.now();
+
+const words=['still','quiet','almost','there','now'];
+let wordIndex=0,lastWord=0;
+
+function skyAt(t){
+  // t: 0-1
+  if(t<0.2) return {top:[8,8,20],bot:[10,10,25],star:1-t*5};
+  if(t<0.4) return {top:[10,12,35],bot:[40,20,45],star:0};
+  if(t<0.6) return {top:[25,30,70],bot:[180,90,50],star:0};
+  if(t<0.8) return {top:[60,100,160],bot:[230,160,80],star:0};
+  return {top:[100,160,220],bot:[240,210,170],star:0};
+}
+
+function lerpc(a,b,t){return a.map((v,i)=>Math.round(v+(b[i]-v)*t))}
+
+function frame(){
+  let elapsed=Date.now()-start;
+  let t=Math.min(elapsed/duration,1);
+
+  let sky=skyAt(t);
+  let grad=x.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,`rgb(${sky.top.join(',')})`);
+  grad.addColorStop(1,`rgb(${sky.bot.join(',')})`);
+  x.fillStyle=grad;
+  x.fillRect(0,0,w,h);
+
+  // stars fade out
+  if(sky.star>0){
+    for(let i=0;i<40;i++){
+      let sx=(Math.sin(i*127.1)*0.5+0.5)*w;
+      let sy=(Math.cos(i*311.7)*0.3+0.1)*h;
+      let flicker=0.3+0.7*Math.sin(elapsed*0.001+i*7);
+      x.beginPath();x.arc(sx,sy,0.8,0,Math.PI*2);
+      x.fillStyle=`rgba(200,210,240,${sky.star*flicker*0.6})`;
+      x.fill();
+    }
+  }
+
+  // horizon line — thin warm band
+  if(t>0.15){
+    let a=Math.min((t-0.15)*3,0.5);
+    let hg=x.createLinearGradient(0,h*0.75,0,h*0.85);
+    hg.addColorStop(0,'rgba(255,180,100,0)');
+    hg.addColorStop(0.5,`rgba(255,180,100,${a})`);
+    hg.addColorStop(1,'rgba(255,180,100,0)');
+    x.fillStyle=hg;
+    x.fillRect(0,h*0.75,w,h*0.1);
+  }
+
+  // sun emerges
+  if(t>0.5){
+    let st=(t-0.5)*2;
+    let sunY=h*0.78-st*h*0.15;
+    let sunR=15+st*20;
+    let sg=x.createRadialGradient(w/2,sunY,0,w/2,sunY,sunR*3);
+    sg.addColorStop(0,`rgba(255,230,180,${st*0.8})`);
+    sg.addColorStop(0.3,`rgba(255,200,120,${st*0.3})`);
+    sg.addColorStop(1,'rgba(255,200,120,0)');
+    x.fillStyle=sg;
+    x.beginPath();x.arc(w/2,sunY,sunR*3,0,Math.PI*2);x.fill();
+    // core
+    x.beginPath();x.arc(w/2,sunY,sunR*0.4,0,Math.PI*2);
+    x.fillStyle=`rgba(255,250,230,${st*0.9})`;x.fill();
+  }
+
+  // words
+  let wi=Math.floor(t*words.length);
+  if(wi>wordIndex&&wi<words.length){
+    wordIndex=wi;
+    let lum=sky.top[0]*0.299+sky.top[1]*0.587+sky.top[2]*0.114;
+    wEl.style.color=lum>100?'rgba(60,50,40,0.4)':'rgba(200,190,180,0.3)';
+    wEl.textContent=words[wi];
+    wEl.style.opacity='1';
+    setTimeout(()=>{wEl.style.opacity='0'},2500);
+  }
+
+  if(t<1)requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

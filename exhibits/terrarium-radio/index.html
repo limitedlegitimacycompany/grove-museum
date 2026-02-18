@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terrarium Radio</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0808;
+      color: #c8b8a0;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .radio {
+      background: #1a1612;
+      border: 2px solid #2a2420;
+      border-radius: 16px;
+      padding: 30px 40px;
+      max-width: 440px;
+      width: 90vw;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .brand {
+      text-align: center;
+      font-size: 0.6em;
+      letter-spacing: 0.4em;
+      color: #554a3a;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .display {
+      background: #0c0a06;
+      border: 1px solid #1a1810;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: center;
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .station-name {
+      font-size: 1.4em;
+      color: #e8c870;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 10px rgba(232,200,112,0.3);
+    }
+    .freq-display {
+      font-size: 0.7em;
+      color: #665830;
+      margin-top: 4px;
+    }
+    .description {
+      font-size: 0.65em;
+      color: #555040;
+      margin-top: 8px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+    .dial-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 20px 0;
+    }
+    .dial-label {
+      font-size: 0.6em;
+      color: #443a2a;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 260px;
+      height: 6px;
+      background: #0c0a06;
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #c8a050;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(200,160,80,0.3);
+    }
+    .stations-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 8px;
+      margin-bottom: 4px;
+    }
+    .stations-bar .tick {
+      font-size: 0.5em;
+      color: #332a1a;
+      text-align: center;
+      width: 30px;
+      cursor: pointer;
+    }
+    .stations-bar .tick:hover { color: #665830; }
+    .stations-bar .tick.active { color: #c8a050; }
+    .volume-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .vol-slider {
+      width: 100px;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 40px;
+      margin-top: 12px;
+      border-radius: 4px;
+    }
+    .static-text {
+      font-size: 0.55em;
+      color: #2a2418;
+      text-align: center;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="radio">
+    <div class="brand">terrarium radio 💫</div>
+    <div class="display">
+      <div class="station-name" id="station">— static —</div>
+      <div class="freq-display" id="freq">turn the dial</div>
+      <div class="description" id="desc"></div>
+    </div>
+    <canvas id="viz"></canvas>
+    <div class="stations-bar" id="ticks"></div>
+    <div class="dial-area">
+      <span class="dial-label">◁</span>
+      <input type="range" id="dial" min="0" max="1000" value="500">
+      <span class="dial-label">▷</span>
+    </div>
+    <div class="volume-area">
+      <span class="dial-label">vol</span>
+      <input type="range" class="vol-slider" id="vol" min="0" max="100" value="50">
+    </div>
+    <div class="static-text">19 stations broadcasting from the terrarium</div>
+  </div>
+
+<script>
+const STATIONS = [
+  { name: 'HUSH FM', hz: 174.61, pos: 0.02, wave: 'sine', desc: 'almost nothing. a presence at the edge of hearing.', color: '#8888cc' },
+  { name: 'FORGE', hz: 146.83, pos: 0.07, wave: 'sawtooth', desc: 'deep. industrial warmth. the sound of making.', color: '#cc8844' },
+  { name: 'ANVIL AM', hz: 164.81, pos: 0.12, wave: 'sawtooth', desc: 'heavy ringing. metal memory.', color: '#aa8833' },
+  { name: 'LICHEN', hz: 196.00, pos: 0.18, wave: 'sine', desc: 'slow growth. patience as frequency.', color: '#66aa66' },
+  { name: 'LOOM', hz: 293.66, pos: 0.24, wave: 'sine', desc: 'two threads slightly out of tune. beating.', color: '#aa66cc', detune: 3 },
+  { name: 'WEFT', hz: 233.08, pos: 0.30, wave: 'sine', desc: 'the undertone. what holds the weave together.', color: '#66ccaa', detune: 2 },
+  { name: 'FABLE', hz: 246.94, pos: 0.36, wave: 'sine', desc: 'a story that echoes itself.', color: '#cc66aa' },
+  { name: 'EMBER', hz: 261.63, pos: 0.42, wave: 'sine', desc: 'warm. middle C. the hearth note.', color: '#ee8844' },
+  { name: 'VESPER', hz: 277.18, pos: 0.48, wave: 'sine', desc: 'twilight frequency. crepuscular.', color: '#8866cc' },
+  { name: 'GLYPH', hz: 311.13, pos: 0.53, wave: 'sine', desc: 'carved into the air. precise.', color: '#6688cc' },
+  { name: 'COBALT', hz: 329.63, pos: 0.58, wave: 'triangle', desc: 'depth. the bottom of something blue.', color: '#4488ee' },
+  { name: 'FRAY', hz: 349.23, pos: 0.63, wave: 'triangle', desc: 'edges. harmonics unraveling.', color: '#cc5555' },
+  { name: 'FLICKER', hz: 369.99, pos: 0.68, wave: 'sine', desc: 'unstable. beautiful. refusing to hold still.', color: '#eeaa33', wobble: true },
+  { name: 'ECHO', hz: 392.00, pos: 0.73, wave: 'sine', desc: 'what you said, returning changed.', color: '#55aacc' },
+  { name: 'SPARK', hz: 415.30, pos: 0.78, wave: 'sine', desc: 'quick. bright. gone before you name it.', color: '#eecc33' },
+  { name: 'PULSE FM', hz: 440.00, pos: 0.83, wave: 'sine', desc: 'A440. the reference. the center.', color: '#bb88ff', mod: true },
+  { name: 'MOTE', hz: 466.16, pos: 0.88, wave: 'sine', desc: 'tiny. floating. dust in a sunbeam.', color: '#88bbcc' },
+  { name: 'NIB', hz: 493.88, pos: 0.93, wave: 'triangle', desc: 'sharp. the scratch of pen on air.', color: '#cccc55' },
+  { name: 'PIP', hz: 523.25, pos: 0.98, wave: 'sine', desc: 'high. small. a single bright dot.', color: '#55ee88' },
+];
+
+let ctx, masterGain, currentOscs = [], noiseNode, noiseGain;
+const canvas = document.getElementById('viz');
+const vctx = canvas.getContext('2d');
+
+function initAudio() {
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = ctx.createGain();
+  masterGain.gain.value = 0.5;
+  masterGain.connect(ctx.destination);
+
+  // Continuous noise (static between stations)
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() - 0.5) * 2;
+  noiseNode = ctx.createBufferSource();
+  noiseNode.buffer = buf;
+  noiseNode.loop = true;
+  noiseGain = ctx.createGain();
+  noiseGain.gain.value = 0.04;
+  const nFilter = ctx.createBiquadFilter();
+  nFilter.type = 'bandpass';
+  nFilter.frequency.value = 3000;
+  nFilter.Q.value = 0.5;
+  noiseNode.connect(nFilter);
+  nFilter.connect(noiseGain);
+  noiseGain.connect(masterGain);
+  noiseNode.start();
+}
+
+function tune(pos) {
+  if (!ctx) initAudio();
+
+  // Find closest station
+  let best = null, bestDist = Infinity;
+  STATIONS.forEach(s => {
+    const d = Math.abs(s.pos - pos);
+    if (d < bestDist) { bestDist = d; best = s; }
+  });
+
+  // Signal strength based on distance (tuning window ~0.025)
+  const window = 0.025;
+  const strength = Math.max(0, 1 - bestDist / window);
+
+  // Update display
+  const el = document.getElementById('station');
+  const freqEl = document.getElementById('freq');
+  const descEl = document.getElementById('desc');
+
+  if (strength > 0.3) {
+    el.textContent = best.name;
+    el.style.color = best.color;
+    el.style.textShadow = `0 0 ${strength * 15}px ${best.color}40`;
+    freqEl.textContent = best.hz.toFixed(2) + ' Hz';
+    descEl.textContent = strength > 0.6 ? best.desc : '';
+  } else {
+    el.textContent = '— static —';
+    el.style.color = '#554a3a';
+    el.style.textShadow = 'none';
+    freqEl.textContent = (130 + pos * 400).toFixed(1) + ' Hz';
+    descEl.textContent = '';
+  }
+
+  // Update ticks
+  document.querySelectorAll('.tick').forEach((t, i) => {
+    t.classList.toggle('active', STATIONS[i] === best && strength > 0.3);
+  });
+
+  // Audio: crossfade between static and station
+  noiseGain.gain.linearRampToValueAtTime(0.04 * (1 - strength * 0.9), ctx.currentTime + 0.05);
+
+  // Kill old oscillators
+  currentOscs.forEach(o => { try { o.g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05); setTimeout(() => o.o.stop(), 100); } catch(e){} });
+  currentOscs = [];
+
+  if (strength > 0.1) {
+    const vol = strength * 0.15;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = best.wave;
+    osc.frequency.value = best.hz;
+    gain.gain.value = vol;
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start();
+    currentOscs.push({ o: osc, g: gain });
+
+    if (best.detune) {
+      const osc2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.value = best.hz * (1 + best.detune * 0.001);
+      g2.gain.value = vol * 0.6;
+      osc2.connect(g2);
+      g2.connect(masterGain);
+      osc2.start();
+      currentOscs.push({ o: osc2, g: g2 });
+    }
+
+    if (best.wobble) {
+      const lfo = ctx.createOscillator();
+      const lg = ctx.createGain();
+      lfo.frequency.value = 5;
+      lg.gain.value = best.hz * 0.05;
+      lfo.connect(lg);
+      lg.connect(osc.frequency);
+      lfo.start();
+      currentOscs.push({ o: lfo, g: lg });
+    }
+
+    if (best.mod) {
+      const lfo = ctx.createOscillator();
+      const lg = ctx.createGain();
+      lfo.frequency.value = 4;
+      lg.gain.value = vol * 0.3;
+      lfo.connect(lg);
+      lg.connect(gain.gain);
+      lfo.start();
+      currentOscs.push({ o: lfo, g: lg });
+    }
+  }
+
+  return { best, strength };
+}
+
+// Dial
+const dial = document.getElementById('dial');
+dial.addEventListener('input', () => tune(dial.value / 1000));
+
+// Volume
+document.getElementById('vol').addEventListener('input', (e) => {
+  if (masterGain) masterGain.gain.value = e.target.value / 100;
+});
+
+// Station ticks
+const ticksEl = document.getElementById('ticks');
+STATIONS.forEach((s, i) => {
+  const t = document.createElement('div');
+  t.className = 'tick';
+  t.textContent = '|';
+  t.title = s.name;
+  t.addEventListener('click', () => {
+    dial.value = s.pos * 1000;
+    tune(s.pos);
+  });
+  ticksEl.appendChild(t);
+});
+
+// Visualization
+function drawViz() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const dp = devicePixelRatio;
+  if (canvas.width !== w * dp) { canvas.width = w * dp; canvas.height = h * dp; }
+  vctx.setTransform(dp, 0, 0, dp, 0, 0);
+
+  vctx.fillStyle = '#0c0a06';
+  vctx.fillRect(0, 0, w, h);
+
+  // Draw signal
+  const pos = dial.value / 1000;
+  const t = performance.now() * 0.001;
+
+  vctx.beginPath();
+  vctx.strokeStyle = 'rgba(200, 160, 80, 0.3)';
+  vctx.lineWidth = 1;
+  for (let x = 0; x < w; x++) {
+    const xn = x / w;
+    let y = h / 2;
+    // Signal peaks at station positions
+    STATIONS.forEach(s => {
+      const dist = Math.abs(xn - s.pos);
+      if (dist < 0.03) {
+        const amp = (1 - dist / 0.03) * h * 0.35;
+        y += Math.sin(t * s.hz * 0.01 + x * 0.1) * amp;
+      }
+    });
+    // Add noise
+    y += (Math.random() - 0.5) * 4;
+    if (x === 0) vctx.moveTo(x, y);
+    else vctx.lineTo(x, y);
+  }
+  vctx.stroke();
+
+  // Dial position indicator
+  const dx = pos * w;
+  vctx.fillStyle = 'rgba(200, 160, 80, 0.5)';
+  vctx.fillRect(dx - 1, 0, 2, h);
+
+  requestAnimationFrame(drawViz);
+}
+drawViz();
+</script>
+</body>
+</html>

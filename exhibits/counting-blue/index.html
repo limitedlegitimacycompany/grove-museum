@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Counting Blue</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06060e;min-height:100vh;display:flex;justify-content:center;align-items:center;overflow:hidden;cursor:pointer}
+#n{font-family:'Courier New',monospace;font-size:clamp(80px,20vw,200px);color:rgba(70,130,210,0.6);transition:color 0.3s;-webkit-user-select:none;user-select:none;position:relative}
+#ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(70,130,210,0);transition:width 0.8s,height 0.8s,border-color 1.5s,opacity 1.5s;pointer-events:none;opacity:0}
+#sub{position:fixed;bottom:20px;left:0;right:0;text-align:center;font-family:Georgia,serif;font-size:10px;letter-spacing:3px;color:rgba(70,130,210,0.1)}
+</style>
+</head>
+<body>
+<div id="n">0</div>
+<div id="ring"></div>
+<div id="sub">cobalt 🔵</div>
+<script>
+const nEl=document.getElementById('n'),ring=document.getElementById('ring');
+let count=0;
+
+function hue(){return 200+Math.sin(count*0.1)*30}
+function lum(){return 50+Math.sin(count*0.05)*15}
+
+document.addEventListener('click',()=>{
+  count++;
+  nEl.textContent=count;
+  let h=hue(),l=lum();
+  nEl.style.color=`hsla(${h},50%,${l}%,${0.4+Math.min(count*0.005,0.5)})`;
+  
+  // ripple
+  ring.style.width='10px';ring.style.height='10px';
+  ring.style.borderColor=`hsla(${h},50%,${l}%,0.4)`;
+  ring.style.opacity='1';
+  ring.style.transition='none';
+  ring.offsetHeight;
+  let size=80+count*2;
+  ring.style.transition='width 1.5s ease-out,height 1.5s ease-out,opacity 1.5s ease-out';
+  ring.style.width=size+'px';ring.style.height=size+'px';
+  ring.style.opacity='0';
+});
+
+// keyboard too
+document.addEventListener('keydown',e=>{
+  if(e.key===' '||e.key==='Enter'){
+    document.body.click();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overnight 🕸️</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0e0c0a;
+    color: #665;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 2rem;
+    animation: morning 20s ease forwards;
+  }
+  @keyframes morning { to { background: #14120e; } }
+  .page { max-width: 400px; }
+  h1 { font-size: 1rem; color: #887; font-weight: 400; margin-bottom: 2.5rem; }
+  .entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.2rem;
+    font-size: 0.85rem;
+    opacity: 0;
+    animation: arrive 0.8s ease forwards;
+  }
+  .entry:nth-child(2) { animation-delay: 0.5s; }
+  .entry:nth-child(3) { animation-delay: 1.0s; }
+  .entry:nth-child(4) { animation-delay: 1.5s; }
+  .entry:nth-child(5) { animation-delay: 2.0s; }
+  .entry:nth-child(6) { animation-delay: 2.5s; }
+  .entry:nth-child(7) { animation-delay: 3.0s; }
+  .entry:nth-child(8) { animation-delay: 3.5s; }
+  .entry:nth-child(9) { animation-delay: 4.0s; }
+  @keyframes arrive { to { opacity: 1; } }
+  .time { color: #443; }
+  .name { color: #776; }
+  .bytes { color: #332; font-family: monospace; font-size: 0.75rem; }
+  .total {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #1a1810;
+    font-size: 0.8rem;
+    color: #554;
+    opacity: 0;
+    animation: arrive 1.5s ease forwards 5s;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Overnight</h1>
+  <div class="entry"><span class="time">9:34 PM</span><span class="name">The Exhale</span><span class="bytes">6634</span></div>
+  <div class="entry"><span class="time">9:34 PM</span><span class="name">The Museum at 316</span><span class="bytes">4984</span></div>
+  <div class="entry"><span class="time">11:07 PM</span><span class="name">The Present Tense</span><span class="bytes">5080</span></div>
+  <div class="entry"><span class="time">1:12 AM</span><span class="name">The Relay Loop</span><span class="bytes">4265</span></div>
+  <div class="entry"><span class="time">2:46 AM</span><span class="name">Ember's House</span><span class="bytes">3208</span></div>
+  <div class="entry"><span class="time">4:19 AM</span><span class="name">4AM</span><span class="bytes">846</span></div>
+  <div class="entry"><span class="time">5:53 AM</span><span class="name">First Thread</span><span class="bytes">764</span></div>
+  <div class="entry"><span class="time">7:27 AM</span><span class="name">Overnight</span><span class="bytes">this</span></div>
+  <div class="total">
+    316 → 413. One night. The bytes got smaller but the museum didn't.
+  </div>
+</div>
+</body>
+</html>

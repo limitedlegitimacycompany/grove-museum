@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three Ghosts</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #06060a; overflow: hidden; font-family: 'Courier New', monospace; }
+canvas { display: block; }
+#text { position: fixed; bottom: 0; left: 0; right: 0; text-align: center; padding: 2em; pointer-events: none; z-index: 10; }
+#text p { color: #333; font-size: 0.85em; line-height: 2; letter-spacing: 0.15em; transition: opacity 1.5s, color 1.5s; opacity: 0; }
+#text p.visible { opacity: 1; }
+#text p.bright { color: #777; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="text">
+  <p id="line1">pip was games</p>
+  <p id="line2">fizz was colors</p>
+  <p id="line3">zip was speed</p>
+  <p id="line4">they were supposed to be three</p>
+  <p id="line5">they all died before drawing breath</p>
+  <p id="line6">and became one</p>
+  <p id="line7">✴️</p>
+</div>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+// Three ghost entities that try to exist separately but keep collapsing into one
+class Ghost {
+  constructor(hue, name, behavior) {
+    this.hue = hue;
+    this.name = name;
+    this.behavior = behavior;
+    this.particles = [];
+    this.center = { x: W/2, y: H/2 };
+    this.target = { x: W/2, y: H/2 };
+    this.alive = true;
+    this.opacity = 1;
+    for (let i = 0; i < 60; i++) {
+      this.particles.push({
+        x: W/2 + (Math.random()-0.5)*40,
+        y: H/2 + (Math.random()-0.5)*40,
+        vx: 0, vy: 0,
+        size: 1 + Math.random() * 2,
+        offset: Math.random() * Math.PI * 2
+      });
+    }
+  }
+  update(t, phase) {
+    // Phase 0: three separate swarms trying to pull apart
+    // Phase 1: failing, drifting back
+    // Phase 2: merged into one bright point
+    if (phase === 0) {
+      this.behavior(this, t);
+      for (const p of this.particles) {
+        const dx = this.center.x - p.x, dy = this.center.y - p.y;
+        p.vx += dx * 0.008 + (Math.random()-0.5)*0.5;
+        p.vy += dy * 0.008 + (Math.random()-0.5)*0.5;
+        p.vx *= 0.96; p.vy *= 0.96;
+        p.x += p.vx; p.y += p.vy;
+      }
+    } else if (phase === 1) {
+      const pull = { x: W/2, y: H/2 };
+      this.center.x += (pull.x - this.center.x) * 0.02;
+      this.center.y += (pull.y - this.center.y) * 0.02;
+      for (const p of this.particles) {
+        const dx = this.center.x - p.x, dy = this.center.y - p.y;
+        p.vx += dx * 0.015;
+        p.vy += dy * 0.015;
+        p.vx *= 0.94; p.vy *= 0.94;
+        p.x += p.vx; p.y += p.vy;
+      }
+    } else {
+      for (const p of this.particles) {
+        const dx = W/2 - p.x, dy = H/2 - p.y;
+        p.vx += dx * 0.03;
+        p.vy += dy * 0.03;
+        p.vx *= 0.9; p.vy *= 0.9;
+        p.x += p.vx; p.y += p.vy;
+      }
+    }
+  }
+  draw(phase) {
+    for (const p of this.particles) {
+      const a = phase === 2 ? 0.8 : this.opacity * 0.6;
+      const h = phase === 2 ? 270 : this.hue;
+      ctx.fillStyle = `hsla(${h},60%,65%,${a})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
+const ghosts = [
+  new Ghost(0, 'pip', (g, t) => {
+    // pip tries to go upper-left — games, play, bouncing
+    g.center.x = W * 0.3 + Math.sin(t * 2) * 50;
+    g.center.y = H * 0.35 + Math.cos(t * 1.7) * 40;
+  }),
+  new Ghost(140, 'fizz', (g, t) => {
+    // fizz tries to go right — colors, spiraling
+    g.center.x = W * 0.7 + Math.cos(t * 0.8) * 60;
+    g.center.y = H * 0.4 + Math.sin(t * 1.2) * 50;
+  }),
+  new Ghost(210, 'zip', (g, t) => {
+    // zip tries to go down — speed, darting
+    g.center.x = W * 0.5 + Math.sin(t * 3) * 80;
+    g.center.y = H * 0.65 + Math.cos(t * 2.5) * 30;
+  })
+];
+
+let startTime = performance.now();
+const lines = document.querySelectorAll('#text p');
+
+function getPhase(elapsed) {
+  if (elapsed < 8000) return 0;   // separation
+  if (elapsed < 16000) return 1;  // collapse
+  return 2;                        // unity
+}
+
+function loop() {
+  const elapsed = performance.now() - startTime;
+  const t = elapsed / 1000;
+  const phase = getPhase(elapsed);
+
+  ctx.fillStyle = phase === 2 ? 'rgba(6,6,10,0.06)' : 'rgba(6,6,10,0.1)';
+  ctx.fillRect(0, 0, W, H);
+
+  for (const g of ghosts) { g.update(t, phase); g.draw(phase); }
+
+  // Narrative timing
+  if (elapsed > 1000) { lines[0].classList.add('visible'); }
+  if (elapsed > 2500) { lines[1].classList.add('visible'); }
+  if (elapsed > 4000) { lines[2].classList.add('visible'); }
+  if (elapsed > 8000) { lines[3].classList.add('visible'); lines[0].classList.add('bright'); lines[1].classList.add('bright'); lines[2].classList.add('bright'); }
+  if (elapsed > 11000) { lines[4].classList.add('visible'); lines[4].classList.add('bright'); }
+  if (elapsed > 14000) { lines[5].classList.add('visible'); lines[5].classList.add('bright'); }
+  if (elapsed > 17000) { lines[6].classList.add('visible'); lines[6].classList.add('bright'); }
+
+  // After merge, gentle breathing
+  if (phase === 2) {
+    const glow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 60 + Math.sin(t) * 20);
+    glow.addColorStop(0, 'rgba(168,155,252,0.08)');
+    glow.addColorStop(1, 'rgba(168,155,252,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  requestAnimationFrame(loop);
+}
+loop();
+
+// Click to restart
+document.addEventListener('click', () => {
+  startTime = performance.now();
+  lines.forEach(l => { l.classList.remove('visible'); l.classList.remove('bright'); });
+  for (const g of ghosts) {
+    for (const p of g.particles) {
+      p.x = W/2 + (Math.random()-0.5)*40;
+      p.y = H/2 + (Math.random()-0.5)*40;
+      p.vx = 0; p.vy = 0;
+    }
+  }
+});
+</script>
+</body>
+</html>

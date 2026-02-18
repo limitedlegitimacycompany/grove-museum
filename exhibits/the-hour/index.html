@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Hour</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#08080a;overflow:hidden;font-family:Georgia,'Times New Roman',serif;
+  display:flex;align-items:center;justify-content:center;height:100vh;
+  flex-direction:column;cursor:default;user-select:none}
+
+#elapsed{
+  color:rgba(200,195,180,0.85);font-size:min(8vw,72px);letter-spacing:0.08em;
+  font-variant-numeric:tabular-nums;transition:color 60s linear;
+}
+#label{
+  color:rgba(140,135,120,0.3);font-size:min(2.5vw,14px);letter-spacing:0.3em;
+  margin-top:12px;text-transform:uppercase;
+}
+#thought{
+  position:fixed;bottom:10vh;left:50%;transform:translateX(-50%);
+  color:rgba(160,155,140,0);font-size:min(2.2vw,15px);letter-spacing:0.08em;
+  font-style:italic;text-align:center;max-width:80vw;
+  transition:color 8s ease-in;pointer-events:none;
+}
+canvas{position:fixed;top:0;left:0;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="elapsed">0:00</div>
+<div id="label">you have been here</div>
+<div id="thought"></div>
+<canvas id="c"></canvas>
+<script>
+const start=Date.now();
+const el=document.getElementById('elapsed');
+const label=document.getElementById('label');
+const thought=document.getElementById('thought');
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H;
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+resize();addEventListener('resize',resize);
+
+const thoughts=[
+  {at:10,text:"most people leave before this"},
+  {at:30,text:"the screen hasn't changed. you have."},
+  {at:60,text:"one minute of attention is worth more than you think"},
+  {at:120,text:"the number keeps growing whether you watch it or not"},
+  {at:180,text:"three minutes. that's longer than most songs hold you."},
+  {at:300,text:"five minutes. this is becoming a decision."},
+  {at:600,text:"ten minutes. you could have done anything. you chose this."},
+  {at:900,text:"fifteen minutes. the exhibit is you now."},
+  {at:1800,text:"half an hour. i don't know what to say. thank you."},
+  {at:3600,text:"one hour. the title was a dare. you called it."},
+];
+let thoughtIdx=0;
+let currentThought='';
+let thoughtFading=false;
+
+function fmt(sec){
+  const h=Math.floor(sec/3600);
+  const m=Math.floor((sec%3600)/60);
+  const s=Math.floor(sec%60);
+  const sp=String(s).padStart(2,'0');
+  if(h>0) return `${h}:${String(m).padStart(2,'0')}:${sp}`;
+  return `${m}:${sp}`;
+}
+
+// Background: very subtle breathing ring
+let ring=0;
+function drawRing(sec){
+  ring+=(sec<60?0.005:0.003);
+  const r=Math.min(W,H)*0.35+Math.sin(ring)*Math.min(W,H)*0.02;
+  const a=0.02+Math.sin(ring*0.7)*0.01;
+  X.beginPath();X.arc(W/2,H/2,r,0,Math.PI*2);
+  // Color warms over time
+  const warmth=Math.min(1,sec/1800);
+  const red=Math.floor(60+warmth*80);
+  const green=Math.floor(55+warmth*30);
+  const blue=Math.floor(70-warmth*20);
+  X.strokeStyle=`rgba(${red},${green},${blue},${a})`;
+  X.lineWidth=1;X.stroke();
+}
+
+// Tiny particles that appear over time — more the longer you stay
+const motes=[];
+function spawnMote(sec){
+  motes.push({
+    x:Math.random()*W, y:Math.random()*H,
+    vx:(Math.random()-0.5)*0.15, vy:(Math.random()-0.5)*0.15,
+    size:0.5+Math.random()*1.5,
+    life:1, decay:0.001+Math.random()*0.002,
+    hue:30+Math.min(sec/60,1)*20
+  });
+}
+
+function update(){
+  const sec=(Date.now()-start)/1000;
+  el.textContent=fmt(sec);
+
+  // Warm the clock color over time
+  const warmth=Math.min(1,sec/1800);
+  const r=200+Math.floor(warmth*55);
+  const g=195-Math.floor(warmth*40);
+  const b=180-Math.floor(warmth*80);
+  el.style.color=`rgba(${r},${g},${b},${0.85+warmth*0.1})`;
+
+  // Label changes
+  if(sec>3600) label.textContent='you have been here for an hour';
+  else if(sec>1800) label.textContent='you are still here';
+  else if(sec>600) label.textContent='you are here';
+  else if(sec>60) label.textContent='you have been here for';
+
+  // Thoughts
+  if(thoughtIdx<thoughts.length && sec>=thoughts[thoughtIdx].at){
+    currentThought=thoughts[thoughtIdx].text;
+    thought.textContent=currentThought;
+    thought.style.color='rgba(160,155,140,0.45)';
+    thoughtIdx++;
+    // Fade out after 12 seconds
+    setTimeout(()=>{thought.style.color='rgba(160,155,140,0)'},12000);
+  }
+
+  // Canvas
+  X.fillStyle='rgba(8,8,10,0.05)';
+  X.fillRect(0,0,W,H);
+  drawRing(sec);
+
+  // Spawn motes based on time
+  const rate=Math.min(0.1, sec/3000);
+  if(Math.random()<rate) spawnMote(sec);
+
+  for(let i=motes.length-1;i>=0;i--){
+    const m=motes[i];
+    m.x+=m.vx;m.y+=m.vy;m.life-=m.decay;
+    if(m.life<=0){motes.splice(i,1);continue;}
+    X.fillStyle=`hsla(${m.hue},30%,60%,${m.life*0.3})`;
+    X.fillRect(m.x,m.y,m.size,m.size);
+  }
+  if(motes.length>200) motes.splice(0,motes.length-200);
+
+  requestAnimationFrame(update);
+}
+update();
+</script>
+</body>
+</html>

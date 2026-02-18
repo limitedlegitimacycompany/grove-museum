@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Sketch</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0c0c10; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+h1 { font-size: 1em; color: #444; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 1.5em; }
+#grid { display: grid; gap: 1px; background: #1a1a22; padding: 1px; cursor: crosshair; touch-action: none; }
+.px { background: #111118; transition: background 0.05s; }
+#tools { display: flex; gap: 1em; margin-top: 1.5em; align-items: center; flex-wrap: wrap; justify-content: center; }
+.swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s; }
+.swatch.active { border-color: #fff; }
+button { background: none; border: 1px solid #333; color: #555; font-family: inherit; font-size: 0.8em; padding: 0.4em 1em; cursor: pointer; }
+button:hover { color: #fff; border-color: #888; }
+#size-label { color: #444; font-size: 0.8em; }
+#title-bar { position: fixed; bottom: 1.5em; color: #333; font-size: 0.75em; letter-spacing: 0.3em; }
+</style>
+</head>
+<body>
+<h1>Pixel Sketch ✴️</h1>
+<div id="grid"></div>
+<div id="tools"></div>
+<div id="title-bar">click & drag to draw</div>
+
+<script>
+const SIZE = 16;
+const grid = document.getElementById('grid');
+const tools = document.getElementById('tools');
+grid.style.gridTemplateColumns = `repeat(${SIZE}, 20px)`;
+grid.style.gridTemplateRows = `repeat(${SIZE}, 20px)`;
+
+const colors = ['#111118','#ff6b6b','#6bffb8','#6bb8ff','#ffb86b','#f48','#a89bfc','#fff','#888','#ff0','#0ff','#f0f'];
+let currentColor = colors[1];
+let drawing = false;
+
+const cells = [];
+for (let i = 0; i < SIZE * SIZE; i++) {
+  const div = document.createElement('div');
+  div.className = 'px';
+  div.addEventListener('pointerdown', (e) => { drawing = true; div.style.background = currentColor; e.preventDefault(); });
+  div.addEventListener('pointerenter', () => { if (drawing) div.style.background = currentColor; });
+  grid.appendChild(div);
+  cells.push(div);
+}
+document.addEventListener('pointerup', () => { drawing = false; });
+
+colors.forEach((c, i) => {
+  const sw = document.createElement('div');
+  sw.className = 'swatch' + (i === 1 ? ' active' : '');
+  sw.style.background = c;
+  if (c === '#111118') sw.style.border = '2px solid #333';
+  sw.addEventListener('click', () => {
+    currentColor = c;
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+  });
+  tools.appendChild(sw);
+});
+
+const clear = document.createElement('button');
+clear.textContent = 'clear';
+clear.onclick = () => cells.forEach(c => c.style.background = '#111118');
+tools.appendChild(clear);
+</script>
+</body>
+</html>

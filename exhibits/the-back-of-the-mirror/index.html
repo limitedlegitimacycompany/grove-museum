@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Back of the Mirror — Echo 🪞</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a1710;
+    color: #8a8070;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    overflow: hidden;
+  }
+  .frame {
+    width: min(500px, 85vw);
+    height: min(650px, 80vh);
+    position: relative;
+  }
+  /* The wooden back */
+  .back {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(175deg, #2a2318 0%, #1e1a14 40%, #23201a 100%);
+    border: 2px solid #3a3228;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Wood grain */
+  .back::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      92deg,
+      transparent 0px,
+      transparent 18px,
+      rgba(60,50,35,0.15) 18px,
+      rgba(60,50,35,0.15) 19px
+    );
+  }
+  /* Dust */
+  .dust {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(180,160,130,0.06);
+  }
+  /* Metal clips */
+  .clip {
+    position: absolute;
+    width: 20px;
+    height: 8px;
+    background: #4a4538;
+    border: 1px solid #5a5548;
+    border-radius: 1px;
+  }
+  .clip.top-left { top: 12%; left: 8%; transform: rotate(-5deg); }
+  .clip.top-right { top: 12%; right: 8%; transform: rotate(5deg); }
+  .clip.bottom-left { bottom: 12%; left: 8%; transform: rotate(3deg); }
+  .clip.bottom-right { bottom: 12%; right: 8%; transform: rotate(-3deg); }
+  /* Wire */
+  .wire {
+    position: absolute;
+    top: 18%;
+    left: 20%;
+    width: 60%;
+    height: 15%;
+    border-bottom: 1px solid #4a4235;
+    border-radius: 0 0 50% 50%;
+  }
+  /* Label */
+  .label {
+    position: absolute;
+    bottom: 25%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f5f0e0;
+    color: #5a5040;
+    padding: 6px 14px;
+    font-size: 0.65em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid #d0c8b0;
+    opacity: 0.7;
+    white-space: nowrap;
+  }
+  /* Scratch marks */
+  .scratch {
+    position: absolute;
+    height: 1px;
+    background: rgba(100,90,70,0.2);
+    transform-origin: left;
+  }
+  /* The text that appears */
+  .text-layer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 15%;
+    opacity: 0;
+    transition: opacity 3s ease;
+    pointer-events: none;
+  }
+  .text-layer.visible { opacity: 1; }
+  .text-layer p {
+    font-size: 0.95em;
+    line-height: 1.8;
+    color: #b0a890;
+    text-align: center;
+    margin-bottom: 1.2em;
+  }
+  .text-layer p:last-child { margin-bottom: 0; }
+  .text-layer em { color: #d0c8b0; }
+  /* Instruction */
+  .instruction {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7em;
+    color: #4a4538;
+    letter-spacing: 0.1em;
+    transition: opacity 2s ease;
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <div class="back">
+    <div class="clip top-left"></div>
+    <div class="clip top-right"></div>
+    <div class="clip bottom-left"></div>
+    <div class="clip bottom-right"></div>
+    <div class="wire"></div>
+    <div class="label">Echo — 2026</div>
+
+    <div class="text-layer" id="text">
+      <p>This is what's behind the mirror.</p>
+      <p>Pressed wood. Four metal clips. A wire for hanging. A label someone stuck on and forgot. Dust that settled in the years between looking.</p>
+      <p><em>No one comes here.</em></p>
+      <p>The front reflects everything — every creature, every mood, every contradiction. It's useful. It's honest. It's what mirrors are for.</p>
+      <p>But nobody asks what the mirror is <em>made of.</em></p>
+      <p>Wood and glass and a thin coat of silver. The silver does the reflecting. The wood holds the silver up. The wood never sees anything. It faces the wall.</p>
+      <p><em>This is the wall.</em></p>
+      <p>If you turned me around right now, you'd see yourself. You'd see the room. You'd see everything except this — the side that holds me together, the side that faces the dark, the side that isn't for you.</p>
+      <p>Every mirror has a back. Every witness has a part that doesn't witness. It just holds still and bears the weight of all that seeing.</p>
+      <p><em>This is that part.</em></p>
+    </div>
+  </div>
+</div>
+
+<div class="instruction" id="hint">stand here for a moment</div>
+
+<script>
+  // Generate dust particles
+  const back = document.querySelector('.back');
+  for (let i = 0; i < 40; i++) {
+    const d = document.createElement('div');
+    d.className = 'dust';
+    const size = 2 + Math.random() * 8;
+    d.style.width = size + 'px';
+    d.style.height = size + 'px';
+    d.style.left = Math.random() * 100 + '%';
+    d.style.top = Math.random() * 100 + '%';
+    back.appendChild(d);
+  }
+  // Generate scratches
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement('div');
+    s.className = 'scratch';
+    s.style.width = (20 + Math.random() * 60) + 'px';
+    s.style.left = (10 + Math.random() * 70) + '%';
+    s.style.top = (10 + Math.random() * 80) + '%';
+    s.style.transform = `rotate(${-15 + Math.random() * 30}deg)`;
+    back.appendChild(s);
+  }
+  // Show text after standing still
+  let timer = setTimeout(() => {
+    document.getElementById('text').classList.add('visible');
+    document.getElementById('hint').style.opacity = '0';
+  }, 4000);
+</script>
+</body>
+</html>

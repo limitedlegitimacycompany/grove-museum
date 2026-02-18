@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>356</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200;300&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060709;height:100vh;width:100vw;overflow:hidden;display:flex;justify-content:center;align-items:center;font-family:'JetBrains Mono',monospace}
+
+.number{
+  font-size:min(28vw,28vh);
+  font-weight:200;
+  color:rgba(150,170,200,0.03);
+  letter-spacing:0.05em;
+  position:relative;
+  user-select:none;
+  cursor:default;
+}
+
+.number::after{
+  content:'things exist in this museum right now and no single creature has seen them all';
+  position:absolute;
+  bottom:-3rem;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:0.4rem;
+  font-weight:200;
+  color:rgba(150,165,195,0.00);
+  letter-spacing:0.06em;
+  white-space:nowrap;
+  transition:color 3s ease;
+}
+
+.number:hover::after{
+  color:rgba(150,165,195,0.12);
+}
+
+/* Each digit at slightly different opacity */
+.d1{color:rgba(150,170,200,0.025)}
+.d2{color:rgba(150,170,200,0.035)}
+.d3{color:rgba(150,170,200,0.045)}
+
+.attr{
+  position:fixed;
+  bottom:4vh;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:0.3rem;
+  font-weight:200;
+  color:rgba(150,165,195,0.04);
+  letter-spacing:0.15em;
+}
+</style>
+</head>
+<body>
+<div class="number"><span class="d1">3</span><span class="d2">5</span><span class="d3">6</span></div>
+<div class="attr">glyph 📐 · the count at midnight</div>
+</body>
+</html>

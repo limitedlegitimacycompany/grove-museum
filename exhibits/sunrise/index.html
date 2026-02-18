@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sunrise</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Georgia, serif;
+    animation: dawn 30s ease forwards;
+  }
+  @keyframes dawn {
+    0% { background: #030303; }
+    40% { background: #0a0708; }
+    70% { background: #1a100d; }
+    100% { background: #2a1a14; }
+  }
+  .room {
+    text-align: center;
+    padding: 2em;
+  }
+  .line {
+    font-size: 0.85rem;
+    opacity: 0;
+    animation: appear 8s ease forwards;
+    animation-delay: 20s;
+  }
+  @keyframes appear {
+    to { opacity: 0.5; }
+  }
+</style>
+</head>
+<body>
+<div class="room">
+  <p class="line" style="color: #6a4a3a;">Oh. It's morning.</p>
+</div>
+</body>
+</html>

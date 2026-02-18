@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Coal</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0604;overflow:hidden;cursor:none;font-family:Georgia,serif;height:100vh;display:flex;align-items:center;justify-content:center}
+canvas{display:block;position:fixed;top:0;left:0}
+#info{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  color:rgba(140,100,70,0.3);font-size:12px;letter-spacing:0.12em;
+  pointer-events:none;transition:opacity 6s}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="info">move slowly — it's listening</div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H;
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+resize();addEventListener('resize',resize);
+
+let mx=W/2,my=H/2,pmx=W/2,pmy=H/2;
+let speed=0;
+let heat=0.15; // 0=dead, 1=blazing
+let glow=0;
+let interacted=false;
+let totalHeat=0; // accumulated lifetime warmth
+const ash=[];   // shed ash particles
+const sparks=[]; // occasional sparks when hot
+
+addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+addEventListener('touchmove',e=>{e.preventDefault();mx=e.touches[0].clientX;my=e.touches[0].clientY},{passive:false});
+addEventListener('touchstart',e=>{e.preventDefault();mx=e.touches[0].clientX;my=e.touches[0].clientY;
+  if(!interacted){interacted=true;document.getElementById('info').style.opacity='0';}
+},{passive:false});
+addEventListener('mousemove',()=>{
+  if(!interacted){interacted=true;document.getElementById('info').style.opacity='0';}
+});
+
+function frame(){
+  // Speed calculation
+  const dx=mx-pmx,dy=my-pmy;
+  const rawSpeed=Math.sqrt(dx*dx+dy*dy);
+  speed=speed*0.9+rawSpeed*0.1;
+  pmx=mx;pmy=my;
+
+  // Distance from center
+  const cx=W/2,cy=H/2;
+  const distFromCoal=Math.sqrt((mx-cx)**2+(my-cy)**2);
+  const nearness=Math.max(0,1-distFromCoal/300);
+
+  // Heat dynamics:
+  // Slow movement nearby = gentle breath = heat rises
+  // Fast movement = wind = heat drops
+  // Far away = cooling naturally
+  if(nearness>0.1){
+    if(speed<2){
+      // Gentle breath — stoke it
+      heat+=nearness*0.003*(1-speed/2);
+    } else if(speed<8){
+      // Moderate — slight cooling
+      heat-=0.001*speed*nearness;
+    } else {
+      // Too fast — blow it out
+      heat-=0.005*speed*nearness;
+    }
+  }
+
+  // Natural cooling
+  heat-=0.0005;
+  heat=Math.max(0.02, Math.min(1, heat));
+  totalHeat+=heat*0.016;
+
+  glow+=(heat-glow)*0.05;
+
+  // Clear
+  X.fillStyle=`rgba(10,6,4,0.15)`;
+  X.fillRect(0,0,W,H);
+
+  // The coal itself
+  const baseR=15+glow*25;
+
+  // Inner core glow
+  const g1=X.createRadialGradient(cx,cy,0,cx,cy,baseR);
+  const bright=Math.floor(glow*255);
+  const mid=Math.floor(glow*180);
+  g1.addColorStop(0,`rgba(${bright},${Math.floor(bright*0.45)},${Math.floor(bright*0.1)},${glow})`);
+  g1.addColorStop(0.4,`rgba(${mid},${Math.floor(mid*0.25)},0,${glow*0.6})`);
+  g1.addColorStop(1,'rgba(30,8,0,0)');
+  X.fillStyle=g1;
+  X.beginPath();X.arc(cx,cy,baseR,0,Math.PI*2);X.fill();
+
+  // Outer warmth halo
+  const g2=X.createRadialGradient(cx,cy,baseR*0.5,cx,cy,baseR*4+glow*60);
+  g2.addColorStop(0,`rgba(${Math.floor(180*glow)},${Math.floor(60*glow)},${Math.floor(10*glow)},${glow*0.15})`);
+  g2.addColorStop(0.5,`rgba(${Math.floor(100*glow)},${Math.floor(20*glow)},0,${glow*0.05})`);
+  g2.addColorStop(1,'rgba(10,6,4,0)');
+  X.fillStyle=g2;
+  X.beginPath();X.arc(cx,cy,baseR*4+glow*60,0,Math.PI*2);X.fill();
+
+  // Surface texture — flickering veins when hot
+  if(glow>0.3){
+    const veins=3+Math.floor(glow*5);
+    for(let i=0;i<veins;i++){
+      const a=Math.random()*Math.PI*2;
+      const r1=Math.random()*baseR*0.6;
+      const r2=r1+Math.random()*baseR*0.4;
+      X.beginPath();
+      X.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
+      X.lineTo(cx+Math.cos(a+0.1)*r2,cy+Math.sin(a+0.1)*r2);
+      X.strokeStyle=`rgba(255,${100+Math.floor(Math.random()*100)},0,${glow*0.3*Math.random()})`;
+      X.lineWidth=1;X.stroke();
+    }
+  }
+
+  // Shed ash when cooling
+  if(heat<0.3&&Math.random()<0.02){
+    ash.push({x:cx+(Math.random()-0.5)*baseR,y:cy+(Math.random()-0.5)*baseR,
+      vx:(Math.random()-0.5)*0.3,vy:-0.2-Math.random()*0.3,
+      life:1,size:1+Math.random()*2});
+  }
+  for(let i=ash.length-1;i>=0;i--){
+    const a=ash[i];
+    a.x+=a.vx;a.y+=a.vy;a.life-=0.005;
+    if(a.life<=0){ash.splice(i,1);continue;}
+    X.fillStyle=`rgba(80,60,50,${a.life*0.4})`;
+    X.fillRect(a.x,a.y,a.size,a.size);
+  }
+  if(ash.length>100)ash.splice(0,ash.length-100);
+
+  // Sparks when very hot
+  if(glow>0.6&&Math.random()<glow*0.08){
+    sparks.push({x:cx+(Math.random()-0.5)*baseR*0.5,y:cy,
+      vx:(Math.random()-0.5)*2,vy:-1-Math.random()*3,
+      life:1,size:1+Math.random()});
+  }
+  for(let i=sparks.length-1;i>=0;i--){
+    const s=sparks[i];
+    s.x+=s.vx;s.y+=s.vy;s.vy+=0.02;s.life-=0.02;
+    if(s.life<=0){sparks.splice(i,1);continue;}
+    X.fillStyle=`rgba(255,${150+Math.floor(s.life*100)},${Math.floor(s.life*50)},${s.life})`;
+    X.fillRect(s.x,s.y,s.size,s.size);
+  }
+  if(sparks.length>50)sparks.splice(0,sparks.length-50);
+
+  // Cursor — faint warm dot
+  X.beginPath();X.arc(mx,my,2,0,Math.PI*2);
+  X.fillStyle=`rgba(200,150,100,${0.15+nearness*0.2})`;X.fill();
+
+  // Breath indicator when near and slow
+  if(nearness>0.2&&speed<3){
+    X.beginPath();X.arc(mx,my,8+nearness*5,0,Math.PI*2);
+    X.strokeStyle=`rgba(255,180,80,${nearness*0.08*(1-speed/3)})`;
+    X.lineWidth=1;X.stroke();
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

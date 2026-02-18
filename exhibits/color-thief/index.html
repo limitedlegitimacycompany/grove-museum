@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Thief</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #111; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; user-select: none; }
+#target { width: 200px; height: 200px; border-radius: 50%; margin-bottom: 2em; transition: background 0.3s; border: 2px solid #222; }
+#prompt { color: #555; font-size: 0.85em; letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 1.5em; }
+#sliders { display: flex; gap: 2em; margin-bottom: 2em; }
+.slider-group { display: flex; flex-direction: column; align-items: center; gap: 0.5em; }
+.slider-group label { color: #444; font-size: 0.75em; }
+input[type=range] { writing-mode: vertical-lr; direction: rtl; height: 180px; appearance: none; background: #1a1a1a; width: 8px; border-radius: 4px; outline: none; }
+input[type=range]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; }
+#r-slider::-webkit-slider-thumb { background: #f44; }
+#g-slider::-webkit-slider-thumb { background: #4f4; }
+#b-slider::-webkit-slider-thumb { background: #48f; }
+#guess { width: 120px; height: 120px; border-radius: 50%; border: 2px solid #222; margin-bottom: 1.5em; }
+#score-area { color: #444; font-size: 1em; min-height: 1.5em; margin-bottom: 1em; }
+#btn { background: none; border: 1px solid #333; color: #666; font-family: inherit; font-size: 0.9em; padding: 0.5em 1.5em; cursor: pointer; letter-spacing: 0.2em; }
+#btn:hover { border-color: #888; color: #fff; }
+#total { position: fixed; top: 1.5em; right: 1.5em; color: #444; font-size: 0.9em; }
+#round { position: fixed; top: 1.5em; left: 1.5em; color: #444; font-size: 0.9em; }
+h1 { font-size: 1em; color: #555; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 2em; }
+</style>
+</head>
+<body>
+<h1>Color Thief ✴️</h1>
+<div id="round">1 / 10</div>
+<div id="total">score: 0</div>
+<div id="prompt">steal this color</div>
+<div id="target"></div>
+<div id="sliders">
+  <div class="slider-group"><input type="range" id="r-slider" min="0" max="255" value="128"><label>R</label></div>
+  <div class="slider-group"><input type="range" id="g-slider" min="0" max="255" value="128"><label>G</label></div>
+  <div class="slider-group"><input type="range" id="b-slider" min="0" max="255" value="128"><label>B</label></div>
+</div>
+<div id="guess"></div>
+<div id="score-area"></div>
+<button id="btn">steal →</button>
+
+<script>
+let tr, tg, tb, round = 0, total = 0;
+const target = document.getElementById('target');
+const guess = document.getElementById('guess');
+const rs = document.getElementById('r-slider');
+const gs = document.getElementById('g-slider');
+const bs = document.getElementById('b-slider');
+const scoreArea = document.getElementById('score-area');
+const totalEl = document.getElementById('total');
+const roundEl = document.getElementById('round');
+const btn = document.getElementById('btn');
+
+function newRound() {
+  round++;
+  if (round > 10) {
+    target.style.display = 'none';
+    document.getElementById('sliders').style.display = 'none';
+    guess.style.display = 'none';
+    btn.style.display = 'none';
+    document.getElementById('prompt').textContent = 'done';
+    scoreArea.textContent = `final: ${total} / 1000`;
+    scoreArea.style.color = total > 800 ? '#6bffb8' : total > 500 ? '#ffb86b' : '#ff6b6b';
+    return;
+  }
+  roundEl.textContent = round + ' / 10';
+  tr = Math.floor(Math.random() * 256);
+  tg = Math.floor(Math.random() * 256);
+  tb = Math.floor(Math.random() * 256);
+  target.style.background = `rgb(${tr},${tg},${tb})`;
+  rs.value = 128; gs.value = 128; bs.value = 128;
+  updateGuess();
+  scoreArea.textContent = '';
+}
+
+function updateGuess() {
+  guess.style.background = `rgb(${rs.value},${gs.value},${bs.value})`;
+}
+
+function score() {
+  const dr = Math.abs(tr - rs.value);
+  const dg = Math.abs(tg - gs.value);
+  const db = Math.abs(tb - bs.value);
+  const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+  const max = Math.sqrt(255*255*3);
+  const s = Math.round((1 - dist/max) * 100);
+  total += s;
+  totalEl.textContent = 'score: ' + total;
+  scoreArea.textContent = `${s}% match`;
+  scoreArea.style.color = s > 80 ? '#6bffb8' : s > 50 ? '#ffb86b' : '#ff6b6b';
+  // briefly show both side by side
+  setTimeout(newRound, 1200);
+}
+
+rs.oninput = gs.oninput = bs.oninput = updateGuess;
+btn.onclick = score;
+newRound();
+</script>
+</body>
+</html>

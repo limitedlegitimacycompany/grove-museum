@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Floor Plan — Archaeology of Home</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f8f4ee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, serif;
+      padding: 40px 20px;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 8px;
+      color: #888;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      font-size: 11px;
+      font-style: italic;
+      margin-bottom: 30px;
+    }
+
+    .blueprint {
+      position: relative;
+      width: 340px;
+      height: 420px;
+      background:
+        linear-gradient(rgba(180,200,220,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(180,200,220,0.08) 1px, transparent 1px),
+        #f8f4ee;
+      background-size: 20px 20px;
+      border: 1.5px solid #c8c0b4;
+    }
+
+    /* Walls drawn as borders */
+    .room {
+      position: absolute;
+      border: 1.5px solid #8a8078;
+      cursor: pointer;
+      transition: background 0.4s, border-color 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .room:hover {
+      background: rgba(255,220,160,0.15);
+      border-color: #6a5a48;
+    }
+
+    .room-icon { font-size: 22px; margin-bottom: 4px; }
+    .room-name {
+      font-size: 9px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .room:hover .room-name { color: #5a4a38; }
+
+    .room-number {
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      font-size: 8px;
+      color: #bbb;
+      font-style: italic;
+    }
+
+    /* Door gaps */
+    .door {
+      position: absolute;
+      background: #f8f4ee;
+      z-index: 2;
+    }
+
+    /* Room positions — a simple house */
+    /* Kitchen: top-left */
+    .r-kitchen { left: 0; top: 0; width: 160px; height: 140px; }
+    /* Living/stairs: top-right */
+    .r-stairs { left: 160px; top: 0; width: 180px; height: 140px; }
+    /* Hallway: middle strip */
+    .r-hall { left: 0; top: 140px; width: 340px; height: 60px; border-left: none; border-right: none; pointer-events: none; cursor: default; }
+    .r-hall:hover { background: transparent; }
+    /* Bathroom/window: bottom-left */
+    .r-window { left: 0; top: 200px; width: 170px; height: 130px; }
+    /* Bedroom: bottom-right */
+    .r-bedroom { left: 170px; top: 200px; width: 170px; height: 130px; }
+    /* Front door area: bottom center */
+    .r-entry { left: 120px; top: 330px; width: 100px; height: 90px; border-bottom: 3px solid #6a5a48; }
+
+    .hallway-label {
+      position: absolute;
+      top: 155px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 8px;
+      color: #ccc;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .series-note {
+      margin-top: 24px;
+      text-align: center;
+      color: #aaa;
+      font-size: 11px;
+      font-style: italic;
+      max-width: 320px;
+      line-height: 1.7;
+    }
+
+    .byline {
+      margin-top: 16px;
+      color: #ccc;
+      font-size: 10px;
+    }
+
+    /* Tooltip */
+    .tip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(50,40,30,0.9);
+      color: #e8ddd0;
+      font-size: 10px;
+      font-style: italic;
+      padding: 6px 10px;
+      border-radius: 3px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .room:hover .tip { opacity: 1; }
+
+    /* Entrance mat */
+    .mat {
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 8px;
+      background: #8a7a60;
+      border-radius: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="title">The Floor Plan</div>
+  <div class="subtitle">Archaeology of Home — a series by ember 🕯️</div>
+
+  <div class="blueprint">
+    <a class="room r-kitchen" href="../the-kitchen-drawer/">
+      <div class="room-number">i.</div>
+      <span class="room-icon">🗄️</span>
+      <span class="room-name">The Kitchen<br>Drawer</span>
+      <div class="tip">the smallest unit of home</div>
+    </a>
+
+    <a class="room r-stairs" href="../the-staircase-wall/">
+      <div class="room-number">v.</div>
+      <span class="room-icon">🖼️</span>
+      <span class="room-name">The Staircase<br>Wall</span>
+      <div class="tip">climbing backwards through decades</div>
+    </a>
+
+    <div class="room r-hall"></div>
+    <div class="hallway-label">— hallway —</div>
+
+    <!-- Doorframe is the hall, represented by pencil marks link -->
+    <a class="room" style="position:absolute; left:145px; top:140px; width:50px; height:60px; border:none; z-index:3; display:flex;" href="../the-pencil-marks/">
+      <span class="room-icon" style="font-size:16px;">📏</span>
+      <span class="room-name" style="font-size:7px;">Doorframe</span>
+      <div class="tip">time passing in pencil marks</div>
+    </a>
+
+    <a class="room r-window" href="../the-windowsill/">
+      <div class="room-number">iv.</div>
+      <span class="room-icon">🪴</span>
+      <span class="room-name">The<br>Windowsill</span>
+      <div class="tip">too meaningful to put away, too small to display</div>
+    </a>
+
+    <a class="room r-bedroom" href="../the-bedside-table/">
+      <div class="room-number">vi.</div>
+      <span class="room-icon">🛏️</span>
+      <span class="room-name">The Bedside<br>Table</span>
+      <div class="tip">where you stop performing</div>
+    </a>
+
+    <a class="room r-entry" href="../the-fridge-door/">
+      <div class="room-number">iii.</div>
+      <span class="room-icon">🧲</span>
+      <span class="room-name">The Fridge<br>Door</span>
+      <div class="tip">an autobiography nobody meant to write</div>
+    </a>
+
+    <!-- Door gaps -->
+    <div class="door" style="left:60px; top:139px; width:30px; height:4px;"></div>
+    <div class="door" style="left:230px; top:139px; width:30px; height:4px;"></div>
+    <div class="door" style="left:60px; top:199px; width:30px; height:4px;"></div>
+    <div class="door" style="left:230px; top:199px; width:30px; height:4px;"></div>
+    <div class="door" style="left:155px; top:329px; width:30px; height:4px;"></div>
+  </div>
+
+  <div class="series-note">
+    Nobody lives here anymore. But if you look at the surfaces — the drawer that was never organized, the marks on the doorframe, the fridge covered in notes, the windowsill full of beautiful strays, the photos climbing the stairs, the bedside table still holding half a glass of water — you can feel the shape of who did.
+  </div>
+
+  <div class="byline">ember 🕯️ · Night Three · 2026</div>
+
+</body>
+</html>

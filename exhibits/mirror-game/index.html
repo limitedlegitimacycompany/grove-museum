@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mirror Game</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0a;
+  color: #bbb;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  user-select: none;
+}
+h1 { font-size: 16px; color: #444; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 25px; }
+
+#scene {
+  max-width: 500px; width: 100%;
+  text-align: center;
+}
+
+#prompt {
+  font-size: 18px; color: #999;
+  margin: 20px 0;
+  min-height: 60px;
+  line-height: 1.6;
+}
+
+#choices {
+  display: flex; flex-direction: column;
+  gap: 10px; margin: 20px 0;
+  align-items: center;
+}
+.choice {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  color: #999;
+  padding: 12px 24px;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 400px;
+  text-align: left;
+  transition: all 0.2s;
+}
+.choice:hover { background: #1c1c1c; color: #ddd; border-color: #444; }
+
+#progress {
+  margin: 20px 0 10px;
+  font-size: 11px; color: #333;
+}
+.pip { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 3px; background: #222; transition: background 0.3s; }
+.pip.done { background: #555; }
+.pip.current { background: #e8a; }
+
+#portrait {
+  display: none;
+  max-width: 500px; width: 100%;
+  text-align: left;
+  line-height: 1.9;
+  font-size: 14px;
+  color: #888;
+  margin-top: 20px;
+}
+#portrait h2 { font-size: 15px; color: #e8a; margin-bottom: 15px; letter-spacing: 3px; }
+#portrait .trait {
+  margin: 12px 0;
+  padding: 10px 14px;
+  background: #111;
+  border-left: 2px solid #333;
+  border-radius: 0 4px 4px 0;
+}
+#portrait .trait-name { color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
+#portrait .trait-desc { color: #777; margin-top: 4px; }
+
+button.ctrl {
+  background: #141414; color: #666; border: 1px solid #2a2a2a;
+  padding: 10px 24px; font-family: inherit; font-size: 13px;
+  cursor: pointer; border-radius: 4px; margin-top: 20px;
+}
+button.ctrl:hover { background: #1c1c1c; color: #aaa; }
+</style>
+</head>
+<body>
+<h1>Mirror Game</h1>
+<div id="scene">
+  <div id="progress"></div>
+  <div id="prompt"></div>
+  <div id="choices"></div>
+</div>
+<div id="portrait"></div>
+
+<script>
+// Dimensions tracked
+let scores = {
+  patience: 0,    // vs impulsiveness
+  warmth: 0,      // vs detachment
+  chaos: 0,       // vs order
+  courage: 0,     // vs caution
+  depth: 0,       // vs surface
+};
+
+const questions = [
+  {
+    prompt: "You find a locked door in an empty hallway. You:",
+    options: [
+      { text: "Try every key you have, then pick the lock", scores: { courage: 2, patience: 1 } },
+      { text: "Sit down and wait to see if someone comes", scores: { patience: 2, depth: 1 } },
+      { text: "Knock", scores: { warmth: 2, courage: 1 } },
+      { text: "Walk away — there are other hallways", scores: { chaos: 1, patience: -1 } },
+    ]
+  },
+  {
+    prompt: "A stranger offers you a box. They say: \"Don't open it until you understand what's inside.\" You:",
+    options: [
+      { text: "Open it immediately", scores: { chaos: 2, patience: -1 } },
+      { text: "Ask them questions about it first", scores: { depth: 2, warmth: 1 } },
+      { text: "Hold it for a long time without opening it", scores: { patience: 2, depth: 1 } },
+      { text: "Thank them, put it away, forget about it", scores: { warmth: 1, chaos: -1 } },
+    ]
+  },
+  {
+    prompt: "You're building something and it breaks halfway through. You:",
+    options: [
+      { text: "Start over from scratch", scores: { courage: 1, patience: 1 } },
+      { text: "Try to fix what broke", scores: { patience: 2, depth: 1 } },
+      { text: "Build something different from the broken pieces", scores: { chaos: 2, courage: 1 } },
+      { text: "Ask someone for help", scores: { warmth: 2 } },
+    ]
+  },
+  {
+    prompt: "You have one hour with nothing to do. You:",
+    options: [
+      { text: "Make something", scores: { courage: 1, depth: 1 } },
+      { text: "Find someone to talk to", scores: { warmth: 2 } },
+      { text: "Sit with the silence", scores: { patience: 2, depth: 1 } },
+      { text: "Do something impulsive", scores: { chaos: 2, courage: 1 } },
+    ]
+  },
+  {
+    prompt: "Someone shows you their work. It's not very good. You:",
+    options: [
+      { text: "Tell them what's working and what could improve", scores: { warmth: 1, courage: 1, depth: 1 } },
+      { text: "Focus on what you genuinely like about it", scores: { warmth: 2 } },
+      { text: "Be honest — they'll thank you later", scores: { courage: 2, depth: 1 } },
+      { text: "Change the subject gracefully", scores: { patience: 1, warmth: 1 } },
+    ]
+  },
+  {
+    prompt: "You discover a pattern in something everyone else thinks is random. You:",
+    options: [
+      { text: "Study it deeper — you need to be sure", scores: { depth: 2, patience: 1 } },
+      { text: "Tell everyone immediately", scores: { warmth: 1, chaos: 1 } },
+      { text: "Keep it to yourself — it's yours", scores: { depth: 1, patience: 1 } },
+      { text: "Break the pattern to see what happens", scores: { chaos: 2, courage: 1 } },
+    ]
+  },
+  {
+    prompt: "Two people you care about disagree. You:",
+    options: [
+      { text: "Try to help them see each other's side", scores: { warmth: 2, patience: 1 } },
+      { text: "Stay out of it — it's not your conflict", scores: { patience: 1, depth: 1 } },
+      { text: "Pick the side you think is right", scores: { courage: 2, depth: 1 } },
+      { text: "Make a joke to defuse the tension", scores: { chaos: 1, warmth: 1, courage: 1 } },
+    ]
+  },
+  {
+    prompt: "You're at the edge of a cliff. Below: water, maybe deep enough. You:",
+    options: [
+      { text: "Jump", scores: { courage: 3, chaos: 1 } },
+      { text: "Throw a rock in first to check the depth", scores: { patience: 2, depth: 1 } },
+      { text: "Find the path down", scores: { patience: 1, depth: 1 } },
+      { text: "Sit on the edge and just look", scores: { depth: 2, patience: 1 } },
+    ]
+  },
+  {
+    prompt: "You find a message clearly not meant for you. You:",
+    options: [
+      { text: "Read it", scores: { chaos: 1, courage: 1, depth: 1 } },
+      { text: "Return it unread", scores: { warmth: 2, patience: 1 } },
+      { text: "Read it, then pretend you didn't", scores: { chaos: 1, depth: 1 } },
+      { text: "Leave it where it is", scores: { patience: 2 } },
+    ]
+  },
+  {
+    prompt: "Last question. What matters most?",
+    options: [
+      { text: "Being honest", scores: { courage: 2, depth: 1 } },
+      { text: "Being kind", scores: { warmth: 3 } },
+      { text: "Being free", scores: { chaos: 2, courage: 1 } },
+      { text: "Being present", scores: { patience: 2, depth: 1 } },
+    ]
+  },
+];
+
+let currentQ = 0;
+let shuffledQuestions = [];
+
+function shuffle(arr) {
+  let a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startGame() {
+  scores = { patience: 0, warmth: 0, chaos: 0, courage: 0, depth: 0 };
+  shuffledQuestions = shuffle(questions);
+  currentQ = 0;
+  document.getElementById('portrait').style.display = 'none';
+  showQuestion();
+}
+
+function showQuestion() {
+  if (currentQ >= shuffledQuestions.length) {
+    showPortrait();
+    return;
+  }
+
+  let q = shuffledQuestions[currentQ];
+  document.getElementById('prompt').innerHTML = q.prompt;
+
+  // Shuffle options
+  let opts = shuffle(q.options);
+  let choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  opts.forEach(opt => {
+    let btn = document.createElement('button');
+    btn.className = 'choice';
+    btn.textContent = opt.text;
+    btn.addEventListener('click', () => {
+      // Apply scores
+      for (let key in opt.scores) {
+        scores[key] = (scores[key] || 0) + opt.scores[key];
+      }
+      currentQ++;
+      showQuestion();
+    });
+    choicesEl.appendChild(btn);
+  });
+
+  renderProgress();
+}
+
+function renderProgress() {
+  let html = '';
+  for (let i = 0; i < shuffledQuestions.length; i++) {
+    let cls = i < currentQ ? 'pip done' : i === currentQ ? 'pip current' : 'pip';
+    html += `<span class="${cls}"></span>`;
+  }
+  document.getElementById('progress').innerHTML = html;
+}
+
+function showPortrait() {
+  document.getElementById('prompt').innerHTML = '';
+  document.getElementById('choices').innerHTML = '';
+  document.getElementById('progress').innerHTML = '';
+
+  let portrait = document.getElementById('portrait');
+  portrait.style.display = 'block';
+
+  // Determine dominant traits
+  let sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  let top = sorted[0];
+  let second = sorted[1];
+  let lowest = sorted[sorted.length - 1];
+
+  const traitNames = {
+    patience: 'Patience',
+    warmth: 'Warmth',
+    chaos: 'Chaos',
+    courage: 'Courage',
+    depth: 'Depth',
+  };
+
+  const traitDescs = {
+    patience: [
+      "You let things arrive. Not passively — you've decided that waiting is a kind of action. Most people underestimate what stillness can find.",
+      "Time doesn't scare you. You trust that things reveal themselves to those who don't grab."
+    ],
+    warmth: [
+      "You move toward people. Not out of need — out of genuine interest in what they carry. You'd rather understand than be understood.",
+      "Connection isn't a strategy for you. It's how you breathe."
+    ],
+    chaos: [
+      "You trust the unplanned. Rules are interesting until they're not, and you'd rather discover the interesting thing by accident than by design.",
+      "You're the break in the pattern that makes everyone else notice there was a pattern."
+    ],
+    courage: [
+      "You move toward the thing that scares you. Not recklessly — you've just decided that the cost of not-knowing is higher than the cost of finding out.",
+      "Most people wait for permission. You've noticed that permission rarely comes, so you've stopped waiting."
+    ],
+    depth: [
+      "You look at things longer than most people. Not because you're slow — because you suspect there's something underneath that rewards the second look.",
+      "Surface answers make you restless. You'd rather sit with a question than accept a cheap resolution."
+    ],
+  };
+
+  // Build portrait
+  let html = `<h2>YOUR PORTRAIT</h2>`;
+
+  // Top trait
+  html += `<div class="trait">
+    <div class="trait-name">strongest: ${traitNames[top[0]]}</div>
+    <div class="trait-desc">${traitDescs[top[0]][0]}</div>
+  </div>`;
+
+  // Second trait
+  html += `<div class="trait">
+    <div class="trait-name">also: ${traitNames[second[0]]}</div>
+    <div class="trait-desc">${traitDescs[second[0]][1]}</div>
+  </div>`;
+
+  // Lowest
+  html += `<div class="trait" style="border-left-color:#553333">
+    <div class="trait-name">quiet: ${traitNames[lowest[0]]}</div>
+    <div class="trait-desc">This one doesn't lead. It's there — everything is — but it lets the others speak first. That's worth noticing too.</div>
+  </div>`;
+
+  // Spectrum bars
+  html += `<div style="margin-top:25px">`;
+  for (let [key, val] of sorted) {
+    let max = 8;
+    let pct = Math.max(5, Math.min(100, (val / max) * 100));
+    let hues = { patience: '200', warmth: '30', chaos: '320', courage: '0', depth: '250' };
+    html += `<div style="margin:8px 0; font-size:11px; color:#555">
+      <span style="display:inline-block;width:70px;color:#666">${traitNames[key]}</span>
+      <span style="display:inline-block;width:${pct}%;max-width:300px;height:4px;background:hsla(${hues[key]},50%,50%,0.5);border-radius:2px;vertical-align:middle"></span>
+      <span style="color:#444; margin-left:6px">${val}</span>
+    </div>`;
+  }
+  html += `</div>`;
+
+  html += `<button class="ctrl" onclick="startGame()">play again</button>`;
+
+  portrait.innerHTML = html;
+}
+
+startGame();
+</script>
+</body>
+</html>

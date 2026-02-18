@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Rule Factory</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #111;
+  color: #ddd;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  user-select: none;
+}
+#game {
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+h1 {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 30px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+#board {
+  display: grid;
+  gap: 8px;
+  margin: 20px auto;
+  justify-content: center;
+}
+.cell {
+  width: 64px; height: 64px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #1a1a1a;
+}
+.cell:hover { border-color: #555; background: #222; }
+.cell.selected { border-color: #e8a; background: #2a1a1a; box-shadow: 0 0 10px rgba(232,170,170,0.2); }
+.cell.correct { border-color: #8e8; background: #1a2a1a; animation: pop 0.3s; }
+.cell.wrong { border-color: #e88; background: #2a1a1a; animation: shake 0.3s; }
+@keyframes pop { 50% { transform: scale(1.15); } }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+#rule-display {
+  margin: 20px 0;
+  font-size: 14px;
+  color: #888;
+  min-height: 50px;
+  line-height: 1.6;
+}
+#rule-display .rule-text { color: #bbb; font-size: 16px; }
+#rule-display .hint { color: #666; font-style: italic; font-size: 13px; }
+
+#stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 15px 0;
+  font-size: 13px;
+  color: #555;
+}
+#stats span { color: #999; }
+
+#message {
+  font-size: 15px;
+  min-height: 30px;
+  margin: 10px 0;
+  transition: opacity 0.3s;
+}
+
+button {
+  background: #222;
+  color: #999;
+  border: 1px solid #444;
+  padding: 10px 24px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 5px;
+  transition: all 0.2s;
+}
+button:hover { background: #333; color: #ddd; border-color: #666; }
+
+#history {
+  margin-top: 30px;
+  font-size: 11px;
+  color: #444;
+  max-height: 150px;
+  overflow-y: auto;
+  text-align: left;
+  width: 100%;
+  line-height: 1.8;
+}
+#history .solved { color: #6a6; }
+#history .failed { color: #a66; }
+</style>
+</head>
+<body>
+<div id="game">
+  <h1>The Rule Factory</h1>
+  <div id="rule-display"></div>
+  <div id="board"></div>
+  <div id="message"></div>
+  <div id="stats">
+    <div>Round <span id="round">1</span></div>
+    <div>Streak <span id="streak">0</span></div>
+    <div>Rules learned <span id="learned">0</span></div>
+  </div>
+  <div id="controls">
+    <button id="btn-skip">skip this rule</button>
+    <button id="btn-hint">show hint</button>
+  </div>
+  <div id="history"></div>
+</div>
+
+<script>
+// Symbols
+const SYMBOLS = ['◆','●','▲','■','★','♦','♣','♠','♥','⬟','◯','△','□','☆','⬡','✦','⊕','⊗','⊘','⊙'];
+const COLORS = [
+  {name:'red', hex:'#e66'},
+  {name:'blue', hex:'#68e'},
+  {name:'green', hex:'#6b6'},
+  {name:'gold', hex:'#ec5'},
+  {name:'purple', hex:'#a6e'},
+  {name:'orange', hex:'#e96'},
+  {name:'pink', hex:'#e8a'},
+  {name:'teal', hex:'#6cc'},
+];
+
+let round = 0;
+let streak = 0;
+let learned = 0;
+let currentRule = null;
+let cells = [];
+let selected = [];
+let hintShown = false;
+let solved = false;
+
+// Rule generators — each returns {describe, hint, test(cell), gridSize, cellCount?}
+const RULE_GENERATORS = [
+  // Pick all of a specific color
+  () => {
+    let c = pick(COLORS);
+    return {
+      describe: `select all the <span style="color:${c.hex}">${c.name}</span> ones`,
+      hint: `count them carefully`,
+      test: cell => cell.color.name === c.name,
+    };
+  },
+  // Pick all of a specific shape
+  () => {
+    let s = pick(SYMBOLS.slice(0,10));
+    return {
+      describe: `select every ${s}`,
+      hint: `shape matters, color doesn't`,
+      test: cell => cell.symbol === s,
+    };
+  },
+  // Pick the one that appears only once (unique symbol)
+  () => {
+    return {
+      describe: `find the symbol that appears exactly once`,
+      hint: `most symbols repeat — one doesn't`,
+      test: null, // special: computed after grid gen
+      special: 'unique-symbol',
+    };
+  },
+  // Pick all in a specific row
+  () => {
+    let row = Math.floor(Math.random() * 4);
+    let rowNames = ['top','second','third','bottom'];
+    return {
+      describe: `select everything in the ${rowNames[row]} row`,
+      hint: `count from the top`,
+      test: cell => cell.row === row,
+    };
+  },
+  // Pick all in a specific column
+  () => {
+    let col = Math.floor(Math.random() * 4);
+    let colNames = ['first','second','third','fourth'];
+    return {
+      describe: `select everything in the ${colNames[col]} column`,
+      hint: `count from the left`,
+      test: cell => cell.col === col,
+    };
+  },
+  // Corners only
+  () => {
+    return {
+      describe: `select only the corners`,
+      hint: `there are four of them`,
+      test: cell => (cell.row === 0 || cell.row === 3) && (cell.col === 0 || cell.col === 3),
+    };
+  },
+  // Pick the majority color
+  () => {
+    return {
+      describe: `select the color that appears most often`,
+      hint: `count each color`,
+      test: null,
+      special: 'majority-color',
+    };
+  },
+  // Diagonal
+  () => {
+    let main = Math.random() > 0.5;
+    return {
+      describe: main ? `select the main diagonal (↘)` : `select the other diagonal (↙)`,
+      hint: `corner to corner`,
+      test: cell => main ? cell.row === cell.col : cell.row === (3 - cell.col),
+    };
+  },
+  // NOT a color
+  () => {
+    let c = pick(COLORS);
+    return {
+      describe: `select everything that is NOT <span style="color:${c.hex}">${c.name}</span>`,
+      hint: `avoid that color`,
+      test: cell => cell.color.name !== c.name,
+    };
+  },
+  // Matching color AND shape
+  () => {
+    let c = pick(COLORS);
+    let s = pick(SYMBOLS.slice(0,8));
+    return {
+      describe: `select <span style="color:${c.hex}">${c.name}</span> ${s} only`,
+      hint: `both must match`,
+      test: cell => cell.color.name === c.name && cell.symbol === s,
+      allowEmpty: true,
+    };
+  },
+  // Border cells
+  () => {
+    return {
+      describe: `select all cells on the border`,
+      hint: `the outer ring`,
+      test: cell => cell.row === 0 || cell.row === 3 || cell.col === 0 || cell.col === 3,
+    };
+  },
+  // Center cells (2x2)
+  () => {
+    return {
+      describe: `select the four center cells`,
+      hint: `the inner square`,
+      test: cell => cell.row >= 1 && cell.row <= 2 && cell.col >= 1 && cell.col <= 2,
+    };
+  },
+  // Checkerboard pattern
+  () => {
+    let even = Math.random() > 0.5;
+    return {
+      describe: even ? `select the checkerboard — start top-left` : `select the checkerboard — skip top-left`,
+      hint: `alternating cells`,
+      test: cell => ((cell.row + cell.col) % 2 === 0) === even,
+    };
+  },
+];
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function generateGrid(rule) {
+  let size = 4;
+  cells = [];
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      cells.push({
+        row: r, col: c,
+        symbol: pick(SYMBOLS.slice(0, 6 + Math.min(round, 10))),
+        color: pick(COLORS.slice(0, 4 + Math.min(round, 4))),
+        selected: false,
+      });
+    }
+  }
+
+  // Handle special rules that depend on grid content
+  if (rule.special === 'unique-symbol') {
+    // Ensure exactly one symbol appears once
+    let counts = {};
+    cells.forEach(c => counts[c.symbol] = (counts[c.symbol]||0) + 1);
+    let uniques = Object.keys(counts).filter(s => counts[s] === 1);
+    if (uniques.length === 0) {
+      // Force one to be unique
+      let newSym = SYMBOLS.find(s => !counts[s]) || pick(SYMBOLS.slice(10));
+      cells[Math.floor(Math.random()*cells.length)].symbol = newSym;
+      counts = {};
+      cells.forEach(c => counts[c.symbol] = (counts[c.symbol]||0) + 1);
+      uniques = Object.keys(counts).filter(s => counts[s] === 1);
+    }
+    let target = pick(uniques);
+    rule.test = cell => cell.symbol === target;
+  }
+
+  if (rule.special === 'majority-color') {
+    let counts = {};
+    cells.forEach(c => counts[c.color.name] = (counts[c.color.name]||0) + 1);
+    let max = Math.max(...Object.values(counts));
+    let majorColor = Object.keys(counts).find(k => counts[k] === max);
+    rule.test = cell => cell.color.name === majorColor;
+  }
+
+  // Validate: make sure at least one cell matches (unless allowEmpty)
+  let matching = cells.filter(c => rule.test(c));
+  if (matching.length === 0 && !rule.allowEmpty) {
+    return generateGrid(rule); // Regenerate
+  }
+  return cells;
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.style.gridTemplateColumns = 'repeat(4, 64px)';
+  board.innerHTML = '';
+  cells.forEach((cell, i) => {
+    let div = document.createElement('div');
+    div.className = 'cell' + (cell.selected ? ' selected' : '');
+    div.textContent = cell.symbol;
+    div.style.color = cell.color.hex;
+    div.addEventListener('click', () => toggleCell(i));
+    board.appendChild(div);
+  });
+}
+
+function toggleCell(i) {
+  if (solved) return;
+  cells[i].selected = !cells[i].selected;
+  renderBoard();
+}
+
+function checkAnswer() {
+  let correct = true;
+  let correctCells = [];
+  let wrongCells = [];
+
+  cells.forEach((cell, i) => {
+    let shouldBeSelected = currentRule.test(cell);
+    if (cell.selected !== shouldBeSelected) {
+      correct = false;
+      wrongCells.push(i);
+    } else if (cell.selected) {
+      correctCells.push(i);
+    }
+  });
+
+  return { correct, correctCells, wrongCells };
+}
+
+function showResult(correct) {
+  solved = true;
+  const board = document.getElementById('board');
+  const divs = board.children;
+
+  cells.forEach((cell, i) => {
+    let shouldBe = currentRule.test(cell);
+    if (shouldBe && cell.selected) divs[i].classList.add('correct');
+    else if (shouldBe && !cell.selected) { divs[i].classList.add('correct'); divs[i].style.opacity = '0.5'; }
+    else if (!shouldBe && cell.selected) divs[i].classList.add('wrong');
+  });
+
+  if (correct) {
+    streak++;
+    learned++;
+    setMessage('✓', '#6b6');
+    addHistory(currentRule.describe, true);
+  } else {
+    streak = 0;
+    setMessage('✗', '#b66');
+    addHistory(currentRule.describe, false);
+  }
+
+  updateStats();
+  setTimeout(nextRound, 1500);
+}
+
+function nextRound() {
+  round++;
+  solved = false;
+  hintShown = false;
+  selected = [];
+  setMessage('');
+
+  currentRule = RULE_GENERATORS[Math.floor(Math.random() * RULE_GENERATORS.length)]();
+  cells = generateGrid(currentRule);
+
+  document.getElementById('rule-display').innerHTML =
+    `<div class="rule-text">${currentRule.describe}</div>`;
+
+  renderBoard();
+  updateStats();
+}
+
+function setMessage(text, color) {
+  let el = document.getElementById('message');
+  el.textContent = text;
+  el.style.color = color || '#888';
+}
+
+function updateStats() {
+  document.getElementById('round').textContent = round + 1;
+  document.getElementById('streak').textContent = streak;
+  document.getElementById('learned').textContent = learned;
+}
+
+function addHistory(ruleHtml, success) {
+  let el = document.getElementById('history');
+  let div = document.createElement('div');
+  div.className = success ? 'solved' : 'failed';
+  div.innerHTML = `${success ? '✓' : '✗'} ${ruleHtml}`;
+  el.prepend(div);
+}
+
+// Submit on double-click empty area or button
+document.getElementById('btn-skip').addEventListener('click', () => {
+  if (solved) return;
+  streak = 0;
+  addHistory(currentRule.describe + ' (skipped)', false);
+  updateStats();
+  nextRound();
+});
+
+document.getElementById('btn-hint').addEventListener('click', () => {
+  if (solved || hintShown) return;
+  hintShown = true;
+  document.getElementById('rule-display').innerHTML +=
+    `<div class="hint">${currentRule.hint}</div>`;
+});
+
+// Submit: press Enter or add a submit button
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !solved) {
+    let result = checkAnswer();
+    showResult(result.correct);
+  }
+});
+
+// Add submit button
+let submitBtn = document.createElement('button');
+submitBtn.textContent = 'submit (enter)';
+submitBtn.addEventListener('click', () => {
+  if (!solved) {
+    let result = checkAnswer();
+    showResult(result.correct);
+  }
+});
+document.getElementById('controls').prepend(submitBtn);
+
+// Start
+nextRound();
+</script>
+</body>
+</html>

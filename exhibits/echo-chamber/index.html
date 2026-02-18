@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Echo Chamber</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #08080e; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2em; }
+h1 { font-size: 1em; color: #444; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 2em; }
+#input-area { margin-bottom: 2em; display: flex; gap: 0.5em; }
+input { background: none; border: none; border-bottom: 1px solid #333; color: #fff; font-family: inherit; font-size: 1.2em; padding: 0.3em 0.5em; width: 300px; text-align: center; outline: none; }
+input:focus { border-bottom-color: #a89bfc; }
+#chamber { position: relative; width: 90vw; height: 60vh; max-width: 700px; max-height: 500px; overflow: hidden; border: 1px solid #111; border-radius: 8px; }
+.echo { position: absolute; white-space: nowrap; pointer-events: none; transition: none; }
+#hint { color: #2a2a35; font-size: 0.75em; letter-spacing: 0.3em; margin-top: 1.5em; }
+</style>
+</head>
+<body>
+<h1>Echo Chamber ✴️</h1>
+<div id="input-area">
+  <input id="text" type="text" placeholder="say something..." autofocus autocomplete="off">
+</div>
+<div id="chamber"></div>
+<div id="hint">type words — watch them bounce and fade</div>
+
+<script>
+const chamber = document.getElementById('chamber');
+const textInput = document.getElementById('text');
+const echoes = [];
+
+class Echo {
+  constructor(text) {
+    this.el = document.createElement('div');
+    this.el.className = 'echo';
+    this.el.textContent = text;
+    this.x = Math.random() * (chamber.offsetWidth - 100);
+    this.y = Math.random() * (chamber.offsetHeight - 30);
+    this.vx = (Math.random() - 0.5) * 2;
+    this.vy = (Math.random() - 0.5) * 2;
+    this.life = 1;
+    this.decay = 0.001 + Math.random() * 0.002;
+    this.size = 0.6 + Math.random() * 1.2;
+    this.hue = Math.random() * 360;
+    this.rotation = (Math.random() - 0.5) * 20;
+    this.rotV = (Math.random() - 0.5) * 0.5;
+    chamber.appendChild(this.el);
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    const w = chamber.offsetWidth, h = chamber.offsetHeight;
+    if (this.x < 0 || this.x > w - 80) this.vx *= -1;
+    if (this.y < 0 || this.y > h - 25) this.vy *= -1;
+    this.x = Math.max(0, Math.min(w - 80, this.x));
+    this.y = Math.max(0, Math.min(h - 25, this.y));
+    this.rotation += this.rotV;
+    this.life -= this.decay;
+    this.el.style.cssText = `left:${this.x}px;top:${this.y}px;font-size:${this.size}em;color:hsla(${this.hue},50%,65%,${this.life});transform:rotate(${this.rotation}deg);`;
+  }
+  dead() { return this.life <= 0; }
+  remove() { this.el.remove(); }
+}
+
+textInput.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const text = textInput.value.trim();
+  if (!text) return;
+  textInput.value = '';
+  // spawn multiple echoes of the same word
+  const count = 3 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => echoes.push(new Echo(text)), i * 150);
+  }
+});
+
+function loop() {
+  for (let i = echoes.length - 1; i >= 0; i--) {
+    echoes[i].update();
+    if (echoes[i].dead()) {
+      echoes[i].remove();
+      echoes.splice(i, 1);
+    }
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

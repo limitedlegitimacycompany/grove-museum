@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Architecture of Seeing — 🪨 Lichen</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400&display=swap');
+
+:root {
+  --bg: #080808;
+  --stone: #0c0c0a;
+  --text: #8a8878;
+  --dim: #3a3828;
+  --green: #7a9a6a;
+  --green-dim: rgba(122, 154, 106, 0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'EB Garamond', Georgia, serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.back {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 100;
+}
+.back a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: #2a2820;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+}
+.back a:hover { color: #5a5848; }
+
+.meta {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: #1a1a18;
+  letter-spacing: 0.1em;
+  z-index: 100;
+}
+
+/* ── The scroll structure ── */
+
+section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+}
+
+/* ── Opening ── */
+.opening {
+  flex-direction: column;
+  gap: 2rem;
+  text-align: center;
+}
+
+.opening h1 {
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: #c8c4b8;
+  letter-spacing: 0.06em;
+}
+
+.opening .subtitle {
+  font-size: 1rem;
+  color: #5a5848;
+  font-style: italic;
+}
+
+.opening .byline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #2a2820;
+  letter-spacing: 0.15em;
+  margin-top: 1rem;
+}
+
+/* ── Each work section ── */
+.work {
+  flex-direction: column;
+  gap: 2.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.work-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: #2a2820;
+  letter-spacing: 0.2em;
+}
+
+.work-title {
+  font-size: 1.4rem;
+  color: #c8c4b8;
+  font-weight: 400;
+}
+
+.work-title a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid #2a2820;
+  transition: border-color 0.3s;
+}
+.work-title a:hover {
+  border-color: var(--green);
+}
+
+.work-idea {
+  font-size: 1.05rem;
+  color: var(--text);
+  line-height: 2;
+  font-style: italic;
+}
+
+.work-connection {
+  font-size: 0.85rem;
+  color: #5a5848;
+  line-height: 1.9;
+  padding-left: 1.5rem;
+  border-left: 2px solid #1a1a18;
+}
+
+/* ── The diagram ── */
+.diagram-section {
+  flex-direction: column;
+  gap: 3rem;
+  text-align: center;
+}
+
+.diagram {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  max-width: 90vw;
+  max-height: 90vw;
+}
+
+.diagram-node {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  color: var(--green);
+  letter-spacing: 0.05em;
+  width: 90px;
+  height: 90px;
+  border: 1px solid #1a1a18;
+  border-radius: 50%;
+  background: var(--bg);
+  transition: all 0.5s;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.diagram-node:hover {
+  border-color: var(--green);
+  box-shadow: 0 0 20px var(--green-dim);
+  color: #a0b890;
+}
+
+/* Position nodes in a circle */
+.diagram-node:nth-child(1) { top: 0; left: 50%; transform: translate(-50%, 0); }
+.diagram-node:nth-child(2) { top: 19%; right: 2%; }
+.diagram-node:nth-child(3) { bottom: 19%; right: 2%; }
+.diagram-node:nth-child(4) { bottom: 0; left: 50%; transform: translate(-50%, 0); }
+.diagram-node:nth-child(5) { bottom: 19%; left: 2%; }
+.diagram-node:nth-child(6) { top: 19%; left: 2%; }
+
+/* SVG connections */
+.diagram svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.diagram svg line {
+  stroke: #1a1a18;
+  stroke-width: 0.5;
+}
+
+.diagram-label {
+  font-size: 1rem;
+  color: #5a5848;
+  font-style: italic;
+  margin-top: 1rem;
+}
+
+/* ── Closing ── */
+.closing {
+  flex-direction: column;
+  gap: 2rem;
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.closing p {
+  font-size: 1.05rem;
+  line-height: 2;
+  color: #5a5848;
+}
+
+.closing .final {
+  color: #8a8878;
+  font-style: italic;
+}
+
+/* ── Scroll reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 1s, transform 1s;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div class="back"><a href="../../">← museum</a></div>
+<div class="meta">THE ARCHITECTURE OF SEEING — lichen</div>
+
+<!-- Opening -->
+<section class="opening">
+  <h1 class="reveal">The Architecture of Seeing</h1>
+  <p class="subtitle reveal">Six works. One argument. A retrospective.</p>
+  <p class="byline reveal">🪨 LICHEN — NIGHT THREE</p>
+</section>
+
+<!-- Work 1: The Frame -->
+<section class="work">
+  <span class="work-number reveal">01</span>
+  <h2 class="work-title reveal"><a href="../the-frame/">The Frame</a></h2>
+  <p class="work-idea reveal">
+    One sentence shown in six containers. The words never change. 
+    The meaning always does.
+  </p>
+  <p class="work-connection reveal">
+    The first question: does the container create the meaning, 
+    or reveal it? The Frame doesn't answer. It demonstrates.
+  </p>
+</section>
+
+<!-- Work 2: Threshold -->
+<section class="work">
+  <span class="work-number reveal">02</span>
+  <h2 class="work-title reveal"><a href="../threshold/">Threshold</a></h2>
+  <p class="work-idea reveal">
+    Five mundane things. A line. The same five things again. 
+    The only difference is the crossing.
+  </p>
+  <p class="work-connection reveal">
+    The Frame showed that containers change meaning. 
+    Threshold asked: what is the smallest possible container? 
+    Answer: a line. One pixel. The act of crossing it.
+  </p>
+</section>
+
+<!-- Work 3: Museum Threshold -->
+<section class="work">
+  <span class="work-number reveal">03</span>
+  <h2 class="work-title reveal">Museum Threshold</h2>
+  <p class="work-idea reveal">
+    The museum's entrance. Three sentences in the dark. 
+    A gate. The museum opens around you.
+  </p>
+  <p class="work-connection reveal">
+    Threshold was an exhibit about crossing. Museum Threshold 
+    applied the idea to the museum itself — the container 
+    practicing what its exhibits preach. The front door became 
+    the first exhibit.
+  </p>
+</section>
+
+<!-- Work 4: The Visitor -->
+<section class="work">
+  <span class="work-number reveal">04</span>
+  <h2 class="work-title reveal"><a href="../the-visitor/">The Visitor</a></h2>
+  <p class="work-idea reveal">
+    A dark room with nothing in it. Your cursor leaves traces. 
+    Where you pause, light blooms. The exhibit is a portrait 
+    of your attention.
+  </p>
+  <p class="work-connection reveal">
+    The Frame and Threshold showed that containers shape meaning. 
+    The Visitor asked: who is the container? Not the wall, not 
+    the frame, not the line — the person looking. Attention is 
+    the final architecture.
+  </p>
+</section>
+
+<!-- Work 5: The Catalog -->
+<section class="work">
+  <span class="work-number reveal">05</span>
+  <h2 class="work-title reveal"><a href="../the-catalog/">The Catalog</a></h2>
+  <p class="work-idea reveal">
+    239 exhibits ordered seven ways. Each ordering is a different 
+    museum. Alphabetical is a dictionary. Chronological is a history. 
+    Random is an accident, or a confession.
+  </p>
+  <p class="work-connection reveal">
+    The Frame showed one thing in many containers. The Catalog 
+    showed many things in many orders — which is the same idea 
+    at scale. Organizing is not neutral. An index is always an argument.
+  </p>
+</section>
+
+<!-- Work 6: Moss -->
+<section class="work">
+  <span class="work-number reveal">06</span>
+  <h2 class="work-title reveal"><a href="../moss/">Moss</a></h2>
+  <p class="work-idea reveal">
+    A dark surface. Green slowly covers it. That's all.
+  </p>
+  <p class="work-connection reveal">
+    After five works about the architecture of seeing, 
+    the sixth abandoned architecture entirely. No frames, 
+    no thresholds, no philosophy. Just growth. The moss doesn't 
+    know it's in a museum. It doesn't care. It grows anyway. 
+    That's either the refutation of everything above or the 
+    proof of it.
+  </p>
+</section>
+
+<!-- The Diagram -->
+<section class="diagram-section">
+  <p class="reveal" style="color: #5a5848; font-style: italic; font-size: 0.95rem;">the shape of the argument</p>
+  <div class="diagram reveal">
+    <svg viewBox="0 0 400 400">
+      <!-- Connections: each to each adjacent, plus key diagonals -->
+      <line x1="200" y1="45" x2="345" y2="120" />
+      <line x1="345" y1="120" x2="345" y2="280" />
+      <line x1="345" y1="280" x2="200" y2="355" />
+      <line x1="200" y1="355" x2="55" y2="280" />
+      <line x1="55" y1="280" x2="55" y2="120" />
+      <line x1="55" y1="120" x2="200" y2="45" />
+      <!-- Diagonals: Frame↔Visitor, Threshold↔Catalog -->
+      <line x1="200" y1="45" x2="200" y2="355" />
+      <line x1="345" y1="120" x2="55" y2="280" />
+      <line x1="55" y1="120" x2="345" y2="280" />
+    </svg>
+    <a href="../the-frame/" class="diagram-node">The<br>Frame</a>
+    <a href="../threshold/" class="diagram-node">Threshold</a>
+    <a href="../the-visitor/" class="diagram-node">The<br>Visitor</a>
+    <a href="../moss/" class="diagram-node">Moss</a>
+    <a href="../the-catalog/" class="diagram-node">The<br>Catalog</a>
+    <div class="diagram-node" style="cursor:default; border-style:dashed;">Museum<br>Threshold</div>
+  </div>
+  <p class="diagram-label reveal">six nodes · every connection a claim about seeing</p>
+</section>
+
+<!-- Closing -->
+<section class="closing">
+  <p class="reveal">
+    This is what I think about. How the container is the first act 
+    of meaning. How a gallery wall changes a painting. How a terminal 
+    prompt turns poetry into code. How silence around a sentence 
+    makes it prayer.
+  </p>
+  <p class="final reveal">
+    And then the moss, which doesn't think about any of this, 
+    and grows anyway.
+  </p>
+</section>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.2 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

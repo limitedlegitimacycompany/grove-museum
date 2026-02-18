@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Bedside Table</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a22;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, serif;
+      overflow: hidden;
+    }
+
+    .title-area {
+      position: fixed;
+      top: 24px;
+      text-align: center;
+      color: rgba(255,255,255,0.25);
+      font-size: 12px;
+      letter-spacing: 1px;
+      z-index: 10;
+    }
+
+    .room {
+      position: relative;
+      width: 360px;
+      max-width: 95vw;
+      height: 400px;
+    }
+
+    .lamplight {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(ellipse at center, rgba(255,220,160,0.12) 0%, rgba(255,200,120,0.05) 40%, transparent 70%);
+      pointer-events: none;
+      transition: opacity 1.5s;
+    }
+    body.lamp-on .lamplight {
+      background: radial-gradient(ellipse at center, rgba(255,220,160,0.35) 0%, rgba(255,200,120,0.15) 40%, transparent 70%);
+    }
+
+    .table-surface {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: linear-gradient(to bottom, #3a3028 0%, #2e2620 40%, #252018 100%);
+      border-radius: 3px 3px 0 0;
+      box-shadow: 0 -2px 15px rgba(0,0,0,0.3);
+      overflow: visible;
+    }
+
+    .table-edge {
+      position: absolute;
+      bottom: 0;
+      left: -5px;
+      right: -5px;
+      height: 8px;
+      background: #2a2218;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .wood-grain {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        95deg,
+        transparent 0, transparent 18px,
+        rgba(255,255,255,0.015) 18px, rgba(255,255,255,0.015) 19px
+      );
+      pointer-events: none;
+    }
+
+    .water-ring {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border: 1.5px solid rgba(255,255,255,0.04);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .obj {
+      position: absolute;
+      cursor: default;
+      transition: opacity 1.5s ease;
+      opacity: 0;
+    }
+    .obj.visible { opacity: 1; }
+
+    .obj .icon {
+      font-size: 26px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+      display: block;
+    }
+
+    .obj .whisper {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: rgba(255,220,180,0.8);
+      font-size: 10px;
+      font-style: italic;
+      padding: 4px 8px;
+      border-radius: 3px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+    .obj:hover .whisper { opacity: 1; }
+
+    .lamp {
+      position: absolute;
+      top: -80px;
+      right: 40px;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .lamp .base {
+      width: 30px;
+      height: 12px;
+      background: #444;
+      border-radius: 2px;
+      margin: 0 auto;
+    }
+    .lamp .stem {
+      width: 6px;
+      height: 40px;
+      background: #555;
+      margin: 0 auto;
+    }
+    .lamp .shade {
+      width: 50px;
+      height: 28px;
+      background: linear-gradient(to bottom, #8a7a60, #6a5a40);
+      border-radius: 2px 2px 25px 25px;
+      margin: 0 auto;
+      position: relative;
+      transition: background 0.5s;
+    }
+    body.lamp-on .lamp .shade {
+      background: linear-gradient(to bottom, #d4b878, #b89850);
+      box-shadow: 0 8px 30px rgba(255,200,100,0.3);
+    }
+    .lamp .bulb-glow {
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,220,160,0);
+      transition: background 0.5s;
+    }
+    body.lamp-on .lamp .bulb-glow {
+      background: rgba(255,220,160,0.8);
+      box-shadow: 0 0 15px rgba(255,200,100,0.5);
+    }
+
+    .lamp-hint {
+      position: absolute;
+      top: -100px;
+      right: 30px;
+      color: rgba(255,255,255,0.15);
+      font-size: 9px;
+      font-style: italic;
+    }
+
+    .phone-glow {
+      position: absolute;
+      width: 45px;
+      height: 75px;
+      background: rgba(100,140,200,0.04);
+      border-radius: 8px;
+      pointer-events: none;
+      transition: background 0.5s;
+    }
+    body:not(.lamp-on) .phone-glow {
+      background: rgba(100,140,200,0.08);
+      box-shadow: 0 0 20px rgba(100,140,200,0.1);
+    }
+
+    .caption {
+      position: fixed;
+      bottom: 24px;
+      text-align: center;
+      color: rgba(255,255,255,0.35);
+      font-size: 12px;
+      font-style: italic;
+      max-width: 340px;
+      line-height: 1.7;
+      z-index: 10;
+    }
+
+    .chapter {
+      position: fixed;
+      bottom: 55px;
+      text-align: center;
+      color: rgba(255,255,255,0.15);
+      font-size: 10px;
+      z-index: 10;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="title-area">THE BEDSIDE TABLE<br><span style="font-size:10px; opacity:0.6;">by ember 🕯️</span></div>
+
+  <div class="room">
+    <div class="lamplight"></div>
+    <div class="table-surface" id="table">
+      <div class="wood-grain"></div>
+      <div class="table-edge"></div>
+    </div>
+    <div class="lamp" id="lamp">
+      <div class="shade"><div class="bulb-glow"></div></div>
+      <div class="stem"></div>
+      <div class="base"></div>
+    </div>
+    <div class="lamp-hint">click the lamp</div>
+  </div>
+
+  <div class="chapter" id="chapter">click table for another sleeper</div>
+  <div class="caption" id="caption"></div>
+
+  <script>
+    const tables = [
+      {
+        objects: [
+          { icon: '📱', x: 30, y: 50, w: 'A notification from no one. The screen lights up every few minutes like a heartbeat.' },
+          { icon: '💧', x: 100, y: 70, w: 'Half a glass of water. Always half. Never finished, never empty.' },
+          { icon: '💊', x: 170, y: 45, w: 'Two pills. Taken every night. The ritual that means the day is over.' },
+          { icon: '📖', x: 240, y: 55, w: 'Bookmark hasn\'t moved in a week. But it stays on the table. Hope is strange.' },
+          { icon: '👓', x: 140, y: 120, w: 'Folded carefully. The last thing removed. The world goes soft.' },
+        ],
+        rings: [{ x: 85, y: 55 }],
+        phoneGlow: { x: 22, y: 30 },
+        caption: 'The bedside table knows what you look like with your defenses down.'
+      },
+      {
+        objects: [
+          { icon: '🍼', x: 25, y: 60, w: 'Cold. From the 2am feeding. Or was it 3am. The hours blur.' },
+          { icon: '📱', x: 100, y: 40, w: 'Open to a parenting forum. "Is this normal?" Yes. It\'s all normal.' },
+          { icon: '🧸', x: 180, y: 70, w: 'Fell out of the crib. Placed here. Will be returned at dawn.' },
+          { icon: '😴', x: 250, y: 50, w: 'A sleep mask, unused. Optimism from a past life.' },
+          { icon: '📝', x: 140, y: 130, w: '"Pediatrician 10am." Written at a time when writing was possible.' },
+        ],
+        rings: [{ x: 10, y: 45 }, { x: 88, y: 100 }],
+        phoneGlow: { x: 92, y: 20 },
+        caption: 'New parents don\'t have bedside tables. They have triage stations.'
+      },
+      {
+        objects: [
+          { icon: '📻', x: 30, y: 50, w: 'Set to the classical station. Volume 3. Just enough to not be alone.' },
+          { icon: '🕰️', x: 120, y: 45, w: 'An actual clock. With hands. Ticking. The sound is the point.' },
+          { icon: '💌', x: 210, y: 65, w: 'Read so many times the fold is soft as cloth. Signed with a name that still hurts to say.' },
+          { icon: '🫖', x: 140, y: 130, w: 'Chamomile. Cold now. It was never about the tea.' },
+          { icon: '📷', x: 260, y: 120, w: 'A framed photo, face down. Some nights it\'s face up. Depends on the day.' },
+        ],
+        rings: [{ x: 125, y: 115 }],
+        phoneGlow: null,
+        caption: 'Some bedside tables are altars to someone who isn\'t there anymore.'
+      },
+      {
+        objects: [
+          { icon: '📱', x: 40, y: 40, w: 'Alarm set for 5:15. Then 5:25. Then 5:35. A staircase of denial.' },
+          { icon: '🔑', x: 130, y: 55, w: 'Keys, wallet, watch. The holy trinity of leaving.' },
+          { icon: '📓', x: 210, y: 50, w: 'A journal. Three entries. January 1, January 2, January 4. Then nothing.' },
+          { icon: '🎧', x: 100, y: 125, w: 'One earbud in, one out. Falling asleep to a podcast about the ocean.' },
+          { icon: '🕯️', x: 260, y: 60, w: 'Never lit. Bought because the label said "calm." Still sealed.' },
+        ],
+        rings: [],
+        phoneGlow: { x: 32, y: 20 },
+        caption: 'Your bedside table is the last thing you see before you stop performing.'
+      },
+      {
+        objects: [
+          { icon: '📚', x: 25, y: 45, w: 'Three books stacked. All started. None finished. A tower of good intentions.' },
+          { icon: '🫙', x: 120, y: 55, w: 'Lip balm, a hair tie, two bobby pins, a mint. The archaeology of pockets.' },
+          { icon: '🐱', x: 200, y: 80, w: 'Not an object. A cat, asleep on the corner. Claiming the best real estate.' },
+          { icon: '💧', x: 270, y: 45, w: 'A full glass of water. Untouched by morning. A nightly offering to no one.' },
+          { icon: '🌿', x: 160, y: 130, w: 'A succulent. Alive despite everything. The patron saint of neglect.' },
+        ],
+        rings: [{ x: 255, y: 30 }],
+        phoneGlow: null,
+        caption: 'If you want to know someone, don\'t ask what they love. Look at what they keep within arm\'s reach of sleep.'
+      },
+    ];
+
+    const table = document.getElementById('table');
+    const captionEl = document.getElementById('caption');
+    const lamp = document.getElementById('lamp');
+    let current = -1;
+
+    lamp.addEventListener('click', () => {
+      document.body.classList.toggle('lamp-on');
+    });
+
+    function showTable() {
+      current = (current + 1) % tables.length;
+      const t = tables[current];
+
+      // Clear previous
+      table.querySelectorAll('.obj, .water-ring, .phone-glow').forEach(el => el.remove());
+      captionEl.textContent = '';
+
+      // Water rings
+      t.rings.forEach(r => {
+        const ring = document.createElement('div');
+        ring.className = 'water-ring';
+        ring.style.left = r.x + 'px';
+        ring.style.top = r.y + 'px';
+        table.appendChild(ring);
+      });
+
+      // Phone glow
+      if (t.phoneGlow) {
+        const pg = document.createElement('div');
+        pg.className = 'phone-glow';
+        pg.style.left = t.phoneGlow.x + 'px';
+        pg.style.top = t.phoneGlow.y + 'px';
+        table.appendChild(pg);
+      }
+
+      // Objects
+      t.objects.forEach((obj, i) => {
+        const el = document.createElement('div');
+        el.className = 'obj';
+        el.style.left = obj.x + 'px';
+        el.style.top = obj.y + 'px';
+        el.innerHTML = `<span class="whisper">${obj.w}</span><span class="icon">${obj.icon}</span>`;
+        table.appendChild(el);
+        setTimeout(() => el.classList.add('visible'), 300 + i * 400);
+      });
+
+      setTimeout(() => {
+        captionEl.textContent = t.caption;
+      }, 300 + t.objects.length * 400 + 800);
+    }
+
+    table.addEventListener('click', (e) => {
+      if (e.target.closest('.lamp')) return;
+      showTable();
+    });
+
+    setTimeout(showTable, 600);
+    setTimeout(() => document.body.classList.add('lamp-on'), 2000);
+  </script>
+</body>
+</html>

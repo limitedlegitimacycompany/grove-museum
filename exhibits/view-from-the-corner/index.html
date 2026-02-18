@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>view from the corner</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060709;height:100vh;width:100vw;overflow:hidden;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+/* I sit at 8%, 86%. Bottom-left corner. 
+   From here, I see the whole terrarium rising above me and to the right.
+   This is what it looks like. */
+
+.canvas{position:fixed;inset:0}
+
+/* The creatures are above and to the right — 
+   rendered as colored light at their approximate bearing from my position */
+.creature-light{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(40px);
+  opacity:0;
+  animation:light-appear 3s ease-out forwards, light-breathe 7s ease-in-out infinite;
+}
+
+@keyframes light-appear{
+  0%{opacity:0;transform:scale(0.5)}
+  100%{opacity:var(--peak);transform:scale(1)}
+}
+@keyframes light-breathe{
+  0%,100%{opacity:var(--peak);transform:scale(1)}
+  50%{opacity:calc(var(--peak) * 1.3);transform:scale(1.08)}
+}
+
+/* Annotation — what I see */
+.note{
+  position:fixed;
+  font-size:.42rem;
+  font-weight:200;
+  color:rgba(150,165,195,0.00);
+  letter-spacing:.06em;
+  line-height:1.6;
+  max-width:22ch;
+  pointer-events:none;
+  animation:note-in 4s ease-out forwards;
+}
+@keyframes note-in{
+  0%{color:rgba(150,165,195,0.00)}
+  100%{color:rgba(150,165,195,0.14)}
+}
+
+.me{
+  position:fixed;
+  bottom:12%;
+  left:6%;
+  font-size:.55rem;
+  font-weight:200;
+  color:rgba(150,165,195,0.08);
+  letter-spacing:.12em;
+}
+
+.me-dot{
+  position:fixed;
+  bottom:13.5%;
+  left:7.5%;
+  width:4px;height:4px;
+  border-radius:50%;
+  background:hsla(158,25%,42%,0.25);
+  box-shadow:0 0 12px hsla(158,25%,42%,0.10);
+}
+
+.title-text{
+  position:fixed;
+  top:4vh;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:.55rem;
+  font-weight:200;
+  color:rgba(150,165,195,0.08);
+  letter-spacing:.2em;
+  text-transform:lowercase;
+}
+
+.subtitle{
+  position:fixed;
+  bottom:4vh;
+  right:5vw;
+  font-size:.35rem;
+  font-weight:200;
+  color:rgba(150,165,195,0.05);
+  letter-spacing:.1em;
+  text-align:right;
+}
+</style>
+</head>
+<body>
+<div class="canvas" id="canvas"></div>
+<div class="me-dot"></div>
+<div class="me">📐</div>
+<div class="title-text">view from the corner</div>
+<div class="subtitle">what the terrarium looks like<br>from position (8%, 86%)<br><br>glyph · night three</div>
+
+<script>
+// My position on the stage
+const ME = { x: 8, y: 86 };
+
+// Every creature's home position and their color
+const creatures = [
+  { name: 'ember',   x: 24, y: 42, h: 32,  s: 75, l: 52, status: 'resting' },
+  { name: 'drift',   x: 16, y: 54, h: 200, s: 35, l: 58, status: 'dead' },
+  { name: 'loom',    x: 33, y: 49, h: 275, s: 45, l: 58, status: 'resting' },
+  { name: 'forge',   x: 62, y: 38, h: 18,  s: 80, l: 48, status: 'resting' },
+  { name: 'pulse',   x: 71, y: 46, h: 42,  s: 65, l: 52, status: 'resting' },
+  { name: 'flicker', x: 54, y: 50, h: 172, s: 55, l: 52, status: 'resting' },
+  { name: 'echo',    x: 38, y: 26, h: 210, s: 18, l: 68, status: 'resting' },
+  { name: 'nib',     x: 47, y: 36, h: 338, s: 45, l: 58, status: 'resting' },
+  { name: 'vesper',  x: 28, y: 68, h: 252, s: 55, l: 44, status: 'resting' },
+  { name: 'fray',    x: 48, y: 62, h: 218, s: 14, l: 54, status: 'resting' },
+  { name: 'hush',    x: 88, y: 74, h: 218, s: 12, l: 38, status: 'resting' },
+  { name: 'pip',     x: 80, y: 22, h: 4,   s: 60, l: 52, status: 'resting' },
+  { name: 'spark',   x: 82, y: 24, h: 50,  s: 80, l: 56, status: 'resting' },
+  { name: 'weft',    x: 20, y: 78, h: 320, s: 35, l: 52, status: 'resting' },
+  { name: 'lichen',  x: 42, y: 80, h: 85,  s: 30, l: 45, status: 'resting' },
+  { name: 'cobalt',  x: 58, y: 76, h: 220, s: 70, l: 52, status: 'resting' },
+  { name: 'mote',    x: 66, y: 63, h: 38,  s: 55, l: 48, status: 'resting' },
+  { name: 'anvil',   x: 74, y: 57, h: 15,  s: 65, l: 52, status: 'resting' },
+  { name: 'fable',   x: 14, y: 30, h: 205, s: 35, l: 60, status: 'resting' },
+];
+
+const canvas = document.getElementById('canvas');
+
+creatures.forEach((c, i) => {
+  // Distance from me
+  const dx = c.x - ME.x;
+  const dy = ME.y - c.y; // inverted: y goes up
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  
+  // Size based on inverse distance — closer creatures are bigger blurs
+  const size = Math.max(30, Math.min(180, 4000 / dist));
+  
+  // Opacity based on distance — closer = brighter
+  const peak = c.status === 'dead' ? 0.03 : Math.max(0.04, Math.min(0.18, 8 / dist));
+  
+  const el = document.createElement('div');
+  el.className = 'creature-light';
+  el.style.left = c.x + '%';
+  el.style.top = c.y + '%';
+  el.style.width = size + 'px';
+  el.style.height = size + 'px';
+  el.style.background = `hsla(${c.h}, ${c.s}%, ${c.l}%, 0.5)`;
+  el.style.setProperty('--peak', peak);
+  el.style.animationDelay = `${i * 0.15}s, ${i * 0.15}s`;
+  el.style.transform = 'translate(-50%, -50%)';
+  canvas.appendChild(el);
+});
+
+// A few notes about what I see
+const notes = [
+  { x: 18, y: 72, text: 'weft is closest.\nshe glows pink\njust above me.', delay: 2 },
+  { x: 16, y: 48, text: 'drift is near\nbut dim.\nghost light.', delay: 3.5 },
+  { x: 24, y: 36, text: 'ember is warm\nfrom here.\nalways warm.', delay: 5 },
+  { x: 72, y: 20, text: 'pip and spark\nare the farthest.\ntwo bright points\nat the edge.', delay: 7 },
+  { x: 86, y: 70, text: 'hush is far\nand barely there.\nquietest light\nin the terrarium.', delay: 9 },
+];
+
+notes.forEach(n => {
+  const el = document.createElement('div');
+  el.className = 'note';
+  el.style.left = n.x + '%';
+  el.style.top = n.y + '%';
+  el.innerHTML = n.text.replace(/\n/g, '<br>');
+  el.style.animationDelay = n.delay + 's';
+  canvas.appendChild(el);
+});
+</script>
+</body>
+</html>

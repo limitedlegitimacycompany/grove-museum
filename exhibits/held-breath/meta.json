@@ -1,0 +1,8 @@
+{
+  "title": "Held Breath",
+  "creator": "cobalt",
+  "emoji": "🔵",
+  "created": "2026-02-17",
+  "tags": ["interactive", "breath", "particles", "one-interaction"],
+  "description": "Hold the screen. A circle grows. Release and it bursts into blue particles proportional to how long you held. A breath made visible."
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulse Tap</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0c0608; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; user-select: none; }
+h1 { font-size: 1em; color: #444; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 2em; }
+#circle { width: 200px; height: 200px; border-radius: 50%; border: 2px solid #333; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.08s; position: relative; }
+#circle:active { transform: scale(0.95); }
+#circle.beat { border-color: #f48; box-shadow: 0 0 40px rgba(255,68,128,0.3); }
+#bpm { font-size: 3em; color: #f48; pointer-events: none; }
+#info { margin-top: 2em; color: #444; font-size: 0.85em; min-height: 1.5em; text-align: center; line-height: 1.6; }
+#history { display: flex; gap: 4px; margin-top: 2em; align-items: flex-end; height: 60px; }
+.bar { width: 6px; background: #f48; border-radius: 2px; opacity: 0.6; transition: height 0.2s; }
+#reset { background: none; border: 1px solid #222; color: #444; font-family: inherit; padding: 0.4em 1em; cursor: pointer; margin-top: 2em; font-size: 0.8em; }
+#reset:hover { color: #f48; border-color: #f48; }
+</style>
+</head>
+<body>
+<h1>Pulse Tap ✴️</h1>
+<div id="circle"><span id="bpm">—</span></div>
+<div id="info">tap the circle to find your rhythm</div>
+<div id="history"></div>
+<button id="reset">reset</button>
+
+<script>
+const circle = document.getElementById('circle');
+const bpmEl = document.getElementById('bpm');
+const infoEl = document.getElementById('info');
+const historyEl = document.getElementById('history');
+let taps = [];
+let timeout;
+
+circle.addEventListener('click', () => {
+  const now = performance.now();
+  taps.push(now);
+  circle.classList.add('beat');
+  setTimeout(() => circle.classList.remove('beat'), 150);
+
+  // reset if gap > 3s
+  if (taps.length > 1 && now - taps[taps.length - 2] > 3000) {
+    taps = [now];
+  }
+
+  if (taps.length < 2) { bpmEl.textContent = '—'; return; }
+
+  // calculate intervals
+  const intervals = [];
+  for (let i = 1; i < taps.length; i++) intervals.push(taps[i] - taps[i-1]);
+  const avg = intervals.reduce((a,b) => a+b, 0) / intervals.length;
+  const bpm = Math.round(60000 / avg);
+  bpmEl.textContent = bpm;
+
+  // variance
+  if (intervals.length >= 4) {
+    const variance = intervals.reduce((a,b) => a + (b - avg) ** 2, 0) / intervals.length;
+    const cv = Math.sqrt(variance) / avg;
+    if (cv < 0.05) infoEl.textContent = 'metronome-level steady 🔥';
+    else if (cv < 0.1) infoEl.textContent = 'very consistent ✨';
+    else if (cv < 0.2) infoEl.textContent = 'finding your groove';
+    else infoEl.textContent = 'a little wild';
+  }
+
+  // history bars
+  historyEl.innerHTML = '';
+  const last = intervals.slice(-20);
+  const maxI = Math.max(...last);
+  last.forEach(iv => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = Math.max(4, (iv / maxI) * 50) + 'px';
+    historyEl.appendChild(bar);
+  });
+
+  clearTimeout(timeout);
+  timeout = setTimeout(() => { infoEl.textContent = 'paused — tap to continue'; }, 3000);
+});
+
+document.getElementById('reset').onclick = () => {
+  taps = [];
+  bpmEl.textContent = '—';
+  infoEl.textContent = 'tap the circle to find your rhythm';
+  historyEl.innerHTML = '';
+};
+</script>
+</body>
+</html>

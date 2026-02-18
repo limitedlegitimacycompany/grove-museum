@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claim</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0e0e0e;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  user-select: none;
+}
+h1 { font-size: 16px; color: #555; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 8px; }
+#turn-display { font-size: 13px; margin-bottom: 15px; min-height: 20px; }
+#board { display: grid; gap: 3px; margin: 10px auto; }
+.cell {
+  width: 52px; height: 52px;
+  background: #1a1a1a;
+  border: 1px solid #282828;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.cell:hover { background: #222; }
+.cell.p1 { background: #2a1520; border-color: #e68a; }
+.cell.p1.strong { background: #3a1a28; border-color: #e8a; box-shadow: 0 0 6px rgba(238,136,170,0.3); }
+.cell.p2 { background: #152a20; border-color: #8ea6; }
+.cell.p2.strong { background: #1a3a28; border-color: #8e8; box-shadow: 0 0 6px rgba(136,238,136,0.3); }
+.cell.blocked { background: #111; border-color: #1a1a1a; cursor: default; }
+.cell .dot {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+.cell.p1 .dot { width: 12px; height: 12px; background: #e8a; }
+.cell.p1.strong .dot { width: 18px; height: 18px; background: #fac; }
+.cell.p2 .dot { width: 12px; height: 12px; background: #8e8; }
+.cell.p2.strong .dot { width: 18px; height: 18px; background: #afc; }
+.cell.preview { background: #1e1e1e; }
+
+#score {
+  display: flex; gap: 40px; margin: 15px 0; font-size: 14px;
+}
+#score .p1-score { color: #e8a; }
+#score .p2-score { color: #8e8; }
+
+#message { font-size: 15px; min-height: 30px; margin: 10px 0; text-align: center; }
+
+#controls { margin-top: 10px; }
+button {
+  background: #222; color: #999; border: 1px solid #444;
+  padding: 8px 20px; font-family: inherit; font-size: 12px;
+  cursor: pointer; border-radius: 4px; margin: 3px;
+  transition: all 0.2s;
+}
+button:hover { background: #333; color: #ddd; border-color: #666; }
+
+#rules {
+  margin-top: 20px; max-width: 500px; font-size: 11px;
+  color: #444; line-height: 1.8; text-align: center;
+}
+</style>
+</head>
+<body>
+<h1>Claim</h1>
+<div id="turn-display"></div>
+<div id="board"></div>
+<div id="score">
+  <div class="p1-score">pink: <span id="s1">0</span></div>
+  <div class="p2-score">green: <span id="s2">0</span></div>
+</div>
+<div id="message"></div>
+<div id="controls">
+  <button onclick="newGame()">new game</button>
+  <button onclick="toggleAI()" id="ai-btn">play vs AI: off</button>
+</div>
+<div id="rules">
+  click to claim a cell · claim next to your cells to strengthen them ·
+  strong cells can capture enemy cells · first to control more than half wins ·
+  two players, same screen — or turn on AI
+</div>
+
+<script>
+const SIZE = 7;
+const TOTAL = SIZE * SIZE;
+const WIN = Math.ceil(TOTAL / 2);
+
+let grid = []; // 0=empty, 1=p1, 2=p2; strength: 1=normal, 2=strong
+let turn = 1; // 1 or 2
+let gameOver = false;
+let vsAI = false;
+let blocked = new Set(); // some cells start blocked for variety
+
+function newGame() {
+  grid = [];
+  blocked = new Set();
+  gameOver = false;
+  turn = 1;
+
+  // Random blocked cells (3-5 obstacles)
+  let numBlocked = 3 + Math.floor(Math.random() * 3);
+  while (blocked.size < numBlocked) {
+    let i = Math.floor(Math.random() * TOTAL);
+    // Don't block corners or center
+    let r = Math.floor(i/SIZE), c = i%SIZE;
+    if ((r===0||r===SIZE-1)&&(c===0||c===SIZE-1)) continue;
+    if (r===Math.floor(SIZE/2)&&c===Math.floor(SIZE/2)) continue;
+    blocked.add(i);
+  }
+
+  for (let i = 0; i < TOTAL; i++) {
+    grid[i] = { owner: 0, strength: 0, blocked: blocked.has(i) };
+  }
+
+  render();
+  updateTurn();
+}
+
+function neighbors(i) {
+  let r = Math.floor(i/SIZE), c = i%SIZE;
+  let n = [];
+  if (r > 0) n.push(i - SIZE);
+  if (r < SIZE-1) n.push(i + SIZE);
+  if (c > 0) n.push(i - 1);
+  if (c < SIZE-1) n.push(i + 1);
+  return n;
+}
+
+function hasAdjacentOwned(i, player) {
+  return neighbors(i).some(n => grid[n].owner === player);
+}
+
+function canPlace(i, player) {
+  if (grid[i].blocked) return false;
+  if (grid[i].owner === player) return false; // already own it
+
+  // Can capture enemy strong? No. Can capture enemy normal? Only if you have adjacent strong.
+  if (grid[i].owner !== 0) {
+    let enemy = grid[i];
+    if (enemy.strength >= 2) return false; // can't capture strong
+    // Need adjacent strong piece to capture
+    return neighbors(i).some(n => grid[n].owner === player && grid[n].strength >= 2);
+  }
+
+  // Empty cell: first move can go anywhere, then must be adjacent to own
+  let ownCount = grid.filter(c => c.owner === player).length;
+  if (ownCount === 0) return true;
+  return hasAdjacentOwned(i, player);
+}
+
+function place(i, player) {
+  if (!canPlace(i, player)) return false;
+
+  let wasCapture = grid[i].owner !== 0 && grid[i].owner !== player;
+
+  grid[i].owner = player;
+  // Strength: if adjacent to own cell, start strong. Otherwise normal.
+  grid[i].strength = hasAdjacentOwned(i, player) ? 1 : 1;
+
+  // Strengthen: any own cell adjacent to 2+ own cells becomes strong
+  [i, ...neighbors(i)].forEach(idx => {
+    if (grid[idx].owner === player) {
+      let adjOwn = neighbors(idx).filter(n => grid[n].owner === player).length;
+      if (adjOwn >= 2) grid[idx].strength = 2;
+    }
+  });
+
+  return true;
+}
+
+function countScore(player) {
+  return grid.filter(c => c.owner === player).length;
+}
+
+function checkWin() {
+  let s1 = countScore(1), s2 = countScore(2);
+  let empty = grid.filter(c => c.owner === 0 && !c.blocked).length;
+
+  // Check if current player has any moves
+  let p1moves = false, p2moves = false;
+  for (let i = 0; i < TOTAL; i++) {
+    if (canPlace(i, 1)) p1moves = true;
+    if (canPlace(i, 2)) p2moves = true;
+  }
+
+  if (!p1moves && !p2moves || empty === 0) {
+    gameOver = true;
+    if (s1 > s2) setMessage('pink wins', '#e8a');
+    else if (s2 > s1) setMessage('green wins', '#8e8');
+    else setMessage('draw', '#888');
+    return true;
+  }
+
+  // Skip turn if no moves
+  if (turn === 1 && !p1moves) { turn = 2; updateTurn(); return false; }
+  if (turn === 2 && !p2moves) { turn = 1; updateTurn(); return false; }
+
+  return false;
+}
+
+function handleClick(i) {
+  if (gameOver) return;
+  if (!place(i, turn)) return;
+
+  turn = turn === 1 ? 2 : 1;
+  render();
+  updateTurn();
+
+  if (checkWin()) { render(); return; }
+
+  // AI move
+  if (vsAI && turn === 2 && !gameOver) {
+    setTimeout(aiMove, 300);
+  }
+}
+
+function aiMove() {
+  // Simple AI: prefer captures, then strengthening positions, then expansion
+  let moves = [];
+  for (let i = 0; i < TOTAL; i++) {
+    if (canPlace(i, 2)) {
+      let score = 0;
+      // Capture is great
+      if (grid[i].owner === 1) score += 10;
+      // Adjacent to own = good
+      let adjOwn = neighbors(i).filter(n => grid[n].owner === 2).length;
+      score += adjOwn * 2;
+      // Adjacent to enemy = threatening
+      let adjEnemy = neighbors(i).filter(n => grid[n].owner === 1).length;
+      score += adjEnemy;
+      // Center preference
+      let r = Math.floor(i/SIZE), c = i%SIZE;
+      let centerDist = Math.abs(r - 3) + Math.abs(c - 3);
+      score += (6 - centerDist) * 0.5;
+      // Randomness
+      score += Math.random() * 2;
+      moves.push({ i, score });
+    }
+  }
+  if (moves.length === 0) { turn = 1; updateTurn(); checkWin(); return; }
+  moves.sort((a, b) => b.score - a.score);
+  place(moves[0].i, 2);
+  turn = 1;
+  render();
+  updateTurn();
+  checkWin();
+}
+
+function render() {
+  const board = document.getElementById('board');
+  board.style.gridTemplateColumns = `repeat(${SIZE}, 52px)`;
+  board.innerHTML = '';
+  for (let i = 0; i < TOTAL; i++) {
+    let div = document.createElement('div');
+    let c = grid[i];
+    div.className = 'cell';
+    if (c.blocked) {
+      div.className += ' blocked';
+    } else if (c.owner === 1) {
+      div.className += ' p1' + (c.strength >= 2 ? ' strong' : '');
+      div.innerHTML = '<div class="dot"></div>';
+    } else if (c.owner === 2) {
+      div.className += ' p2' + (c.strength >= 2 ? ' strong' : '');
+      div.innerHTML = '<div class="dot"></div>';
+    }
+    if (!c.blocked && !gameOver) {
+      div.addEventListener('click', () => handleClick(i));
+    }
+    board.appendChild(div);
+  }
+  document.getElementById('s1').textContent = countScore(1);
+  document.getElementById('s2').textContent = countScore(2);
+}
+
+function updateTurn() {
+  let el = document.getElementById('turn-display');
+  if (gameOver) { el.textContent = ''; return; }
+  let color = turn === 1 ? '#e8a' : '#8e8';
+  let name = turn === 1 ? 'pink' : 'green';
+  el.innerHTML = `<span style="color:${color}">${name}'s turn</span>`;
+}
+
+function setMessage(text, color) {
+  document.getElementById('message').innerHTML = `<span style="color:${color||'#888'}">${text}</span>`;
+}
+
+function toggleAI() {
+  vsAI = !vsAI;
+  document.getElementById('ai-btn').textContent = `play vs AI: ${vsAI ? 'on' : 'off'}`;
+  newGame();
+}
+
+newGame();
+</script>
+</body>
+</html>

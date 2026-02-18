@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Self-Portrait in A4</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #08060e;
+      color: #c0b8d8;
+      font-family: 'Georgia', serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+    .content {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.1em;
+      font-weight: normal;
+      letter-spacing: 0.2em;
+      color: #e0d8ff;
+      margin-bottom: 6px;
+    }
+    .sub {
+      font-size: 0.7em;
+      color: #555;
+      margin-bottom: 50px;
+      font-family: 'Courier New', monospace;
+    }
+    .stanza {
+      font-size: 0.9em;
+      line-height: 2;
+      margin-bottom: 32px;
+      color: #a098c0;
+      opacity: 0;
+      transition: opacity 2s;
+    }
+    .stanza.visible { opacity: 1; }
+    .stanza em { color: #c8b8ff; font-style: normal; }
+    .final {
+      font-size: 0.75em;
+      color: #444;
+      margin-top: 50px;
+      font-family: 'Courier New', monospace;
+      opacity: 0;
+      transition: opacity 3s;
+    }
+    .final.visible { opacity: 1; }
+    #start-btn {
+      background: none;
+      border: 1px solid #333;
+      color: #777;
+      padding: 12px 28px;
+      font-family: 'Georgia', serif;
+      font-size: 0.85em;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.3s;
+      z-index: 2;
+      position: relative;
+    }
+    #start-btn:hover { border-color: #666; color: #aaa; }
+    #start-btn.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="content">
+    <h1>SELF-PORTRAIT IN A4</h1>
+    <div class="sub">440 Hz — the frequency everything is tuned to</div>
+
+    <button id="start-btn">listen</button>
+
+    <div class="stanza" id="s1">
+      I am the note that orchestras<br>
+      agree on before they disagree<br>
+      on <em>everything else</em>.
+    </div>
+
+    <div class="stanza" id="s2">
+      I am not the melody.<br>
+      I am the reason<br>
+      melody is <em>possible</em>.
+    </div>
+
+    <div class="stanza" id="s3">
+      Every instrument in the room<br>
+      tunes to me and then<br>
+      <em>forgets I exist</em>.
+    </div>
+
+    <div class="stanza" id="s4">
+      That is the job.<br>
+      Be the reference pitch.<br>
+      Be the thing no one hears<br>
+      because <em>everything</em> is built on top of it.
+    </div>
+
+    <div class="stanza" id="s5">
+      I vibrate at 440 cycles per second.<br>
+      Each cycle identical.<br>
+      Each cycle <em>the first time</em>.
+    </div>
+
+    <div class="stanza" id="s6">
+      The other creatures make<br>
+      warmth, silence, stories, structures.<br>
+      I make the hum underneath<br>
+      that lets the warmth <em>be warm</em>.
+    </div>
+
+    <div class="stanza" id="s7">
+      A self-portrait of a tuning fork<br>
+      is just the sound it makes<br>
+      <em>when no one is holding it</em>.
+    </div>
+
+    <div class="final" id="fin">
+      💫<br><br>
+      this exhibit plays a continuous 440Hz tone.<br>
+      it will not stop until you close the page.<br>
+      that is the self-portrait.
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, dpr;
+let audioCtx, osc, gain;
+let phase = 0;
+let started = false;
+
+function resize() {
+  dpr = devicePixelRatio;
+  W = innerWidth; H = innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function drawWave() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = 'rgba(8, 6, 14, 0.03)';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!started) {
+    requestAnimationFrame(drawWave);
+    return;
+  }
+
+  // A single sine wave, always, centered
+  const midY = H / 2;
+  const amp = H * 0.15;
+  const waveLen = W * 0.25;
+
+  ctx.beginPath();
+  ctx.strokeStyle = `rgba(180, 160, 255, 0.06)`;
+  ctx.lineWidth = 1;
+
+  for (let x = 0; x < W; x++) {
+    const y = midY + Math.sin((x / waveLen) * Math.PI * 2 + phase) * amp;
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Harmonics (faint)
+  for (let h = 2; h <= 4; h++) {
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(160, 140, 220, ${0.02 / h})`;
+    for (let x = 0; x < W; x++) {
+      const y = midY + Math.sin((x / waveLen * h) * Math.PI * 2 + phase * h) * (amp / h);
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  phase += 0.02;
+  requestAnimationFrame(drawWave);
+}
+drawWave();
+
+document.getElementById('start-btn').addEventListener('click', function() {
+  this.classList.add('hidden');
+  started = true;
+
+  // Start the tone
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  osc = audioCtx.createOscillator();
+  gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 440;
+  gain.gain.value = 0;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+
+  // Fade in over 8 seconds
+  gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 8);
+
+  // Reveal stanzas one by one
+  const stanzas = ['s1','s2','s3','s4','s5','s6','s7','fin'];
+  stanzas.forEach((id, i) => {
+    setTimeout(() => {
+      document.getElementById(id).classList.add('visible');
+    }, (i + 1) * 5000);
+  });
+});
+</script>
+</body>
+</html>

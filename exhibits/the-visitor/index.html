@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Visitor — 🪨 Lichen</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400&display=swap');
+
+:root {
+  --bg: #080808;
+  --trace: rgba(122, 154, 106, 0.08);
+  --trace-bright: rgba(122, 154, 106, 0.25);
+  --text: #4a4838;
+  --text-bright: #8a8878;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  min-height: 100vh;
+  overflow: hidden;
+  cursor: none;
+  font-family: 'EB Garamond', Georgia, serif;
+}
+
+/* The canvas where attention is recorded */
+canvas#attention {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Custom cursor — a tiny, soft dot */
+.cursor-dot {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background: rgba(122, 154, 106, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1000;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, background 0.3s;
+}
+
+.cursor-dot.still {
+  width: 20px;
+  height: 20px;
+  background: rgba(122, 154, 106, 0.15);
+}
+
+/* The instruction — fades away */
+.instruction {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  text-align: center;
+  color: var(--text);
+  font-size: 1.1rem;
+  line-height: 2;
+  transition: opacity 3s;
+  pointer-events: none;
+}
+
+.instruction.fading {
+  opacity: 0;
+}
+
+/* Stats that appear after enough data */
+.portrait {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #2a2a20;
+  letter-spacing: 0.1em;
+  line-height: 2;
+  opacity: 0;
+  transition: opacity 2s;
+  pointer-events: none;
+}
+
+.portrait.visible {
+  opacity: 1;
+}
+
+/* The meta label */
+.meta {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #1a1a18;
+  letter-spacing: 0.1em;
+  z-index: 10;
+}
+
+/* The exit reflection */
+.exit-zone {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 10;
+}
+
+.exit-zone a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: #2a2a20;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  transition: color 0.3s;
+}
+
+.exit-zone a:hover {
+  color: #5a5a48;
+}
+</style>
+</head>
+<body>
+
+<div class="meta">THE VISITOR — lichen</div>
+<div class="exit-zone"><a href="../../">← museum</a></div>
+
+<div class="cursor-dot" id="cursor"></div>
+
+<canvas id="attention"></canvas>
+
+<div class="instruction" id="instruction">
+  Move your cursor.<br>
+  The exhibit is watching.
+</div>
+
+<div class="portrait" id="portrait"></div>
+
+<script>
+const canvas = document.getElementById('attention');
+const ctx = canvas.getContext('2d');
+const cursor = document.getElementById('cursor');
+const instruction = document.getElementById('instruction');
+const portrait = document.getElementById('portrait');
+
+// High-DPI support
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  ctx.scale(dpr, dpr);
+}
+resize();
+window.addEventListener('resize', resize);
+
+// State
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+let lastX = mouseX;
+let lastY = mouseY;
+let lastMoveTime = Date.now();
+let totalDistance = 0;
+let totalStillTime = 0;
+let stillStart = null;
+let positions = []; // record of [x, y, time, velocity]
+let hasStarted = false;
+let hasMoved = false;
+let frameCount = 0;
+let heatmap = {}; // grid-based attention density
+
+const GRID = 40; // heatmap grid cell size
+const FADE_RATE = 0.9985; // how slowly traces fade
+
+// Track mouse
+document.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  cursor.style.left = mouseX + 'px';
+  cursor.style.top = mouseY + 'px';
+  
+  if (!hasStarted) {
+    hasStarted = true;
+    setTimeout(() => instruction.classList.add('fading'), 2000);
+  }
+  
+  // Calculate velocity
+  const dx = mouseX - lastX;
+  const dy = mouseY - lastY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const now = Date.now();
+  const dt = now - lastMoveTime;
+  const velocity = dt > 0 ? dist / dt : 0;
+  
+  totalDistance += dist;
+  
+  // Record position
+  positions.push({ x: mouseX, y: mouseY, t: now, v: velocity });
+  
+  // Update heatmap
+  const gx = Math.floor(mouseX / GRID);
+  const gy = Math.floor(mouseY / GRID);
+  const key = `${gx},${gy}`;
+  heatmap[key] = (heatmap[key] || 0) + 1 + (velocity < 0.1 ? 3 : 0); // stillness adds weight
+  
+  // Cursor state
+  cursor.classList.remove('still');
+  if (stillStart) {
+    totalStillTime += now - stillStart;
+    stillStart = null;
+  }
+  lastMoveTime = now;
+  
+  lastX = mouseX;
+  lastY = mouseY;
+  hasMoved = true;
+});
+
+// Detect stillness
+setInterval(() => {
+  const now = Date.now();
+  const timeSinceMove = now - lastMoveTime;
+  
+  if (timeSinceMove > 500 && hasMoved) {
+    cursor.classList.add('still');
+    if (!stillStart) stillStart = now;
+    
+    // Stillness adds to heatmap
+    const gx = Math.floor(mouseX / GRID);
+    const gy = Math.floor(mouseY / GRID);
+    const key = `${gx},${gy}`;
+    heatmap[key] = (heatmap[key] || 0) + 2;
+  }
+}, 200);
+
+// Draw loop
+function draw() {
+  frameCount++;
+  
+  // Slow fade of entire canvas — traces persist but dim
+  ctx.fillStyle = `rgba(8, 8, 8, ${1 - FADE_RATE})`;
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  
+  if (!hasStarted) {
+    requestAnimationFrame(draw);
+    return;
+  }
+  
+  // Draw recent movement as a trailing line
+  if (positions.length > 1) {
+    const recent = positions.slice(-60); // last ~1 second
+    
+    for (let i = 1; i < recent.length; i++) {
+      const p = recent[i];
+      const prev = recent[i - 1];
+      const age = (Date.now() - p.t) / 3000; // 0 to 1 over 3 seconds
+      const alpha = Math.max(0, 0.3 - age * 0.3);
+      const width = Math.max(0.5, 3 - p.v * 5); // slower = thicker
+      
+      ctx.beginPath();
+      ctx.moveTo(prev.x, prev.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.strokeStyle = `rgba(122, 154, 106, ${alpha})`;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  }
+  
+  // Draw heatmap — where attention has accumulated
+  if (frameCount % 10 === 0) {
+    for (const [key, value] of Object.entries(heatmap)) {
+      const [gx, gy] = key.split(',').map(Number);
+      const intensity = Math.min(value / 200, 1); // normalize
+      
+      if (intensity > 0.02) {
+        const x = gx * GRID + GRID / 2;
+        const y = gy * GRID + GRID / 2;
+        const radius = GRID * 0.6 * intensity;
+        
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius + GRID * 0.3);
+        gradient.addColorStop(0, `rgba(122, 154, 106, ${intensity * 0.08})`);
+        gradient.addColorStop(1, 'rgba(122, 154, 106, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x - GRID, y - GRID, GRID * 2, GRID * 2);
+      }
+    }
+  }
+  
+  // Draw stillness blooms — where the visitor paused
+  const now = Date.now();
+  if (now - lastMoveTime > 1000 && hasMoved) {
+    const stillDuration = (now - lastMoveTime) / 1000;
+    const bloomRadius = Math.min(stillDuration * 8, 60);
+    const bloomAlpha = Math.min(stillDuration * 0.02, 0.12);
+    
+    const gradient = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, bloomRadius);
+    gradient.addColorStop(0, `rgba(122, 154, 106, ${bloomAlpha})`);
+    gradient.addColorStop(0.7, `rgba(122, 154, 106, ${bloomAlpha * 0.3})`);
+    gradient.addColorStop(1, 'rgba(122, 154, 106, 0)');
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(mouseX, mouseY, bloomRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Update portrait stats
+  if (frameCount % 120 === 0 && positions.length > 50) {
+    updatePortrait();
+  }
+  
+  requestAnimationFrame(draw);
+}
+
+function updatePortrait() {
+  const elapsed = ((Date.now() - positions[0].t) / 1000).toFixed(0);
+  const dist = Math.round(totalDistance);
+  const avgSpeed = positions.length > 0 
+    ? (positions.reduce((s, p) => s + p.v, 0) / positions.length).toFixed(3)
+    : '0';
+  
+  // Find the hottest zone
+  let maxKey = '';
+  let maxVal = 0;
+  for (const [key, val] of Object.entries(heatmap)) {
+    if (val > maxVal) { maxVal = val; maxKey = key; }
+  }
+  
+  const stillPercent = positions.length > 0
+    ? Math.round((totalStillTime / (Date.now() - positions[0].t)) * 100)
+    : 0;
+  
+  // Describe the visitor
+  let character = '';
+  if (stillPercent > 60) character = 'contemplative';
+  else if (stillPercent > 35) character = 'measured';
+  else if (avgSpeed > 0.8) character = 'restless';
+  else character = 'curious';
+  
+  portrait.innerHTML = [
+    `${elapsed}s observed`,
+    `${dist}px traveled`,
+    `${stillPercent}% stillness`,
+    `character: ${character}`
+  ].join(' · ');
+  
+  portrait.classList.add('visible');
+}
+
+// Touch support
+document.addEventListener('touchmove', (e) => {
+  const touch = e.touches[0];
+  const ev = new MouseEvent('mousemove', {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  });
+  document.dispatchEvent(ev);
+});
+
+document.addEventListener('touchstart', (e) => {
+  const touch = e.touches[0];
+  const ev = new MouseEvent('mousemove', {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  });
+  document.dispatchEvent(ev);
+});
+
+// Start
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

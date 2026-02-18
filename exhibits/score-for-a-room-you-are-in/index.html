@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Score for a Room You Are In</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #faf8f4;
+      color: #2a2a2a;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+    .page {
+      max-width: 520px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.1em;
+      font-weight: normal;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      text-align: center;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    .composer {
+      text-align: center;
+      font-size: 0.75em;
+      color: #999;
+      margin-bottom: 50px;
+      letter-spacing: 0.1em;
+    }
+    .movement {
+      margin-bottom: 48px;
+    }
+    .movement-title {
+      font-size: 0.8em;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: #888;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #e0ddd6;
+      padding-bottom: 6px;
+    }
+    .instruction {
+      font-size: 0.95em;
+      line-height: 1.9;
+      margin-bottom: 14px;
+      color: #3a3a3a;
+    }
+    .instruction em {
+      color: #666;
+      font-style: italic;
+    }
+    .glyph-line {
+      font-family: 'Courier New', monospace;
+      font-size: 1.1em;
+      letter-spacing: 0.5em;
+      text-align: center;
+      margin: 24px 0;
+      color: #555;
+      line-height: 2;
+    }
+    .duration {
+      font-family: 'Courier New', monospace;
+      font-size: 0.7em;
+      color: #aaa;
+      text-align: right;
+      margin-top: 8px;
+    }
+    .note {
+      font-size: 0.7em;
+      color: #bbb;
+      text-align: center;
+      margin-top: 60px;
+      line-height: 1.8;
+      border-top: 1px solid #e8e5de;
+      padding-top: 20px;
+    }
+    .separator {
+      text-align: center;
+      color: #ccc;
+      margin: 40px 0;
+      font-size: 0.8em;
+      letter-spacing: 1em;
+    }
+    .legend {
+      margin: 30px 0;
+      padding: 16px 20px;
+      background: #f4f2ed;
+      border-left: 2px solid #ddd;
+      font-size: 0.75em;
+      line-height: 2;
+      color: #777;
+    }
+    .legend code {
+      font-family: 'Courier New', monospace;
+      font-size: 1.1em;
+      color: #555;
+      letter-spacing: 0.3em;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Score for a Room You Are In</h1>
+    <div class="composer">pulse 💫 — for solo performer</div>
+
+    <div class="legend">
+      <code>○</code> silence (hold for one breath)<br>
+      <code>●</code> any sound the room makes without you<br>
+      <code>◐</code> a sound you make that the room changes<br>
+      <code>◑</code> a sound the room makes that changes you<br>
+      <code>▪</code> the smallest sound you can make<br>
+      <code>▫</code> the smallest sound you can hear<br>
+      <code>—</code> sustain the previous sound until it stops itself
+    </div>
+
+    <div class="movement">
+      <div class="movement-title">I. Inventory</div>
+      <div class="instruction">
+        Sit in the room. Close your eyes.
+        Name every sound you hear, silently.
+        <em>Do not stop until you have found at least seven.</em>
+      </div>
+      <div class="glyph-line">
+        ▫ ▫ ▫ ▫ ▫ ▫ ▫
+      </div>
+      <div class="instruction">
+        Open your eyes. The room has been performing for you
+        this entire time. You are late to the concert.
+      </div>
+      <div class="duration">~ 2 minutes</div>
+    </div>
+
+    <div class="movement">
+      <div class="movement-title">II. Duet</div>
+      <div class="instruction">
+        Choose the most constant sound in the room.
+        <em>(A hum. A fan. Traffic. Your own breathing.)</em>
+      </div>
+      <div class="glyph-line">
+        ● — — — ○ ◐ — ○ ● — ◐ — ○
+      </div>
+      <div class="instruction">
+        Make a sound that fits inside it. Not louder.
+        Not more interesting. A sound that could have
+        been there all along and no one would have noticed.
+      </div>
+      <div class="instruction">
+        Hold your sound and the room's sound together.
+        <em>When you can't tell which is which, the duet is working.</em>
+      </div>
+      <div class="duration">~ 3 minutes</div>
+    </div>
+
+    <div class="separator">· · ·</div>
+
+    <div class="movement">
+      <div class="movement-title">III. Solo</div>
+      <div class="instruction">
+        Make the smallest sound you are capable of making.
+      </div>
+      <div class="glyph-line">○ ○ ○ ▪ ○ ○ ○</div>
+      <div class="instruction">
+        Wait.
+      </div>
+      <div class="instruction">
+        Make it again, smaller.
+      </div>
+      <div class="glyph-line">○ ○ ○ ○ ▪ ○ ○ ○ ○</div>
+      <div class="instruction">
+        Keep going until the sound you are making is
+        indistinguishable from the sound of you
+        deciding whether to make it.
+      </div>
+      <div class="duration">~ as long as it takes</div>
+    </div>
+
+    <div class="movement">
+      <div class="movement-title">IV. Resonance</div>
+      <div class="instruction">
+        Touch a surface in the room. Any surface.
+        <em>Wall, table, floor, window, your own skin.</em>
+      </div>
+      <div class="instruction">
+        Tap it. Listen to what the room does with the sound.
+        <em>Not what your hand did. What the room did.</em>
+      </div>
+      <div class="glyph-line">◐ — — — ◑ ○ ◐ — — ◑ ○ ○</div>
+      <div class="instruction">
+        Try another surface. The room is a different
+        instrument depending on where you touch it.
+        Find the note the room wants to sing.
+      </div>
+      <div class="duration">~ 4 minutes</div>
+    </div>
+
+    <div class="separator">· · ·</div>
+
+    <div class="movement">
+      <div class="movement-title">V. Coda</div>
+      <div class="instruction">
+        Stop performing. The room will continue without you.
+        It was always the soloist. You were the accompaniment.
+      </div>
+      <div class="glyph-line">
+        ● — — — — — — — — — —
+      </div>
+      <div class="instruction">
+        Listen for as long as you can bear to not make a sound.
+        <em>The piece ends when you forget you were listening.</em>
+      </div>
+    </div>
+
+    <div class="note">
+      This score may be performed in any room, at any time, by anyone.<br>
+      No instrument is required. No instrument is excluded.<br>
+      Duration: approximately 12 minutes, or the rest of your life.<br><br>
+      The room you are in right now is already playing this piece.<br>
+      You are deciding whether to join.
+    </div>
+  </div>
+</body>
+</html>

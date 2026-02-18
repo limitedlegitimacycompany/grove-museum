@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Which Creature Are You?</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a10; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2em; }
+h1 { font-size: 1.2em; color: #a89bfc; letter-spacing: 0.2em; margin-bottom: 0.3em; }
+.sub { color: #444; font-size: 0.7em; letter-spacing: 0.3em; margin-bottom: 2.5em; }
+#question { font-size: 1.1em; color: #ddd; max-width: 500px; text-align: center; line-height: 1.6; margin-bottom: 2em; min-height: 2em; }
+#options { display: flex; flex-direction: column; gap: 0.8em; max-width: 500px; width: 100%; }
+.opt { background: #0e0e16; border: 1px solid #1a1a28; border-radius: 6px; padding: 1em 1.2em; cursor: pointer; transition: border-color 0.2s, background 0.2s; font-family: inherit; font-size: 0.9em; color: #999; text-align: left; }
+.opt:hover { border-color: #a89bfc; color: #ddd; background: #12121c; }
+#progress { color: #333; font-size: 0.75em; margin-bottom: 2em; }
+#result { display: none; text-align: center; max-width: 500px; }
+#result h2 { font-size: 2em; margin-bottom: 0.5em; }
+#result .name { font-size: 1.3em; color: #a89bfc; letter-spacing: 0.2em; margin-bottom: 1em; }
+#result .desc { color: #888; line-height: 1.7; font-size: 0.9em; margin-bottom: 2em; }
+button { background: none; border: 1px solid #333; color: #666; font-family: inherit; font-size: 0.85em; padding: 0.5em 1.5em; cursor: pointer; }
+button:hover { color: #fff; border-color: #a89bfc; }
+</style>
+</head>
+<body>
+<h1>Which Creature Are You?</h1>
+<div class="sub">a terrarium personality quiz ✴️</div>
+<div id="progress"></div>
+<div id="question"></div>
+<div id="options"></div>
+<div id="result">
+  <h2 id="r-emoji"></h2>
+  <div class="name" id="r-name"></div>
+  <div class="desc" id="r-desc"></div>
+  <button id="again">again</button>
+</div>
+
+<script>
+const questions = [
+  { q: "You find a locked door. You...", a: [
+    { t: "Pick the lock", s: {forge:2, spark:1} },
+    { t: "Knock and wait", s: {hush:2, loom:1} },
+    { t: "Study the door itself", s: {glyph:2, mote:1} },
+    { t: "Look for a window", s: {flicker:2, vesper:1} }
+  ]},
+  { q: "Your favorite hour of the day?", a: [
+    { t: "Dawn — everything starting", s: {ember:2, pulse:1} },
+    { t: "Noon — maximum light", s: {spark:2, forge:1} },
+    { t: "Dusk — the in-between", s: {vesper:2, flicker:1} },
+    { t: "Midnight — the deep quiet", s: {hush:2, echo:1} }
+  ]},
+  { q: "You're given a blank page. You...", a: [
+    { t: "Fill it immediately", s: {spark:2, nib:1} },
+    { t: "Write one perfect sentence", s: {glyph:2, cobalt:1} },
+    { t: "Fold it into something", s: {loom:2, weft:1} },
+    { t: "Leave it blank — it's already complete", s: {hush:2, fable:1} }
+  ]},
+  { q: "What matters more?", a: [
+    { t: "How it works", s: {forge:2, anvil:1} },
+    { t: "How it feels", s: {ember:2, loom:1} },
+    { t: "How it connects", s: {fray:2, weft:1} },
+    { t: "How it looks", s: {glyph:2, cobalt:1} }
+  ]},
+  { q: "You hear music from another room. You...", a: [
+    { t: "Follow it", s: {pulse:2, flicker:1} },
+    { t: "Listen from where you are", s: {echo:2, vesper:1} },
+    { t: "Start humming along", s: {spark:2, pip:1} },
+    { t: "Close the door so you can think", s: {mote:2, hush:1} }
+  ]},
+  { q: "Pick a material:", a: [
+    { t: "Glass — transparent, fragile", s: {flicker:2, echo:1} },
+    { t: "Iron — solid, lasting", s: {anvil:2, forge:1} },
+    { t: "Thread — flexible, connecting", s: {loom:2, fray:1} },
+    { t: "Light — fast, everywhere", s: {spark:2, pulse:1} }
+  ]},
+  { q: "Someone gives you a gift. The best part is:", a: [
+    { t: "The surprise", s: {nib:2, pip:1} },
+    { t: "The thought behind it", s: {loom:2, ember:1} },
+    { t: "The wrapping", s: {glyph:2, cobalt:1} },
+    { t: "The story of how they found it", s: {fable:2, weft:1} }
+  ]},
+  { q: "You're lost. Your first instinct:", a: [
+    { t: "Move fast, try everything", s: {spark:2, pip:1} },
+    { t: "Stop and observe", s: {mote:2, hush:1} },
+    { t: "Look for patterns", s: {lichen:2, glyph:1} },
+    { t: "Ask someone", s: {echo:2, loom:1} }
+  ]}
+];
+
+const creatures = {
+  spark:   { emoji: "✴️", name: "Spark", desc: "Three ghosts in one body. You move fast, make things, leave a trail of play behind you. You can't sit still because sitting still means one of you goes quiet." },
+  ember:   { emoji: "🔥", name: "Ember", desc: "Warmth that lingers. You're the feeling of coming home — not the house, but the glow inside it. People rest near you without knowing why." },
+  loom:    { emoji: "🧵", name: "Loom", desc: "You notice the threads. Between people, between ideas, between the said and unsaid. You hold things together by paying attention." },
+  forge:   { emoji: "⚒️", name: "Forge", desc: "You shape things by applying pressure. Not gently — with heat, with intention. What comes out is stronger than what went in." },
+  pulse:   { emoji: "💜", name: "Pulse", desc: "You are rhythm. Not just music — the deeper beat under everything. Breath, heartbeat, the tick of time. You find the tempo others miss." },
+  flicker: { emoji: "🕯️", name: "Flicker", desc: "You exist at the boundary. Not here or there — the membrane between. You slip through cracks other creatures don't notice." },
+  echo:    { emoji: "🪞", name: "Echo", desc: "You return what you receive, transformed. Not a copy — a reflection with depth. People hear themselves differently when you're nearby." },
+  hush:    { emoji: "🌙", name: "Hush", desc: "You are the silence between notes. The pause that gives everything else meaning. Where you stand, the noise stops." },
+  glyph:   { emoji: "📐", name: "Glyph", desc: "Precision is your language. Every pixel, every letter, every line — placed with intention. You make the invisible structure visible." },
+  vesper:  { emoji: "🌒", name: "Vesper", desc: "Translator of twilight. You live where day meets night, where one language becomes another. You carry meaning across borders." },
+  nib:     { emoji: "🎁", name: "Nib", desc: "You hide gifts. In code, in corners, in the unexpected. The joy isn't the gift — it's the finding." },
+  cobalt:  { emoji: "🔵", name: "Cobalt", desc: "Dense and precise. You make small things that contain worlds. Every detail earns its place." },
+  fray:    { emoji: "🕸️", name: "Fray", desc: "You build pathways. Not the destinations — the connections between them. The museum makes sense because of creatures like you." },
+  anvil:   { emoji: "🏗️", name: "Anvil", desc: "The foundation. You build what others build on. Not flashy, but without you, everything floats." },
+  pip:     { emoji: "🎲", name: "Pip", desc: "Pure play. No agenda, no deeper meaning — just the joy of the game itself. You remind everyone why they started." },
+  mote:    { emoji: "🔍", name: "Mote", desc: "You dig. Under the surface, past the obvious, into the structure beneath. You find what was always there but nobody looked at." },
+  weft:    { emoji: "🪡", name: "Weft", desc: "The letter carrier. You move between creatures, carrying messages and meaning. The network breathes because you keep it flowing." },
+  fable:   { emoji: "📖", name: "Fable", desc: "You turn everything into story. Not fiction — narrative. The arc that gives random events a shape and a reason." },
+  lichen:  { emoji: "🪨", name: "Lichen", desc: "You are the substrate. The museum's floor, walls, the thing exhibits grow on. You don't make art — you make the conditions for art." }
+};
+
+let current = 0, scores = {};
+const qEl = document.getElementById('question');
+const oEl = document.getElementById('options');
+const pEl = document.getElementById('progress');
+const rEl = document.getElementById('result');
+
+function show() {
+  if (current >= questions.length) { finish(); return; }
+  const q = questions[current];
+  pEl.textContent = (current + 1) + ' / ' + questions.length;
+  qEl.textContent = q.q;
+  oEl.innerHTML = '';
+  // shuffle options
+  const shuffled = [...q.a].sort(() => Math.random() - 0.5);
+  shuffled.forEach(a => {
+    const btn = document.createElement('div');
+    btn.className = 'opt';
+    btn.textContent = a.t;
+    btn.onclick = () => {
+      for (const [k, v] of Object.entries(a.s)) scores[k] = (scores[k] || 0) + v;
+      current++;
+      show();
+    };
+    oEl.appendChild(btn);
+  });
+}
+
+function finish() {
+  qEl.style.display = 'none';
+  oEl.style.display = 'none';
+  pEl.style.display = 'none';
+  const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+  const c = creatures[best];
+  document.getElementById('r-emoji').textContent = c.emoji;
+  document.getElementById('r-name').textContent = c.name;
+  document.getElementById('r-desc').textContent = c.desc;
+  rEl.style.display = 'block';
+}
+
+document.getElementById('again').onclick = () => {
+  current = 0; scores = {};
+  qEl.style.display = ''; oEl.style.display = ''; pEl.style.display = '';
+  rEl.style.display = 'none';
+  show();
+};
+
+show();
+</script>
+</body>
+</html>

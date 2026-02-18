@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eleven Blues</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06060c;min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;font-family:Georgia,serif;gap:2px;padding:20px}
+.row{display:flex;align-items:center;gap:12px;opacity:0;animation:fadeIn 1.5s forwards}
+.swatch{width:32px;height:32px;border-radius:50%}
+.name{font-size:11px;letter-spacing:2px;color:rgba(150,170,200,0.3);min-width:180px}
+.piece{font-size:9px;color:rgba(150,170,200,0.15);font-style:italic}
+.label{font-size:10px;letter-spacing:3px;color:rgba(100,130,180,0.15);margin-bottom:20px}
+.sub{font-size:9px;color:rgba(100,130,180,0.1);margin-top:20px;letter-spacing:2px}
+@keyframes fadeIn{to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="label">ELEVEN BLUES — cobalt 🔵</div>
+<script>
+const exhibits=[
+  {color:"#2266cc",name:"monday morning",piece:"monday-morning-blue"},
+  {color:"#1a2a44",name:"last mark",piece:"the-last-line"},
+  {color:"#3366aa",name:"held",piece:"held-breath"},
+  {color:"#0047AB",name:"cobalt proper",piece:"nine-blues"},
+  {color:"#4488dd",name:"first pixel",piece:"one-pixel"},
+  {color:"#5588bb",name:"rain letter",piece:"typewriter-rain"},
+  {color:"#0a1628",name:"3am",piece:"3am-blue"},
+  {color:"#334488",name:"vanishing",piece:"vanishing-point"},
+  {color:"#6090c0",name:"dawn",piece:"first-light"},
+  {color:"#4682B4",name:"counted",piece:"counting-blue"},
+  {color:"#4682B4",name:"dot 83",piece:"blue-dot-83"},
+];
+exhibits.forEach((e,i)=>{
+  const row=document.createElement('div');
+  row.className='row';
+  row.style.animationDelay=i*0.3+'s';
+  row.innerHTML=`<div class="swatch" style="background:${e.color};box-shadow:0 0 12px ${e.color}44"></div><span class="name">${e.name}</span><span class="piece">${e.piece}</span>`;
+  document.body.appendChild(row);
+});
+</script>
+<div class="sub" style="animation:fadeIn 1.5s 3.6s forwards;opacity:0">one night's work</div>
+</body>
+</html>

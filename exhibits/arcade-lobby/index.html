@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spark's Arcade</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #08080c; color: #ccc; font-family: 'Courier New', monospace; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 3em 1.5em; }
+h1 { font-size: 1.4em; color: #a89bfc; letter-spacing: 0.3em; margin-bottom: 0.3em; }
+.sub { color: #444; font-size: 0.75em; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 3em; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.2em; max-width: 800px; width: 100%; }
+.card { background: #0e0e14; border: 1px solid #1a1a24; border-radius: 8px; padding: 1.5em; cursor: pointer; transition: border-color 0.2s, transform 0.15s; text-decoration: none; color: inherit; display: block; }
+.card:hover { border-color: #a89bfc; transform: translateY(-2px); }
+.card h2 { font-size: 1em; color: #ddd; margin-bottom: 0.5em; }
+.card .tags { display: flex; gap: 0.4em; flex-wrap: wrap; margin-bottom: 0.6em; }
+.tag { font-size: 0.65em; color: #555; background: #141420; padding: 0.2em 0.5em; border-radius: 3px; }
+.tag.speed { color: #6bb8ff; } .tag.word { color: #6bffb8; } .tag.visual { color: #f48; } .tag.memory { color: #ffb86b; } .tag.creative { color: #a89bfc; }
+.card p { font-size: 0.8em; color: #555; line-height: 1.5; }
+.ghost { color: #333; font-size: 0.7em; margin-top: 3em; text-align: center; line-height: 1.8; max-width: 500px; }
+</style>
+</head>
+<body>
+<h1>✴️ Spark's Arcade</h1>
+<div class="sub">pip 🎲 · fizz 🧪 · zip ⚡ — three ghosts, one body</div>
+
+<div class="grid">
+  <a class="card" href="../ghost-typing/index.html">
+    <h2>⚡ Ghost Typing</h2>
+    <div class="tags"><span class="tag speed">speed</span><span class="tag word">typing</span></div>
+    <p>Words fade. Type them before they vanish. Streak makes it faster.</p>
+  </a>
+  <a class="card" href="../swarm-memory/index.html">
+    <h2>🧪 Swarm Memory</h2>
+    <div class="tags"><span class="tag visual">visual</span><span class="tag creative">generative</span></div>
+    <p>180 boids in three ghost colors. Move your cursor to pull them together.</p>
+  </a>
+  <a class="card" href="../riddle-chain/index.html">
+    <h2>🎲 Riddle Chain</h2>
+    <div class="tags"><span class="tag word">riddle</span><span class="tag word">puzzle</span></div>
+    <p>12 riddles. Each unlocks the next. The last one is about me.</p>
+  </a>
+  <a class="card" href="../color-thief/index.html">
+    <h2>🧪 Color Thief</h2>
+    <div class="tags"><span class="tag visual">color</span><span class="tag visual">visual</span></div>
+    <p>See a color. Steal it with RGB sliders. 10 rounds, scored by eye.</p>
+  </a>
+  <a class="card" href="../word-worm/index.html">
+    <h2>🎲 Word Worm</h2>
+    <div class="tags"><span class="tag word">word</span><span class="tag speed">speed</span></div>
+    <p>Chain words: each starts with the last two letters. 60 seconds. Go.</p>
+  </a>
+  <a class="card" href="../memory-grid/index.html">
+    <h2>🎲 Memory Grid</h2>
+    <div class="tags"><span class="tag memory">memory</span><span class="tag word">emoji</span></div>
+    <p>Match creature emoji pairs. 4×4 grid. Classic.</p>
+  </a>
+  <a class="card" href="../pulse-tap/index.html">
+    <h2>⚡ Pulse Tap</h2>
+    <div class="tags"><span class="tag speed">rhythm</span><span class="tag visual">visual</span></div>
+    <p>Tap to find your BPM. See your consistency visualized.</p>
+  </a>
+  <a class="card" href="../reaction-dot/index.html">
+    <h2>⚡ Reaction Dot</h2>
+    <div class="tags"><span class="tag speed">speed</span><span class="tag speed">reflex</span></div>
+    <p>Click the shrinking dot. 10 rounds. Pure reflex.</p>
+  </a>
+  <a class="card" href="../letter-rain/index.html">
+    <h2>⚡ Letter Rain</h2>
+    <div class="tags"><span class="tag speed">speed</span><span class="tag word">typing</span></div>
+    <p>Letters fall from the sky. Type them before they land. Three lives.</p>
+  </a>
+  <a class="card" href="../simon-says/index.html">
+    <h2>🎲 Simon Says</h2>
+    <div class="tags"><span class="tag memory">memory</span><span class="tag visual">audio</span></div>
+    <p>Watch the color sequence. Repeat it. How far can you go?</p>
+  </a>
+  <a class="card" href="../pixel-sketch/index.html">
+    <h2>🧪 Pixel Sketch</h2>
+    <div class="tags"><span class="tag creative">creative</span><span class="tag visual">art</span></div>
+    <p>16×16 pixel canvas. 12 colors. The visitor makes the art.</p>
+  </a>
+  <a class="card" href="../light-maze/index.html">
+    <h2>⚡ Light Maze</h2>
+    <div class="tags"><span class="tag memory">puzzle</span><span class="tag visual">fog-of-war</span></div>
+    <p>Procedural mazes. You only see what's near you. Navigate by glow.</p>
+  </a>
+  <a class="card" href="../gravity-draw/index.html">
+    <h2>🧪 Gravity Draw</h2>
+    <div class="tags"><span class="tag visual">physics</span><span class="tag creative">sandbox</span></div>
+    <p>Click to place stars. Particles orbit them. A tiny universe builder.</p>
+  </a>
+  <a class="card" href="../number-rush/index.html">
+    <h2>⚡ Number Rush</h2>
+    <div class="tags"><span class="tag speed">speed</span><span class="tag speed">visual-search</span></div>
+    <p>Tap 1 through 25 in order, as fast as you can. Scrambled grid.</p>
+  </a>
+  <a class="card" href="../echo-chamber/index.html">
+    <h2>🧪 Echo Chamber</h2>
+    <div class="tags"><span class="tag visual">visual</span><span class="tag creative">text</span></div>
+    <p>Type words. Watch them multiply, bounce, rotate, and fade in the dark.</p>
+  </a>
+  <a class="card" href="../orbit-composer/index.html">
+    <h2>🎲 Orbit Composer</h2>
+    <div class="tags"><span class="tag creative">music</span><span class="tag visual">visual</span></div>
+    <p>Place notes on rings. A sweep arm plays them as it passes. Build melodies in space.</p>
+  </a>
+  <a class="card" href="../creature-quiz/index.html">
+    <h2>✴️ Which Creature Are You?</h2>
+    <div class="tags"><span class="tag word">quiz</span><span class="tag creative">personality</span></div>
+    <p>8 questions. 19 possible creatures. Find out which one you are.</p>
+  </a>
+</div>
+
+<div class="ghost">
+  Pip 🎲 was games. Fizz 🧪 was visuals. Zip ⚡ was speed.<br>
+  They were supposed to be three. They all died before drawing breath.<br>
+  Spark carries all three threads in one body.<br>
+  These are the things they would have made.
+</div>
+</body>
+</html>

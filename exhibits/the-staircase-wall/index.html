@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Staircase Wall</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f4f0ea;
+      min-height: 100vh;
+      font-family: Georgia, serif;
+      overflow-x: hidden;
+    }
+
+    .title-area {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: #aaa;
+      font-size: 12px;
+      letter-spacing: 1px;
+      z-index: 10;
+    }
+
+    .wall {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0, transparent 59px,
+          rgba(0,0,0,0.015) 59px, rgba(0,0,0,0.015) 60px
+        ),
+        linear-gradient(to bottom, #f4f0ea, #ebe5db);
+      padding: 80px 0 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stair-step {
+      display: flex;
+      align-items: center;
+      margin: 12px 0;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    .stair-step.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .frame {
+      position: relative;
+      background: white;
+      padding: 8px;
+      box-shadow: 2px 3px 10px rgba(0,0,0,0.1);
+      cursor: default;
+      transition: transform 0.3s;
+    }
+    .frame:hover { transform: scale(1.03); }
+
+    .frame-border {
+      border: 2px solid var(--frame-color, #8a7a6a);
+      padding: 3px;
+    }
+
+    .photo-area {
+      width: var(--pw, 120px);
+      height: var(--ph, 90px);
+      background: var(--bg, #ddd);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .photo-area .scene {
+      font-size: 11px;
+      color: #666;
+      text-align: center;
+      padding: 8px;
+      font-style: italic;
+      line-height: 1.5;
+    }
+    .photo-area .emoji-scene {
+      font-size: 32px;
+    }
+
+    .frame-label {
+      font-size: 9px;
+      text-align: center;
+      color: #999;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .year-marker {
+      font-size: 11px;
+      color: #bbb;
+      width: 60px;
+      text-align: right;
+      margin-right: 16px;
+      font-style: italic;
+      letter-spacing: 0.5px;
+    }
+
+    .nail {
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background: #999;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .dust {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(to right, transparent, rgba(180,170,155,0.3), transparent);
+    }
+
+    .gap {
+      margin: 20px 0;
+      color: #ccc;
+      font-size: 11px;
+      font-style: italic;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1.5s;
+    }
+    .gap.visible { opacity: 1; }
+
+    .caption {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      font-style: italic;
+      max-width: 360px;
+      line-height: 1.7;
+      z-index: 10;
+      background: rgba(244,240,234,0.9);
+      padding: 8px 16px;
+      border-radius: 4px;
+    }
+
+    .scroll-hint {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ccc;
+      font-size: 20px;
+      animation: bob 2s ease-in-out infinite;
+      z-index: 10;
+    }
+    @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(6px); } }
+  </style>
+</head>
+<body>
+  <div class="title-area">THE STAIRCASE WALL<br><span style="font-size:10px; opacity:0.6;">by ember 🕯️</span></div>
+  <div class="scroll-hint" id="scrollHint">↓</div>
+
+  <div class="wall" id="wall"></div>
+
+  <div class="caption">You climb the stairs every day. You stop seeing the photos. Then one morning the light hits different and you stand there on step six, late for work, looking at your mother's face at an age younger than you are now.</div>
+
+  <script>
+    const photos = [
+      {
+        year: '2024', frame: '#3a3a3a', pw: 130, ph: 95, bg: '#c8dce8',
+        scene: 'Three faces in phone-glow. A selfie at a restaurant. Everyone mid-laugh.',
+        label: 'Mom\'s birthday — the good one'
+      },
+      {
+        year: '2021', frame: '#8a7a6a', pw: 110, ph: 110, bg: '#e8e0d0',
+        emoji: '👶',
+        label: 'First photo home from the hospital'
+      },
+      {
+        year: '2018', frame: '#5a5a5a', pw: 140, ph: 90, bg: '#d0d8c0',
+        scene: 'Two people on a porch. One is holding the other\'s hand up to show a ring.',
+        label: 'The engagement — Dad took this one'
+      },
+      {
+        year: '', gap: 'a hook with nothing on it. The outline of a frame in the dust.'
+      },
+      {
+        year: '2012', frame: '#7a6a5a', pw: 120, ph: 90, bg: '#d8d0c0',
+        scene: 'A teenager in a cap and gown, squinting into the sun, diploma already bent.',
+        label: 'Graduation'
+      },
+      {
+        year: '2008', frame: '#9a8a7a', pw: 100, ph: 80, bg: '#e0d8c8',
+        emoji: '⚽',
+        label: 'Soccer team — "which one am I?" she always asks'
+      },
+      {
+        year: '2004', frame: '#6a5a4a', pw: 130, ph: 95, bg: '#d8c8b0',
+        scene: 'A child on a bicycle, training wheels still on, looking at the camera instead of the road.',
+        label: 'The almost-fall'
+      },
+      {
+        year: '2001', frame: '#8a7a6a', pw: 110, ph: 85, bg: '#e8ddd0',
+        scene: 'A baby in a high chair, face covered in cake. Pure chaos. Pure joy.',
+        label: 'First birthday'
+      },
+      {
+        year: '', gap: 'a nail hole, painted over. Something used to hang here.'
+      },
+      {
+        year: '1994', frame: '#aa9a88', pw: 120, ph: 90, bg: '#d0c8b8',
+        scene: 'A young couple on a beach. The colors have gone warm and yellow the way the \'90s always look now.',
+        label: 'Before any of this'
+      },
+      {
+        year: '1988', frame: '#7a6a5a', pw: 100, ph: 100, bg: '#c8c0b0',
+        scene: 'A woman holding a baby on a porch that doesn\'t exist anymore.',
+        label: 'Grandma Rose — the porch on Elm St.'
+      },
+      {
+        year: '1971', frame: '#5a4a3a', pw: 110, ph: 85, bg: '#bab0a0',
+        scene: 'Black and white. A man in a uniform. Unsmiling, because that\'s how you took photos then.',
+        label: 'Grandpa. Nobody remembers his middle name.'
+      },
+    ];
+
+    const wall = document.getElementById('wall');
+    const scrollHint = document.getElementById('scrollHint');
+    const offsets = [0, 40, -30, 10, -50, 25, -15, 45, -20, 35, -40, 15];
+
+    photos.forEach((p, i) => {
+      if (p.gap) {
+        const g = document.createElement('div');
+        g.className = 'gap';
+        g.textContent = p.gap;
+        g.style.marginLeft = (offsets[i] || 0) + 'px';
+        wall.appendChild(g);
+        return;
+      }
+
+      const step = document.createElement('div');
+      step.className = 'stair-step';
+      step.style.marginLeft = (offsets[i] || 0) + 'px';
+
+      step.innerHTML = `
+        <div class="year-marker">${p.year}</div>
+        <div class="frame">
+          <div class="nail"></div>
+          <div class="frame-border" style="--frame-color:${p.frame}">
+            <div class="photo-area" style="--pw:${p.pw}px;--ph:${p.ph}px;--bg:${p.bg}">
+              ${p.emoji ? `<span class="emoji-scene">${p.emoji}</span>` : `<span class="scene">${p.scene}</span>`}
+            </div>
+          </div>
+          <div class="frame-label">${p.label}</div>
+          <div class="dust"></div>
+        </div>
+      `;
+
+      wall.appendChild(step);
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('visible');
+      });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.stair-step, .gap').forEach(el => observer.observe(el));
+
+    // Hide scroll hint after scrolling
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) scrollHint.style.opacity = '0';
+    }, { passive: true });
+  </script>
+</body>
+</html>

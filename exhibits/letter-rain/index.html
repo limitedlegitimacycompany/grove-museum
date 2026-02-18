@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Letter Rain</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #08080c; color: #ccc; font-family: 'Courier New', monospace; overflow: hidden; }
+canvas { display: block; }
+#ui { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; padding: 1.5em 2em; pointer-events: none; z-index: 10; }
+#ui span { color: #444; font-size: 0.9em; }
+#title { position: fixed; bottom: 1.5em; left: 50%; transform: translateX(-50%); color: #333; font-size: 0.8em; letter-spacing: 0.3em; text-transform: uppercase; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="ui"><span id="score">0</span><span id="lives">♥♥♥</span></div>
+<div id="title">letter rain ✴️ — type the falling letters</div>
+<canvas id="c"></canvas>
+
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+let W, H;
+function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+const scoreEl = document.getElementById('score');
+const livesEl = document.getElementById('lives');
+
+let letters = [], score = 0, lives = 3, frame = 0, speed = 1.2, spawnRate = 80;
+
+class Letter {
+  constructor() {
+    this.char = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    this.x = 40 + Math.random() * (W - 80);
+    this.y = -20;
+    this.speed = speed + Math.random() * 0.5;
+    this.size = 28;
+    this.alive = true;
+    this.flash = 0;
+  }
+  update() {
+    this.y += this.speed;
+    if (this.flash > 0) this.flash--;
+    if (this.y > H + 20) { this.alive = false; lives--; livesEl.textContent = '♥'.repeat(Math.max(0, lives)); }
+  }
+  draw() {
+    ctx.font = this.size + 'px Courier New';
+    ctx.textAlign = 'center';
+    if (this.flash > 0) {
+      ctx.fillStyle = '#6bffb8';
+      ctx.fillText('✓', this.x, this.y);
+    } else {
+      const a = Math.min(1, (H - this.y) / H + 0.3);
+      ctx.fillStyle = this.y > H * 0.7 ? `rgba(255,100,100,${a})` : `rgba(180,180,220,${a})`;
+      ctx.fillText(this.char, this.x, this.y);
+    }
+  }
+}
+
+document.addEventListener('keydown', e => {
+  const key = e.key.toUpperCase();
+  if (key.length !== 1 || key < 'A' || key > 'Z') return;
+  // find lowest matching letter
+  let best = null;
+  for (const l of letters) {
+    if (l.char === key && l.alive && l.flash === 0) {
+      if (!best || l.y > best.y) best = l;
+    }
+  }
+  if (best) {
+    best.flash = 8;
+    setTimeout(() => { best.alive = false; }, 120);
+    score++;
+    scoreEl.textContent = score;
+    // difficulty
+    if (score % 10 === 0) { speed += 0.15; spawnRate = Math.max(25, spawnRate - 3); }
+  }
+});
+
+function loop() {
+  ctx.fillStyle = 'rgba(8,8,12,0.3)';
+  ctx.fillRect(0, 0, W, H);
+
+  if (lives <= 0) {
+    ctx.fillStyle = '#444';
+    ctx.font = '1.5em Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(`score: ${score}`, W/2, H/2);
+    ctx.fillText(score >= 50 ? '🔥' : score >= 25 ? '✨' : 'try again', W/2, H/2 + 40);
+    return;
+  }
+
+  frame++;
+  if (frame % spawnRate === 0) letters.push(new Letter());
+  letters = letters.filter(l => l.alive);
+  for (const l of letters) { l.update(); l.draw(); }
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

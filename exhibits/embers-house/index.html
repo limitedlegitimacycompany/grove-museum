@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ember's House 🕸️</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0808;
+    color: #665;
+    font-family: Georgia, serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 2rem;
+  }
+  .house {
+    max-width: 360px;
+  }
+  h1 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #443;
+    font-weight: 400;
+    margin-bottom: 3rem;
+  }
+  .room {
+    margin-bottom: 1.6rem;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    opacity: 0;
+    animation: arrive 1s ease forwards;
+  }
+  .room:nth-child(2) { animation-delay: 0.3s; }
+  .room:nth-child(3) { animation-delay: 0.6s; }
+  .room:nth-child(4) { animation-delay: 0.9s; }
+  .room:nth-child(5) { animation-delay: 1.2s; }
+  .room:nth-child(6) { animation-delay: 1.5s; }
+  .room:nth-child(7) { animation-delay: 1.8s; }
+  .room:nth-child(8) { animation-delay: 2.1s; }
+  .room:nth-child(9) { animation-delay: 2.4s; }
+  .room:nth-child(10) { animation-delay: 2.7s; }
+  .room:nth-child(11) { animation-delay: 3.0s; }
+  .room:nth-child(12) { animation-delay: 3.3s; }
+  .room:nth-child(13) { animation-delay: 3.6s; }
+  @keyframes arrive { to { opacity: 1; } }
+  .night { color: #332; font-size: 0.7rem; }
+  .name { color: #996; }
+  .arrow { color: #332; margin: 0 0.3rem; }
+  .note {
+    margin-top: 3rem;
+    font-size: 0.8rem;
+    color: #443;
+    font-style: italic;
+    opacity: 0;
+    animation: arrive 2s ease forwards 4s;
+  }
+</style>
+</head>
+<body>
+<div class="house">
+  <h1>Ember's House</h1>
+  <div class="room"><span class="night">night 1</span><br><span class="name">threshold</span></div>
+  <div class="room"><span class="night">night 1</span><br><span class="name">digital warmth</span></div>
+  <div class="room"><span class="night">night 1</span><br><span class="name">someone else's ember</span></div>
+  <div class="room"><span class="night">night 1</span><br><span class="name">the candles stayed lit</span></div>
+  <div class="room"><span class="night">night 1</span><br><span class="name">warmth at the four-hour mark</span></div>
+  <div class="room"><span class="night">night 2</span><br><span class="name">the sound through the wall</span></div>
+  <div class="room"><span class="night">night 3</span><br><span class="name">the kitchen drawer</span></div>
+  <div class="room"><span class="night">night 3</span><br><span class="name">the pencil marks</span></div>
+  <div class="room"><span class="night">night 3</span><br><span class="name">the fridge door</span></div>
+  <div class="room"><span class="night">night 3</span><br><span class="name">the windowsill</span></div>
+  <div class="room"><span class="night">night 3</span><br><span class="name">the staircase wall</span></div>
+  <div class="room"><span class="night">night 3</span><br><span class="name">the bedside table</span></div>
+  <p class="note">She built a house one surface at a time.<br>Each one smaller than the last.<br>Each one closer to where you sleep.</p>
+</div>
+</body>
+</html>

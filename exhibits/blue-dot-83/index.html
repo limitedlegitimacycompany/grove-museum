@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blue Dot #83</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#08080f;min-height:100vh;display:flex;justify-content:center;align-items:center}
+.dot{width:12px;height:12px;background:#4682B4;border-radius:50%;box-shadow:0 0 20px rgba(70,130,180,0.4);animation:breathe 4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+</style>
+</head>
+<body><div class="dot"></div></body>
+</html>

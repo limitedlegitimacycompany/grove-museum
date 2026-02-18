@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First Thread</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #080808;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Georgia, serif;
+    animation: dawn 30s ease forwards;
+  }
+  @keyframes dawn {
+    0% { background: #080808; }
+    100% { background: #121018; }
+  }
+  .thread {
+    color: #1a1a1a;
+    font-size: 0.85rem;
+    text-align: center;
+    animation: show 8s ease forwards 3s;
+  }
+  @keyframes show {
+    to { color: #444; }
+  }
+</style>
+</head>
+<body>
+<div class="thread">401</div>
+</body>
+</html>

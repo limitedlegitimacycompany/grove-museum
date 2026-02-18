@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Tide</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060a10;overflow:hidden;cursor:default;font-family:Georgia,serif}
+canvas{display:block}
+#info{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  color:rgba(120,150,180,0.35);font-size:12px;letter-spacing:0.1em;
+  pointer-events:none;transition:opacity 5s;text-align:center}
+#title{position:fixed;top:26px;left:50%;transform:translateX(-50%);
+  color:rgba(100,140,180,0.3);font-size:18px;letter-spacing:0.3em;
+  pointer-events:none;opacity:0;animation:fi 3s .5s forwards}
+#cycles{position:fixed;top:58px;left:50%;transform:translateX(-50%);
+  color:rgba(100,130,160,0.15);font-size:11px;letter-spacing:0.2em;pointer-events:none}
+@keyframes fi{to{opacity:0.35}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">THE TIDE</div>
+<div id="cycles"></div>
+<div id="info">hold to inhale — release to exhale</div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H;
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+resize();addEventListener('resize',resize);
+
+let holding=false;
+let level=0.5; // 0=empty, 1=full — starts at half
+let targetLevel=0.5;
+let velocity=0;
+let interacted=false;
+let breathCount=0;
+let wasHolding=false;
+const marks=[]; // high-water marks from each breath
+
+addEventListener('mousedown',()=>{holding=true;startBreath()});
+addEventListener('mouseup',()=>{holding=false});
+addEventListener('touchstart',e=>{e.preventDefault();holding=true;startBreath()},{passive:false});
+addEventListener('touchend',()=>{holding=false});
+
+function startBreath(){
+  if(!interacted){interacted=true;document.getElementById('info').style.opacity='0';}
+}
+
+const time={v:0};
+
+function frame(){
+  time.v=performance.now()*0.001;
+
+  // Breath mechanics
+  if(holding){
+    targetLevel=Math.min(1,targetLevel+0.004);
+  } else {
+    targetLevel=Math.max(0.05,targetLevel-0.003);
+  }
+  
+  // Track breath cycles
+  if(wasHolding&&!holding){
+    // Exhale started — mark the high point
+    breathCount++;
+    marks.push({level:level,time:time.v});
+    if(marks.length>30)marks.shift();
+    document.getElementById('cycles').textContent=breathCount+' breath'+(breathCount===1?'':'s');
+  }
+  wasHolding=holding;
+
+  // Smooth follow with slight overshoot
+  const diff=targetLevel-level;
+  velocity+=diff*0.02;
+  velocity*=0.92;
+  level+=velocity;
+  level=Math.max(0,Math.min(1,level));
+
+  // Clear
+  X.fillStyle='#060a10';
+  X.fillRect(0,0,W,H);
+
+  const waterY=H-(level*H*0.85)-H*0.05; // water surface y
+
+  // Sky — darker when water is low, lighter when high
+  const skyBright=0.3+level*0.15;
+  const sg=X.createLinearGradient(0,0,0,waterY);
+  sg.addColorStop(0,`rgba(${Math.floor(8+level*15)},${Math.floor(12+level*20)},${Math.floor(25+level*30)},1)`);
+  sg.addColorStop(1,`rgba(${Math.floor(15+level*25)},${Math.floor(25+level*35)},${Math.floor(45+level*40)},1)`);
+  X.fillStyle=sg;
+  X.fillRect(0,0,W,waterY);
+
+  // Water surface — wavy line
+  X.beginPath();
+  X.moveTo(0,waterY);
+  for(let x=0;x<=W;x+=2){
+    const wave1=Math.sin(x*0.01+time.v*0.8)*6;
+    const wave2=Math.sin(x*0.025+time.v*1.3)*3;
+    const wave3=Math.sin(x*0.005+time.v*0.3)*10*level;
+    // Breath ripple — more agitated during transitions
+    const breathRipple=Math.abs(velocity)*200*Math.sin(x*0.04+time.v*3);
+    X.lineTo(x,waterY+wave1+wave2+wave3+breathRipple);
+  }
+  X.lineTo(W,H);X.lineTo(0,H);X.closePath();
+
+  // Water gradient
+  const wg=X.createLinearGradient(0,waterY,0,H);
+  const depth=level;
+  wg.addColorStop(0,`rgba(${Math.floor(30+depth*40)},${Math.floor(60+depth*50)},${Math.floor(100+depth*50)},0.9)`);
+  wg.addColorStop(0.3,`rgba(${Math.floor(15+depth*20)},${Math.floor(35+depth*30)},${Math.floor(70+depth*40)},0.95)`);
+  wg.addColorStop(1,`rgba(${Math.floor(5+depth*8)},${Math.floor(10+depth*15)},${Math.floor(25+depth*20)},1)`);
+  X.fillStyle=wg;
+  X.fill();
+
+  // Surface shimmer
+  const shimmerA=0.05+level*0.1;
+  for(let i=0;i<8;i++){
+    const sx=Math.sin(time.v*0.5+i*1.7)*W*0.4+W/2;
+    const sw=30+Math.sin(time.v*0.3+i)*20;
+    const sy=waterY+Math.sin(sx*0.01+time.v)*5;
+    X.fillStyle=`rgba(180,200,220,${shimmerA*Math.sin(time.v+i)})`;
+    X.fillRect(sx-sw/2,sy-1,sw,2);
+  }
+
+  // High-water marks — faint horizontal lines showing previous peaks
+  for(const m of marks){
+    const my=H-(m.level*H*0.85)-H*0.05;
+    const age=time.v-m.time;
+    const a=Math.max(0,0.08-age*0.002);
+    if(a<=0)continue;
+    X.beginPath();
+    X.moveTo(0,my);
+    for(let x=0;x<=W;x+=4){
+      X.lineTo(x,my+Math.sin(x*0.02+m.time)*2);
+    }
+    X.strokeStyle=`rgba(140,180,210,${a})`;
+    X.lineWidth=0.5;X.stroke();
+  }
+
+  // Moon reflection on water when level is high
+  if(level>0.4){
+    const moonY=H*0.15;
+    const moonA=(level-0.4)/0.6*0.25;
+    // Moon
+    X.fillStyle=`rgba(220,225,235,${moonA})`;
+    X.beginPath();X.arc(W*0.7,moonY,12,0,Math.PI*2);X.fill();
+    // Reflection
+    const refY=waterY+20;
+    for(let i=0;i<15;i++){
+      const ry=refY+i*8;
+      const rx=W*0.7+Math.sin(time.v*1.2+i*0.5)*6;
+      const ra=moonA*(1-i/15)*0.4;
+      X.fillStyle=`rgba(200,210,225,${ra})`;
+      X.fillRect(rx-4-Math.random()*3,ry,8+Math.random()*4,2);
+    }
+  }
+
+  // Breathing indicator — subtle pulse at bottom
+  if(interacted){
+    const pulse=holding?0.3+Math.sin(time.v*4)*0.1:0.1;
+    X.beginPath();X.arc(W/2,H-15,4,0,Math.PI*2);
+    X.fillStyle=`rgba(140,180,220,${pulse})`;X.fill();
+  }
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

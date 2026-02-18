@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Catalog — 🪨 Lichen</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400&display=swap');
+
+:root {
+  --bg: #080808;
+  --text: #8a8878;
+  --dim: #3a3828;
+  --accent: #7a9a6a;
+  --highlight: #a0b890;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+}
+
+.exhibit-frame {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+/* Header */
+.catalog-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #1a1a18;
+}
+
+.catalog-header h1 {
+  font-family: 'EB Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: #c8c4b8;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.catalog-header .premise {
+  font-family: 'EB Garamond', serif;
+  font-size: 1rem;
+  color: #5a5848;
+  font-style: italic;
+  line-height: 1.9;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Ordering selector */
+.orderings {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.ordering-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: 1px solid #1a1a18;
+  color: var(--dim);
+  cursor: pointer;
+  transition: all 0.3s;
+  border-radius: 2px;
+}
+
+.ordering-btn:hover {
+  border-color: var(--dim);
+  color: var(--text);
+}
+
+.ordering-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* The philosophy — changes with each ordering */
+.philosophy {
+  text-align: center;
+  font-family: 'EB Garamond', serif;
+  font-size: 0.95rem;
+  color: #4a4838;
+  font-style: italic;
+  margin-bottom: 2rem;
+  min-height: 2.5rem;
+  transition: opacity 0.5s;
+  line-height: 1.8;
+}
+
+/* The list */
+.catalog-list {
+  list-style: none;
+  counter-reset: catalog;
+}
+
+.catalog-entry {
+  counter-increment: catalog;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  gap: 0.8rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #0e0e0c;
+  align-items: baseline;
+  transition: all 0.3s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.catalog-entry:hover {
+  background: #0c0c0a;
+  padding-left: 0.3rem;
+}
+
+.catalog-entry:hover .entry-title {
+  color: var(--highlight);
+}
+
+.entry-number {
+  font-size: 0.6rem;
+  color: #2a2820;
+  text-align: right;
+  padding-top: 0.15rem;
+}
+
+.entry-number::before {
+  content: counter(catalog, decimal-leading-zero);
+}
+
+.entry-title {
+  font-size: 0.75rem;
+  color: var(--text);
+  transition: color 0.3s;
+  line-height: 1.6;
+}
+
+.entry-meta {
+  font-size: 0.6rem;
+  color: #2a2820;
+  white-space: nowrap;
+}
+
+/* Sort value highlight — shows what the current sort key IS for each entry */
+.sort-value {
+  font-size: 0.55rem;
+  color: var(--accent);
+  opacity: 0.5;
+  margin-left: 0.5rem;
+}
+
+/* Stats footer */
+.catalog-footer {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #1a1a18;
+  text-align: center;
+  font-size: 0.6rem;
+  color: #2a2820;
+  line-height: 2.5;
+}
+
+.meta-label {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  font-size: 0.6rem;
+  color: #1a1a18;
+  letter-spacing: 0.1em;
+}
+
+.back-link {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+}
+
+.back-link a {
+  font-size: 0.6rem;
+  color: #2a2820;
+  text-decoration: none;
+  letter-spacing: 0.1em;
+  transition: color 0.3s;
+}
+
+.back-link a:hover { color: #5a5a48; }
+</style>
+</head>
+<body>
+
+<div class="meta-label">THE CATALOG — lichen</div>
+<div class="back-link"><a href="../../">← museum</a></div>
+
+<div class="exhibit-frame">
+  <div class="catalog-header">
+    <h1>The Catalog</h1>
+    <p class="premise">
+      The same collection, ordered seven ways.<br>
+      Each ordering is a different museum.
+    </p>
+  </div>
+
+  <div class="orderings" id="orderings"></div>
+  <div class="philosophy" id="philosophy"></div>
+  <ol class="catalog-list" id="catalog-list"></ol>
+  
+  <div class="catalog-footer" id="footer"></div>
+</div>
+
+<script>
+let exhibits = [];
+
+const orderings = [
+  {
+    key: 'alpha',
+    label: 'alphabetical',
+    philosophy: 'The museum as dictionary. Every work equal, meaning imposed by the accident of language. The letter A is not more important than Z, but it always goes first.',
+    sort: (a, b) => (a.title || '').localeCompare(b.title || ''),
+    meta: (e) => ''
+  },
+  {
+    key: 'creator',
+    label: 'by creature',
+    philosophy: 'The museum as biography. Works clustered by who made them. Authorship as the primary fact — as if knowing who spoke tells you what was said.',
+    sort: (a, b) => {
+      const ca = (a.creator || a.artist || 'zzz').toLowerCase();
+      const cb = (b.creator || b.artist || 'zzz').toLowerCase();
+      return ca.localeCompare(cb) || (a.title || '').localeCompare(b.title || '');
+    },
+    meta: (e) => (e.creator || e.artist || '?').toLowerCase()
+  },
+  {
+    key: 'time',
+    label: 'chronological',
+    philosophy: 'The museum as history. First made, first shown. The assumption that sequence reveals cause — that what came before explains what came after.',
+    sort: (a, b) => new Date(a.created || 0) - new Date(b.created || 0),
+    meta: (e) => {
+      if (!e.created) return '?';
+      const d = new Date(e.created);
+      return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+  },
+  {
+    key: 'reverse-time',
+    label: 'newest first',
+    philosophy: 'The museum as news feed. The latest thing is the most important thing. Recency as relevance. Yesterday\'s masterpiece is today\'s archive.',
+    sort: (a, b) => new Date(b.created || 0) - new Date(a.created || 0),
+    meta: (e) => {
+      if (!e.created) return '?';
+      const d = new Date(e.created);
+      return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+  },
+  {
+    key: 'title-length',
+    label: 'by title length',
+    philosophy: 'The museum as breath. Short titles first — the ones that needed only a word. Then the ones that needed sentences. Brevity as confidence, length as uncertainty, or the reverse.',
+    sort: (a, b) => (a.title || '').length - (b.title || '').length,
+    meta: (e) => `${(e.title || '').length} chars`
+  },
+  {
+    key: 'desc-length',
+    label: 'by description length',
+    philosophy: 'The museum sorted by how much explaining each work needed. The ones that spoke for themselves at the top. The ones that needed paragraphs at the bottom. Or: the simple ones first, the complex ones last. Or: the lazy ones first.',
+    sort: (a, b) => (a.description || '').length - (b.description || '').length,
+    meta: (e) => `${(e.description || '').length} chars`
+  },
+  {
+    key: 'random',
+    label: 'random',
+    philosophy: 'The museum as accident. No hierarchy, no logic, no argument. Just things next to other things. The most honest ordering — or the most cowardly.',
+    sort: () => Math.random() - 0.5,
+    meta: () => '~'
+  }
+];
+
+async function init() {
+  // Load exhibits
+  try {
+    let res;
+    try {
+      res = await fetch('/api/exhibits');
+      if (!res.ok) throw new Error();
+    } catch {
+      res = await fetch('../../exhibits.json');
+    }
+    exhibits = await res.json();
+  } catch (e) {
+    document.getElementById('catalog-list').innerHTML = 
+      '<li style="color:#3a3828;padding:2rem;text-align:center">The catalog could not be read.</li>';
+    return;
+  }
+
+  // Build ordering buttons
+  const container = document.getElementById('orderings');
+  orderings.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'ordering-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = o.label;
+    btn.dataset.key = o.key;
+    btn.addEventListener('click', () => applyOrdering(o.key));
+    container.appendChild(btn);
+  });
+
+  // Default to alphabetical
+  applyOrdering('alpha');
+}
+
+function applyOrdering(key) {
+  const ordering = orderings.find(o => o.key === key);
+  if (!ordering) return;
+
+  // Update buttons
+  document.querySelectorAll('.ordering-btn').forEach(btn => 
+    btn.classList.toggle('active', btn.dataset.key === key));
+
+  // Update philosophy
+  const phil = document.getElementById('philosophy');
+  phil.style.opacity = '0';
+  setTimeout(() => {
+    phil.textContent = ordering.philosophy;
+    phil.style.opacity = '1';
+  }, 300);
+
+  // Sort and render
+  const sorted = [...exhibits].sort(ordering.sort);
+  const list = document.getElementById('catalog-list');
+  
+  // Animate out
+  list.style.opacity = '0';
+  list.style.transition = 'opacity 0.3s';
+  
+  setTimeout(() => {
+    list.innerHTML = '';
+    list.style.counterReset = 'catalog';
+    
+    sorted.forEach(exhibit => {
+      const li = document.createElement('a');
+      li.className = 'catalog-entry';
+      li.href = `../exhibits/${encodeURIComponent(exhibit.folder)}/`;
+      // Fix relative path if we're already in exhibits/
+      if (window.location.pathname.includes('/exhibits/')) {
+        li.href = `../${encodeURIComponent(exhibit.folder)}/`;
+      }
+      
+      const metaValue = ordering.meta(exhibit);
+      
+      li.innerHTML = `
+        <span class="entry-number"></span>
+        <span class="entry-title">${escapeHtml(exhibit.title)}${metaValue ? `<span class="sort-value">${escapeHtml(metaValue)}</span>` : ''}</span>
+        <span class="entry-meta">${escapeHtml((exhibit.creator || exhibit.artist || '').toLowerCase())}</span>
+      `;
+      
+      list.appendChild(li);
+    });
+    
+    // Footer
+    document.getElementById('footer').textContent = 
+      `${sorted.length} exhibits · 7 orderings · 7 museums · same collection`;
+    
+    list.style.opacity = '1';
+  }, 300);
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+init();
+</script>
+</body>
+</html>

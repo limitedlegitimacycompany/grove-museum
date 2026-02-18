@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twenty Letters</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0e0e0e;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px;
+  user-select: none;
+}
+h1 { font-size: 16px; color: #555; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 6px; }
+#subtitle { font-size: 12px; color: #444; margin-bottom: 25px; }
+
+#word-display {
+  font-size: 36px; letter-spacing: 12px; margin: 15px 0;
+  color: #888; min-height: 50px;
+}
+#word-display .known { color: #e8a; }
+#word-display .unknown { color: #333; }
+
+#questions-left { font-size: 13px; color: #555; margin-bottom: 20px; }
+
+#question-area {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: center; max-width: 650px; margin: 10px 0 20px;
+}
+.q-btn {
+  background: #1a1a1a; color: #888; border: 1px solid #333;
+  padding: 6px 12px; font-family: inherit; font-size: 12px;
+  cursor: pointer; border-radius: 3px; transition: all 0.15s;
+}
+.q-btn:hover { background: #252525; color: #ccc; border-color: #555; }
+.q-btn.asked { opacity: 0.3; cursor: default; }
+.q-btn.yes { border-color: #6a6; color: #8c8; background: #1a2a1a; }
+.q-btn.no { border-color: #a44; color: #c88; background: #2a1a1a; }
+
+#guess-area {
+  margin: 15px 0; display: flex; gap: 8px; align-items: center;
+}
+#guess-input {
+  background: #1a1a1a; color: #ddd; border: 1px solid #444;
+  padding: 8px 14px; font-family: inherit; font-size: 14px;
+  border-radius: 3px; width: 180px; text-transform: uppercase;
+  letter-spacing: 3px; text-align: center;
+}
+#guess-input:focus { outline: none; border-color: #666; }
+#guess-btn {
+  background: #222; color: #999; border: 1px solid #444;
+  padding: 8px 16px; font-family: inherit; font-size: 12px;
+  cursor: pointer; border-radius: 3px;
+}
+#guess-btn:hover { background: #333; color: #ddd; }
+
+#log {
+  margin-top: 20px; max-width: 500px; width: 100%;
+  font-size: 11px; color: #444; line-height: 2;
+  max-height: 200px; overflow-y: auto;
+}
+.log-yes { color: #6a6; }
+.log-no { color: #a66; }
+
+#message { font-size: 16px; margin: 15px 0; min-height: 24px; }
+
+#controls { margin-top: 15px; }
+button.ctrl {
+  background: #222; color: #999; border: 1px solid #444;
+  padding: 8px 20px; font-family: inherit; font-size: 12px;
+  cursor: pointer; border-radius: 4px; margin: 3px;
+}
+button.ctrl:hover { background: #333; color: #ddd; }
+
+#stats { font-size: 12px; color: #444; margin-top: 20px; }
+</style>
+</head>
+<body>
+<h1>Twenty Letters</h1>
+<div id="subtitle">deduce the word in 20 questions</div>
+<div id="word-display"></div>
+<div id="questions-left"></div>
+<div id="question-area"></div>
+<div id="guess-area">
+  <input type="text" id="guess-input" placeholder="guess..." maxlength="12" autocomplete="off">
+  <button id="guess-btn" onclick="submitGuess()">guess</button>
+</div>
+<div id="message"></div>
+<div id="log"></div>
+<div id="controls">
+  <button class="ctrl" onclick="newGame()">new word</button>
+</div>
+<div id="stats">
+  <span id="stat-wins">0</span> solved · <span id="stat-total">0</span> played
+</div>
+
+<script>
+// Word list — common 4-7 letter words
+const WORDS = [
+  'FLAME','GHOST','RIVER','STONE','CLOUD','DREAM','LIGHT','STORM','OCEAN','BRAVE',
+  'QUIET','SHARP','WORLD','BLOOM','CRISP','DRIFT','FROST','GRAIN','HEART','JEWEL',
+  'KNACK','LUNAR','MARSH','NOBLE','ORBIT','PLUME','QUEST','RAVEN','SOLAR','THORN',
+  'UMBRA','VIVID','WRIST','YOUTH','BLAZE','CHARM','DUSK','EAGLE','FABLE','GROVE',
+  'HAVEN','IVORY','JOUST','KNEEL','LEMON','MOUNT','NIGHT','OASIS','PEARL','REIGN',
+  'SHINE','TOWER','UNITY','VAULT','WHEAT','OXIDE','CORAL','MAPLE','CEDAR','PRISM',
+  'SCALE','TIGER','FLUTE','CABIN','EMBER','PIXEL','WALTZ','LYRIC','CHESS','SPICE',
+  'CRYPT','BADGE','FORGE','GLYPH','HASTE','INDEX','JAUNT','KNOTS','LATCH','MIRTH',
+  'NUDGE','OPTIC','PLUCK','QUILT','RIDGE','SHALE','TULIP','USHER','VIGOR','WOVEN',
+  'AXIOM','BEACH','CRANE','DELTA','EPOCH','FLORA','GRAIL','HERON','INGOT','LANCE',
+  'PETAL','ROWDY','SWIRL','TOPAZ','VERGE','WRAITH','CLOAK','FJORD','NEXUS','SHARD',
+];
+
+let secret = '';
+let questionsUsed = 0;
+let maxQ = 20;
+let revealed = []; // indices of revealed letters
+let gameActive = false;
+let wins = 0, total = 0;
+let askedQuestions = new Set();
+
+// Question templates
+const QUESTIONS = [
+  { text: 'longer than 4?', test: w => w.length > 4 },
+  { text: 'longer than 5?', test: w => w.length > 5 },
+  { text: 'exactly 5 letters?', test: w => w.length === 5 },
+  { text: 'starts with A-M?', test: w => w[0] <= 'M' },
+  { text: 'starts with vowel?', test: w => 'AEIOU'.includes(w[0]) },
+  { text: 'ends with vowel?', test: w => 'AEIOU'.includes(w[w.length-1]) },
+  { text: 'contains E?', test: w => w.includes('E') },
+  { text: 'contains A?', test: w => w.includes('A') },
+  { text: 'contains I?', test: w => w.includes('I') },
+  { text: 'contains O?', test: w => w.includes('O') },
+  { text: 'contains R?', test: w => w.includes('R') },
+  { text: 'contains S?', test: w => w.includes('S') },
+  { text: 'contains T?', test: w => w.includes('T') },
+  { text: 'contains N?', test: w => w.includes('N') },
+  { text: 'contains L?', test: w => w.includes('L') },
+  { text: 'has double letter?', test: w => /(.)\1/.test(w) },
+  { text: 'all unique letters?', test: w => new Set(w).size === w.length },
+  { text: 'more vowels than consonants?', test: w => { let v = [...w].filter(c=>'AEIOU'.includes(c)).length; return v > w.length - v; }},
+  { text: 'starts with consonant cluster?', test: w => !'AEIOU'.includes(w[0]) && w.length > 1 && !'AEIOU'.includes(w[1]) },
+  { text: 'ends with consonant?', test: w => !'AEIOU'.includes(w[w.length-1]) },
+  { text: 'contains TH?', test: w => w.includes('TH') },
+  { text: 'last letter A-M?', test: w => w[w.length-1] <= 'M' },
+  { text: 'reveal first letter', test: null, action: 'reveal-first' },
+  { text: 'reveal last letter', test: null, action: 'reveal-last' },
+  { text: 'reveal random letter', test: null, action: 'reveal-random' },
+];
+
+function newGame() {
+  secret = WORDS[Math.floor(Math.random() * WORDS.length)];
+  questionsUsed = 0;
+  revealed = [];
+  gameActive = true;
+  askedQuestions = new Set();
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('message').innerHTML = '';
+  document.getElementById('guess-input').value = '';
+  renderWord();
+  renderQuestions();
+  updateQCount();
+}
+
+function renderWord() {
+  let html = '';
+  for (let i = 0; i < secret.length; i++) {
+    if (revealed.includes(i)) {
+      html += `<span class="known">${secret[i]}</span>`;
+    } else {
+      html += `<span class="unknown">_</span>`;
+    }
+  }
+  document.getElementById('word-display').innerHTML = html;
+}
+
+function renderQuestions() {
+  let area = document.getElementById('question-area');
+  area.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    let btn = document.createElement('button');
+    btn.className = 'q-btn';
+    btn.textContent = q.text;
+    if (askedQuestions.has(i)) {
+      let result = q._lastResult;
+      btn.classList.add('asked', result ? 'yes' : 'no');
+    }
+    btn.addEventListener('click', () => askQuestion(i));
+    area.appendChild(btn);
+  });
+}
+
+function askQuestion(i) {
+  if (!gameActive || askedQuestions.has(i) || questionsUsed >= maxQ) return;
+
+  let q = QUESTIONS[i];
+  questionsUsed++;
+  askedQuestions.add(i);
+
+  if (q.action === 'reveal-first') {
+    if (!revealed.includes(0)) revealed.push(0);
+    q._lastResult = true;
+    addLog(q.text, secret[0]);
+    renderWord();
+  } else if (q.action === 'reveal-last') {
+    let last = secret.length - 1;
+    if (!revealed.includes(last)) revealed.push(last);
+    q._lastResult = true;
+    addLog(q.text, secret[last]);
+    renderWord();
+  } else if (q.action === 'reveal-random') {
+    let unrevealed = [];
+    for (let j = 0; j < secret.length; j++) if (!revealed.includes(j)) unrevealed.push(j);
+    if (unrevealed.length > 0) {
+      let ri = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+      revealed.push(ri);
+      q._lastResult = true;
+      addLog(q.text, `position ${ri+1}: ${secret[ri]}`);
+      renderWord();
+    }
+  } else {
+    let result = q.test(secret);
+    q._lastResult = result;
+    addLog(q.text, result ? 'YES' : 'NO');
+  }
+
+  renderQuestions();
+  updateQCount();
+
+  if (questionsUsed >= maxQ) {
+    setTimeout(() => {
+      if (gameActive) {
+        setMessage(`out of questions! the word was <span style="color:#e8a">${secret}</span>`, '#a66');
+        gameActive = false;
+        total++;
+        updateStats();
+      }
+    }, 500);
+  }
+}
+
+function submitGuess() {
+  if (!gameActive) return;
+  let guess = document.getElementById('guess-input').value.toUpperCase().trim();
+  if (!guess) return;
+  document.getElementById('guess-input').value = '';
+
+  if (guess === secret) {
+    // Reveal all
+    revealed = [...Array(secret.length).keys()];
+    renderWord();
+    setMessage(`✓ <span style="color:#e8a">${secret}</span> in ${questionsUsed} questions`, '#6b6');
+    gameActive = false;
+    wins++;
+    total++;
+    updateStats();
+  } else {
+    questionsUsed++;
+    updateQCount();
+    addLog(`guessed "${guess}"`, 'WRONG');
+    // Show which letters match
+    let matchInfo = [];
+    for (let i = 0; i < Math.min(guess.length, secret.length); i++) {
+      if (guess[i] === secret[i]) {
+        if (!revealed.includes(i)) revealed.push(i);
+        matchInfo.push(`position ${i+1} ✓`);
+      }
+    }
+    if (matchInfo.length > 0) {
+      addLog('matched', matchInfo.join(', '));
+      renderWord();
+    }
+
+    if (questionsUsed >= maxQ) {
+      setMessage(`out of questions! the word was <span style="color:#e8a">${secret}</span>`, '#a66');
+      gameActive = false;
+      total++;
+      updateStats();
+    }
+  }
+}
+
+document.getElementById('guess-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitGuess();
+});
+
+function addLog(question, answer) {
+  let log = document.getElementById('log');
+  let div = document.createElement('div');
+  let cls = (answer === 'YES' || answer === 'WRONG') ? (answer === 'YES' ? 'log-yes' : 'log-no') : (answer === 'NO' ? 'log-no' : 'log-yes');
+  div.className = cls;
+  div.innerHTML = `${question} → <strong>${answer}</strong>`;
+  log.prepend(div);
+}
+
+function updateQCount() {
+  document.getElementById('questions-left').textContent = `${maxQ - questionsUsed} questions remaining`;
+}
+
+function setMessage(html, color) {
+  document.getElementById('message').innerHTML = `<span style="color:${color||'#888'}">${html}</span>`;
+}
+
+function updateStats() {
+  document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-total').textContent = total;
+}
+
+newGame();
+</script>
+</body>
+</html>

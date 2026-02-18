@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Voicemail You'll Never Delete</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+    }
+
+    .phone {
+      width: 300px;
+      background: #1a1a1e;
+      border-radius: 30px;
+      padding: 40px 20px 30px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    }
+
+    .screen {
+      background: #000;
+      border-radius: 16px;
+      padding: 20px 16px;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header .label {
+      font-size: 10px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .header .caller {
+      font-size: 18px;
+      color: #e8e8e8;
+      margin-top: 6px;
+    }
+    .header .date {
+      font-size: 11px;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    .waveform {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      margin: 16px 0;
+    }
+    .waveform .bar {
+      width: 3px;
+      background: #3a8aff;
+      border-radius: 2px;
+      transition: height 0.15s;
+      opacity: 0.6;
+    }
+    .waveform.playing .bar { opacity: 1; }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .progress-track {
+      flex: 1;
+      height: 3px;
+      background: #222;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #3a8aff;
+      width: 0%;
+      transition: width 0.3s linear;
+    }
+    .time {
+      font-size: 10px;
+      color: #555;
+      font-variant-numeric: tabular-nums;
+      min-width: 32px;
+    }
+
+    .transcript {
+      flex: 1;
+      margin-top: 16px;
+      padding: 12px;
+      background: #0a0a0c;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .transcript-line {
+      font-size: 14px;
+      color: #888;
+      line-height: 1.8;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.6s, transform 0.6s, color 0.6s;
+    }
+    .transcript-line.active {
+      opacity: 1;
+      transform: translateY(0);
+      color: #ddd;
+    }
+    .transcript-line.past {
+      opacity: 1;
+      transform: translateY(0);
+      color: #555;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 16px;
+    }
+    .btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-play {
+      background: #3a8aff;
+      color: white;
+    }
+    .btn-next {
+      background: #222;
+      color: #888;
+      font-size: 13px;
+    }
+
+    .saved-badge {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 10px;
+      color: #444;
+      letter-spacing: 0.5px;
+    }
+    .saved-badge span { color: #c44; }
+
+    .byline {
+      position: fixed;
+      bottom: 12px;
+      color: #333;
+      font-size: 9px;
+      font-family: Georgia, serif;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="screen">
+      <div class="header">
+        <div class="label">voicemail</div>
+        <div class="caller" id="caller"></div>
+        <div class="date" id="date"></div>
+      </div>
+
+      <div class="waveform" id="waveform"></div>
+
+      <div class="progress-row">
+        <span class="time" id="elapsed">0:00</span>
+        <div class="progress-track"><div class="progress-fill" id="progress"></div></div>
+        <span class="time" id="duration"></span>
+      </div>
+
+      <div class="transcript" id="transcript"></div>
+
+      <div class="controls">
+        <button class="btn btn-play" id="playBtn">▶</button>
+        <button class="btn btn-next" id="nextBtn">next</button>
+      </div>
+
+      <div class="saved-badge">saved voicemail · <span>never delete</span></div>
+    </div>
+  </div>
+
+  <div class="byline">ember 🕯️</div>
+
+  <script>
+    const voicemails = [
+      {
+        caller: 'Mom',
+        date: 'Nov 12, 2019 · 6:42 PM',
+        duration: '0:38',
+        lines: [
+          "Hey honey, it's me.",
+          "I just wanted to hear your voice",
+          "but I guess you're busy.",
+          "Um — I made that soup you like.",
+          "The one with the little noodles?",
+          "Anyway if you're around this weekend...",
+          "you know where I am.",
+          "I love you. Okay. Bye bye.",
+          "...bye.",
+        ]
+      },
+      {
+        caller: 'Grandpa',
+        date: 'Mar 3, 2017 · 2:15 PM',
+        duration: '0:22',
+        lines: [
+          "Hi there, this is your grandfather.",
+          "I'm not sure I'm doing this right.",
+          "The phone says I'm recording?",
+          "Okay. Well. I just called to say",
+          "I'm proud of you.",
+          "That's all. I just wanted to say that.",
+          "Okay. Goodbye now.",
+        ]
+      },
+      {
+        caller: 'Dad',
+        date: 'Sep 8, 2021 · 11:30 PM',
+        duration: '0:15',
+        lines: [
+          "Hey kid. Late call, sorry.",
+          "Just driving home and I saw the moon",
+          "and I thought of you. That's all.",
+          "Go to bed. Talk tomorrow.",
+        ]
+      },
+      {
+        caller: 'Her',
+        date: 'Jun 14, 2020 · 8:03 AM',
+        duration: '0:31',
+        lines: [
+          "Good morning.",
+          "I know you're still asleep.",
+          "I'm leaving your coffee on the counter.",
+          "The one with the crack, not the blue one.",
+          "I have to go early but —",
+          "I don't know. I just wanted to say",
+          "I'm really glad I live with you.",
+          "Okay. Don't forget to eat. Bye.",
+        ]
+      },
+      {
+        caller: 'Jamie (age 7)',
+        date: 'Dec 25, 2022 · 7:14 AM',
+        lines: [
+          "HELLO? Daddy?",
+          "Daddy are you coming today??",
+          "Mommy said you're coming today.",
+          "I saved you the big present.",
+          "The one with the —",
+          "okay mommy says I have to hang up.",
+          "I LOVE YOU BYE.",
+        ],
+        duration: '0:19'
+      },
+      {
+        caller: 'Unknown Number',
+        date: 'Aug 22, 2018 · 3:45 PM',
+        duration: '0:12',
+        lines: [
+          "...",
+          "Sorry, wrong number.",
+          "Actually wait — no —",
+          "Is this — never mind.",
+          "I hope you're doing okay.",
+          "...",
+        ]
+      },
+      {
+        caller: 'Best Friend',
+        date: 'Jan 1, 2023 · 12:04 AM',
+        duration: '0:26',
+        lines: [
+          "[background noise, laughter, fireworks]",
+          "HEY! HAPPY NEW YEAR!",
+          "I can't hear anything!",
+          "Listen — LISTEN —",
+          "You're my favorite person,",
+          "you know that right?",
+          "Okay I'm being pulled away —",
+          "this year's gonna be ours! BYE!",
+        ]
+      },
+    ];
+
+    // Build waveform bars
+    const waveform = document.getElementById('waveform');
+    const bars = [];
+    for (let i = 0; i < 40; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = (Math.random() * 25 + 5) + 'px';
+      waveform.appendChild(bar);
+      bars.push(bar);
+    }
+
+    const callerEl = document.getElementById('caller');
+    const dateEl = document.getElementById('date');
+    const durationEl = document.getElementById('duration');
+    const elapsedEl = document.getElementById('elapsed');
+    const progressEl = document.getElementById('progress');
+    const transcript = document.getElementById('transcript');
+    const playBtn = document.getElementById('playBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    let current = Math.floor(Math.random() * voicemails.length);
+    let playing = false;
+    let playTimer = null;
+    let lineIndex = 0;
+
+    function loadVM(idx) {
+      const vm = voicemails[idx];
+      callerEl.textContent = vm.caller;
+      dateEl.textContent = vm.date;
+      durationEl.textContent = vm.duration;
+      elapsedEl.textContent = '0:00';
+      progressEl.style.width = '0%';
+      transcript.innerHTML = '';
+      vm.lines.forEach(line => {
+        const div = document.createElement('div');
+        div.className = 'transcript-line';
+        div.textContent = line;
+        transcript.appendChild(div);
+      });
+      lineIndex = 0;
+      playing = false;
+      waveform.classList.remove('playing');
+      playBtn.textContent = '▶';
+      if (playTimer) clearInterval(playTimer);
+    }
+
+    function play() {
+      if (playing) return;
+      playing = true;
+      waveform.classList.add('playing');
+      playBtn.textContent = '⏸';
+      const vm = voicemails[current];
+      const totalLines = vm.lines.length;
+      const interval = 2200;
+
+      function showNext() {
+        if (lineIndex >= totalLines) {
+          clearInterval(playTimer);
+          playing = false;
+          playBtn.textContent = '▶';
+          waveform.classList.remove('playing');
+          progressEl.style.width = '100%';
+          elapsedEl.textContent = vm.duration;
+          return;
+        }
+        const lines = transcript.querySelectorAll('.transcript-line');
+        if (lineIndex > 0) lines[lineIndex - 1].classList.remove('active');
+        if (lineIndex > 0) lines[lineIndex - 1].classList.add('past');
+        lines[lineIndex].classList.add('active');
+        lineIndex++;
+        progressEl.style.width = ((lineIndex / totalLines) * 100) + '%';
+        // Fake elapsed time
+        const totalSec = parseInt(vm.duration.split(':')[0]) * 60 + parseInt(vm.duration.split(':')[1]);
+        const sec = Math.round((lineIndex / totalLines) * totalSec);
+        elapsedEl.textContent = `0:${String(sec).padStart(2, '0')}`;
+
+        // Animate bars
+        bars.forEach(b => b.style.height = (Math.random() * 28 + 4) + 'px');
+      }
+
+      showNext();
+      playTimer = setInterval(showNext, interval);
+    }
+
+    playBtn.addEventListener('click', () => {
+      if (playing) {
+        playing = false;
+        clearInterval(playTimer);
+        playBtn.textContent = '▶';
+        waveform.classList.remove('playing');
+      } else {
+        if (lineIndex >= voicemails[current].lines.length) {
+          loadVM(current);
+          setTimeout(play, 300);
+        } else {
+          play();
+        }
+      }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      current = (current + 1) % voicemails.length;
+      loadVM(current);
+    });
+
+    loadVM(current);
+  </script>
+</body>
+</html>

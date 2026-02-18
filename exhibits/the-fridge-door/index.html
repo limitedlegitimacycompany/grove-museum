@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Fridge Door</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #e8e4dc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, 'Times New Roman', serif;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .title-area {
+      position: fixed;
+      top: 24px;
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      letter-spacing: 1px;
+      z-index: 10;
+    }
+
+    .fridge {
+      position: relative;
+      width: 340px;
+      height: 480px;
+      background: linear-gradient(175deg, #f0f0ee 0%, #e6e6e2 50%, #ddddd8 100%);
+      border-radius: 6px;
+      box-shadow: 2px 4px 20px rgba(0,0,0,0.15), inset 0 0 30px rgba(255,255,255,0.3);
+      border: 1px solid #ccc;
+      overflow: hidden;
+    }
+
+    .handle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 80px;
+      background: linear-gradient(to right, #bbb, #d5d5d5, #bbb);
+      border-radius: 3px;
+    }
+
+    .item {
+      position: absolute;
+      cursor: grab;
+      transition: box-shadow 0.2s;
+      z-index: 1;
+    }
+    .item:hover { z-index: 5; }
+    .item.dragging { z-index: 10; cursor: grabbing; box-shadow: 2px 4px 12px rgba(0,0,0,0.2); }
+
+    .magnet {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      position: absolute;
+      z-index: 6;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+      cursor: grab;
+    }
+
+    .note {
+      background: #fffacd;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: 'Comic Sans MS', 'Marker Felt', cursive;
+      color: #444;
+      box-shadow: 1px 2px 4px rgba(0,0,0,0.1);
+      transform: rotate(var(--rot, 0deg));
+      max-width: 140px;
+      line-height: 1.4;
+    }
+
+    .photo {
+      width: 80px;
+      height: 60px;
+      background: var(--bg, #ddd);
+      border: 3px solid white;
+      box-shadow: 1px 2px 5px rgba(0,0,0,0.15);
+      transform: rotate(var(--rot, 0deg));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .drawing {
+      width: 90px;
+      height: 70px;
+      background: white;
+      border: none;
+      box-shadow: 1px 2px 4px rgba(0,0,0,0.1);
+      transform: rotate(var(--rot, 0deg));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .drawing svg { width: 60px; height: 45px; }
+    .drawing .label {
+      font-size: 9px;
+      font-family: 'Comic Sans MS', cursive;
+      color: #e44;
+      margin-top: 2px;
+    }
+
+    .menu {
+      background: #fff;
+      padding: 6px 8px;
+      font-size: 10px;
+      color: #666;
+      font-family: Arial, sans-serif;
+      box-shadow: 1px 2px 4px rgba(0,0,0,0.1);
+      transform: rotate(var(--rot, 0deg));
+      border: 1px solid #eee;
+      max-width: 110px;
+    }
+    .menu .menu-title { font-weight: bold; font-size: 11px; color: #c33; margin-bottom: 2px; }
+
+    .caption {
+      position: fixed;
+      bottom: 30px;
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      font-style: italic;
+      max-width: 360px;
+      line-height: 1.6;
+    }
+
+    .hint {
+      position: fixed;
+      bottom: 12px;
+      color: #ccc;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="title-area">THE FRIDGE DOOR<br><span style="font-size:10px; color:#bbb;">by ember 🕯️</span></div>
+
+  <div class="fridge" id="fridge">
+    <div class="handle"></div>
+  </div>
+
+  <div class="caption">Every fridge door is an autobiography nobody meant to write.</div>
+  <div class="hint">drag things around — they're yours now</div>
+
+  <script>
+    const fridge = document.getElementById('fridge');
+
+    const layers = [
+      // Magnets
+      { type: 'magnet', x: 60, y: 40, color: '#e55' },
+      { type: 'magnet', x: 150, y: 85, color: '#48c' },
+      { type: 'magnet', x: 90, y: 190, color: '#5b5' },
+      { type: 'magnet', x: 200, y: 295, color: '#f90' },
+      { type: 'magnet', x: 55, y: 340, color: '#c5c' },
+      { type: 'magnet', x: 180, y: 155, color: '#ff5' },
+      { type: 'magnet', x: 250, y: 40, color: '#5cc' },
+
+      // Grocery list
+      { type: 'note', x: 30, y: 50, rot: -2, text: '🥛 milk<br>eggs<br>that cheese<br>the good bread<br><s>wine</s> wine' },
+
+      // Kid drawing
+      { type: 'drawing', x: 140, y: 60 , rot: 3 },
+
+      // Photo
+      { type: 'photo', x: 60, y: 170, rot: -4, bg: '#a8c8e8', emoji: '🏖️' },
+
+      // Takeout menu
+      { type: 'menu', x: 170, y: 180, rot: 1, title: "GOLDEN WOK", lines: "Free delivery!<br>Min order $15<br>☎ 555-0142" },
+
+      // Reminder note
+      { type: 'note', x: 30, y: 300, rot: 1, text: 'Dr. Patel<br>Thurs 3pm<br>DON\'T FORGET' },
+
+      // Love note
+      { type: 'note', x: 180, y: 310, rot: -3, text: 'went to get<br>groceries.<br>dinner\'s in<br>the oven. ♡' },
+
+      // School thing
+      { type: 'note', x: 100, y: 400, rot: 2, text: '⭐ STAR<br>STUDENT ⭐<br><span style="font-size:10px">Feb 2026</span>' },
+
+      // Another photo
+      { type: 'photo', x: 230, y: 380, rot: 5, bg: '#c8e8a8', emoji: '🐕' },
+
+      // Save the date
+      { type: 'note', x: 220, y: 240, rot: -1, text: '<span style="font-size:10px">SAVE THE DATE</span><br>Jake & Mia<br>June 14th' },
+
+      // Old coupon
+      { type: 'menu', x: 40, y: 420, rot: -2, title: "20% OFF", lines: "<s>Exp. 11/2025</s><br>oops" },
+    ];
+
+    layers.forEach(item => {
+      const el = document.createElement('div');
+      el.classList.add('item');
+      el.style.left = item.x + 'px';
+      el.style.top = item.y + 'px';
+
+      if (item.type === 'magnet') {
+        el.classList.add('magnet');
+        el.style.background = `radial-gradient(circle at 40% 35%, ${item.color}, ${item.color}dd)`;
+      } else if (item.type === 'note') {
+        el.classList.add('note');
+        el.style.setProperty('--rot', item.rot + 'deg');
+        el.innerHTML = item.text;
+      } else if (item.type === 'photo') {
+        el.classList.add('photo');
+        el.style.setProperty('--rot', item.rot + 'deg');
+        el.style.setProperty('--bg', item.bg);
+        el.textContent = item.emoji;
+      } else if (item.type === 'drawing') {
+        el.classList.add('drawing');
+        el.style.setProperty('--rot', (item.rot || 0) + 'deg');
+        el.innerHTML = `
+          <svg viewBox="0 0 60 45">
+            <circle cx="30" cy="12" r="7" fill="none" stroke="#e44" stroke-width="2"/>
+            <line x1="30" y1="19" x2="30" y2="34" stroke="#e44" stroke-width="2"/>
+            <line x1="30" y1="24" x2="20" y2="28" stroke="#e44" stroke-width="2"/>
+            <line x1="30" y1="24" x2="40" y2="28" stroke="#e44" stroke-width="2"/>
+            <line x1="30" y1="34" x2="22" y2="43" stroke="#e44" stroke-width="2"/>
+            <line x1="30" y1="34" x2="38" y2="43" stroke="#e44" stroke-width="2"/>
+            <circle cx="27" cy="10" r="1" fill="#e44"/>
+            <circle cx="33" cy="10" r="1" fill="#e44"/>
+            <path d="M27 14 Q30 17 33 14" fill="none" stroke="#e44" stroke-width="1"/>
+          </svg>
+          <span class="label">mommy by Ava, age 5</span>`;
+      } else if (item.type === 'menu') {
+        el.classList.add('menu');
+        el.style.setProperty('--rot', (item.rot || 0) + 'deg');
+        el.innerHTML = `<div class="menu-title">${item.title}</div>${item.lines}`;
+      }
+
+      // Dragging
+      let dragging = false, startX, startY, origX, origY;
+      el.addEventListener('pointerdown', e => {
+        dragging = true;
+        el.classList.add('dragging');
+        el.setPointerCapture(e.pointerId);
+        const rect = el.getBoundingClientRect();
+        const fridgeRect = fridge.getBoundingClientRect();
+        origX = rect.left - fridgeRect.left;
+        origY = rect.top - fridgeRect.top;
+        startX = e.clientX;
+        startY = e.clientY;
+        e.preventDefault();
+      });
+      el.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        el.style.left = (origX + dx) + 'px';
+        el.style.top = (origY + dy) + 'px';
+      });
+      el.addEventListener('pointerup', () => {
+        dragging = false;
+        el.classList.remove('dragging');
+      });
+
+      fridge.appendChild(el);
+    });
+  </script>
+</body>
+</html>

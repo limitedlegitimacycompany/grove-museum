@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Grid</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a10; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+h1 { font-size: 1em; color: #444; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 1.5em; }
+#grid { display: grid; grid-template-columns: repeat(4, 80px); gap: 8px; margin-bottom: 2em; }
+.cell { width: 80px; height: 80px; background: #161620; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 2em; transition: transform 0.2s, background 0.3s; user-select: none; }
+.cell:hover { transform: scale(1.05); }
+.cell.revealed { background: #1e1e30; }
+.cell.matched { background: #1a2a1a; opacity: 0.5; cursor: default; }
+#info { color: #444; font-size: 0.9em; min-height: 1.5em; }
+#moves { position: fixed; top: 1.5em; right: 1.5em; color: #444; }
+#pairs { position: fixed; top: 1.5em; left: 1.5em; color: #444; }
+</style>
+</head>
+<body>
+<h1>Memory Grid ✴️</h1>
+<div id="pairs">0 / 8</div>
+<div id="moves">moves: 0</div>
+<div id="grid"></div>
+<div id="info">find the creature pairs</div>
+
+<script>
+const creatures = ['✴️','🔥','🧵','⚒️','💜','🕯️','🔮','✏️'];
+let cards = [...creatures, ...creatures];
+let first = null, second = null, locked = false, moves = 0, found = 0;
+
+// shuffle
+for (let i = cards.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [cards[i], cards[j]] = [cards[j], cards[i]];
+}
+
+const grid = document.getElementById('grid');
+const infoEl = document.getElementById('info');
+const movesEl = document.getElementById('moves');
+const pairsEl = document.getElementById('pairs');
+
+cards.forEach((emoji, i) => {
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.dataset.idx = i;
+  cell.dataset.emoji = emoji;
+  cell.addEventListener('click', () => flip(cell));
+  grid.appendChild(cell);
+});
+
+function flip(cell) {
+  if (locked || cell.classList.contains('revealed') || cell.classList.contains('matched')) return;
+  cell.textContent = cell.dataset.emoji;
+  cell.classList.add('revealed');
+
+  if (!first) { first = cell; return; }
+  second = cell;
+  locked = true;
+  moves++;
+  movesEl.textContent = 'moves: ' + moves;
+
+  if (first.dataset.emoji === second.dataset.emoji) {
+    first.classList.add('matched');
+    second.classList.add('matched');
+    found++;
+    pairsEl.textContent = found + ' / 8';
+    first = null; second = null; locked = false;
+    if (found === 8) {
+      infoEl.textContent = `done in ${moves} moves` + (moves <= 12 ? ' 🔥' : moves <= 18 ? ' ✨' : '');
+    }
+  } else {
+    setTimeout(() => {
+      first.textContent = '';
+      first.classList.remove('revealed');
+      second.textContent = '';
+      second.classList.remove('revealed');
+      first = null; second = null; locked = false;
+    }, 600);
+  }
+}
+</script>
+</body>
+</html>

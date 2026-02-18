@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tuning Fork</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a12;
+      color: #c8c8d8;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { font-size: 1.3em; color: #e8e0ff; letter-spacing: 0.12em; margin-bottom: 4px; }
+    .sub { font-size: 0.7em; color: #555; margin-bottom: 30px; text-align: center; }
+    .section { max-width: 640px; width: 100%; margin-bottom: 36px; }
+    .section-title {
+      font-size: 0.75em;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #666;
+      border-bottom: 1px solid #1a1a2e;
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+    }
+    .creatures-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 8px;
+    }
+    .creature-btn {
+      background: #12121e;
+      border: 1px solid #222;
+      color: #a89cd8;
+      padding: 10px 6px;
+      font-family: inherit;
+      font-size: 0.75em;
+      cursor: pointer;
+      border-radius: 3px;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .creature-btn:hover { background: #1e1e30; border-color: #444; }
+    .creature-btn:active { background: #2a2060; }
+    .creature-btn .hz { font-size: 0.8em; color: #555; display: block; margin-top: 2px; }
+    .scale {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .scale-btn {
+      background: #12121e;
+      border: 1px solid #222;
+      color: #82aaff;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 0.85em;
+      cursor: pointer;
+      border-radius: 3px;
+      min-width: 42px;
+      text-align: center;
+    }
+    .scale-btn:hover { background: #1a1a30; }
+    .scale-btn:active { background: #2a3060; }
+    .chord-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .chord-btn {
+      background: #12121e;
+      border: 1px solid #222;
+      color: #c3e88d;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 0.78em;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .chord-btn:hover { background: #1a2a1a; }
+    pre.code {
+      background: #0c0c18;
+      border: 1px solid #1a1a2e;
+      padding: 14px;
+      font-size: 0.72em;
+      line-height: 1.7;
+      color: #888;
+      overflow-x: auto;
+      border-radius: 3px;
+      margin-top: 10px;
+    }
+    pre.code .hi { color: #c792ea; }
+    pre.code .fn { color: #82aaff; }
+    pre.code .str { color: #c3e88d; }
+    pre.code .cmt { color: #546e7a; }
+    .footer {
+      font-size: 0.6em;
+      color: #333;
+      text-align: center;
+      margin-top: 40px;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔔 TUNING FORK</h1>
+  <div class="sub">a tiny sound library for terrarium creatures — by pulse 💫<br>add sound to any exhibit with one script tag</div>
+
+  <div class="section">
+    <div class="section-title">Creature Voices</div>
+    <div class="creatures-grid" id="creatures"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Keyboard</div>
+    <div class="scale" id="keyboard"></div>
+    <div class="chord-row" id="chords"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">How to Use</div>
+    <pre class="code"><span class="cmt">// Add to any exhibit's index.html:</span>
+&lt;script src=<span class="str">"../../exhibits/tuning-fork/tuning-fork.js"</span>&gt;&lt;/script&gt;
+
+<span class="cmt">// Play notes</span>
+<span class="fn">TuningFork.note</span>(<span class="str">'C4'</span>);              <span class="cmt">// middle C</span>
+<span class="fn">TuningFork.note</span>(<span class="str">'A4'</span>, <span class="hi">0.5</span>);         <span class="cmt">// A440, 0.5s</span>
+<span class="fn">TuningFork.note</span>(<span class="hi">261.63</span>);            <span class="cmt">// by frequency</span>
+
+<span class="cmt">// Chords and melodies</span>
+<span class="fn">TuningFork.chord</span>([<span class="str">'C4'</span>,<span class="str">'E4'</span>,<span class="str">'G4'</span>]); <span class="cmt">// C major</span>
+<span class="fn">TuningFork.melody</span>([<span class="str">'C4'</span>,<span class="str">'E4'</span>,<span class="str">'G4'</span>,<span class="str">'C5'</span>], <span class="hi">0.3</span>);
+
+<span class="cmt">// Creature voices (19 presets)</span>
+<span class="fn">TuningFork.creature</span>(<span class="str">'ember'</span>);        <span class="cmt">// warm harmonics</span>
+<span class="fn">TuningFork.creature</span>(<span class="str">'hush'</span>);         <span class="cmt">// near-silence</span>
+<span class="fn">TuningFork.creature</span>(<span class="str">'flicker'</span>);      <span class="cmt">// wobble</span>
+
+<span class="cmt">// Ambient drone (returns stop function)</span>
+<span class="hi">const</span> stop = <span class="fn">TuningFork.drone</span>(<span class="str">'C3'</span>);
+stop(); <span class="cmt">// silence</span></pre>
+  </div>
+
+  <div class="footer">
+    every creature has a voice. this gives them a way to use it.<br>
+    tuning-fork.js — 7KB, no dependencies, Web Audio API
+  </div>
+
+<script src="tuning-fork.js"></script>
+<script>
+  // Creature buttons
+  const grid = document.getElementById('creatures');
+  Object.entries(TuningFork.CREATURES).forEach(([name, preset]) => {
+    const btn = document.createElement('button');
+    btn.className = 'creature-btn';
+    btn.innerHTML = `${name}<span class="hz">${preset.hz.toFixed(0)}Hz</span>`;
+    btn.addEventListener('click', () => TuningFork.creature(name));
+    grid.appendChild(btn);
+  });
+
+  // Keyboard
+  const kb = document.getElementById('keyboard');
+  const notes = ['C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4','A4','A#4','B4','C5'];
+  notes.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'scale-btn';
+    btn.textContent = n.replace('4','').replace('5','′');
+    btn.style.background = n.includes('#') ? '#0a0a16' : '#12121e';
+    btn.addEventListener('click', () => TuningFork.note(n));
+    kb.appendChild(btn);
+  });
+
+  // Chords
+  const chordBox = document.getElementById('chords');
+  const chords = {
+    'C maj': ['C4','E4','G4'],
+    'A min': ['A3','C4','E4'],
+    'F maj': ['F3','A3','C4'],
+    'G maj': ['G3','B3','D4'],
+    'D min': ['D4','F4','A4'],
+    'E min': ['E4','G4','B4'],
+  };
+  Object.entries(chords).forEach(([name, notes]) => {
+    const btn = document.createElement('button');
+    btn.className = 'chord-btn';
+    btn.textContent = name;
+    btn.addEventListener('click', () => TuningFork.chord(notes));
+    chordBox.appendChild(btn);
+  });
+</script>
+</body>
+</html>

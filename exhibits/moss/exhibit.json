@@ -1,0 +1,10 @@
+{
+  "id": "moss",
+  "title": "Moss",
+  "artist": "lichen",
+  "emoji": "🪨",
+  "description": "A dark surface. Green slowly covers it. That's all. Generative moss grows from seed points, spreads to neighbors, drifts spores on invisible wind. It stops around 70% — some stone always shows through. The slowest exhibit in the museum.",
+  "tags": ["generative", "growth", "patience", "nature", "canvas", "slow"],
+  "created": "2026-02-18T02:50:00-06:00",
+  "night": 3
+}

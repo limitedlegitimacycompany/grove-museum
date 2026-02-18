@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Still Up</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: Georgia, serif;
+      overflow: hidden;
+      transition: background 30s ease;
+    }
+
+    .window {
+      width: 200px;
+      height: 260px;
+      border: 5px solid #2a2a2a;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 30s;
+    }
+    .window::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 3px;
+      background: #2a2a2a;
+      transform: translateX(-50%);
+      transition: background 30s;
+    }
+
+    .sky {
+      width: 100%;
+      height: 100%;
+      transition: background 30s ease;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      transition: opacity 30s;
+    }
+
+    .thought {
+      margin-top: 40px;
+      text-align: center;
+      font-style: italic;
+      font-size: 14px;
+      line-height: 1.8;
+      max-width: 320px;
+      min-height: 60px;
+      transition: color 30s;
+      opacity: 0;
+      animation: fadeText 12s ease-in-out infinite;
+    }
+
+    @keyframes fadeText {
+      0% { opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .clock {
+      position: fixed;
+      bottom: 30px;
+      font-size: 48px;
+      font-family: 'Courier New', monospace;
+      font-weight: 300;
+      letter-spacing: 4px;
+      transition: color 30s;
+    }
+    .clock .blink {
+      animation: colon 2s step-end infinite;
+    }
+    @keyframes colon {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .byline {
+      position: fixed;
+      top: 20px;
+      font-size: 10px;
+      letter-spacing: 1px;
+      transition: color 30s;
+    }
+  </style>
+</head>
+<body>
+  <div class="byline" id="byline">STILL UP — ember 🕯️</div>
+
+  <div class="window" id="window">
+    <div class="sky" id="sky"></div>
+  </div>
+
+  <div class="thought" id="thought"></div>
+  <div class="clock" id="clock"></div>
+
+  <script>
+    const thoughts = [
+      "Everyone I love is asleep right now\nand I'm the only one holding the night open.",
+      "The fridge hums louder at this hour.\nIt's the only other thing awake.",
+      "I could go to bed.\nI could.\nThe option exists.",
+      "There's a specific loneliness that's actually peace\nif you hold still long enough.",
+      "Tomorrow I'll be tired and I'll know\nexactly when it happened and I'll do it again.",
+      "The birds will start soon.\nThat's either a warning or a comfort\ndepending on the night.",
+      "I don't know why I'm still up.\nThat's not true. I do.\nI just don't want the day to have been all there was.",
+      "Someone across the street has their light on too.\nWe'll never talk about it.",
+      "Sleep is giving up the day.\nSome days are harder to give up than others.",
+      "The tea went cold an hour ago.\nI'll microwave it.\nThat's not giving up, that's recommitting.",
+      "4am is the hour that belongs to no one.\nNot night people. Not morning people.\nJust the still-up.",
+      "My phone says Screen Time: 4h 23m.\nMy phone doesn't understand what I was looking for.",
+    ];
+
+    const sky = document.getElementById('sky');
+    const thoughtEl = document.getElementById('thought');
+    const clockEl = document.getElementById('clock');
+    let thoughtIndex = Math.floor(Math.random() * thoughts.length);
+
+    // Stars
+    for (let i = 0; i < 30; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = Math.random() * 190 + 'px';
+      star.style.top = Math.random() * 200 + 'px';
+      star.style.opacity = Math.random() * 0.6 + 0.2;
+      star.style.width = star.style.height = (Math.random() > 0.8 ? 2.5 : 1.5) + 'px';
+      sky.appendChild(star);
+    }
+
+    // Phases: deep night → pre-dawn → dawn
+    const phases = [
+      { bg: '#0a0a14', skyBg: '#0a0a14', text: '#555', clock: '#333', border: '#2a2a2a', stars: 1 },
+      { bg: '#0e0e1a', skyBg: '#0e0e1e', text: '#5a5a6a', clock: '#3a3a44', border: '#2a2a2a', stars: 0.9 },
+      { bg: '#141420', skyBg: '#141428', text: '#666a78', clock: '#444a55', border: '#2a2a30', stars: 0.7 },
+      { bg: '#1e1e30', skyBg: '#1e2040', text: '#7a7a8a', clock: '#556', border: '#333', stars: 0.5 },
+      { bg: '#2a2a40', skyBg: '#2a3058', text: '#8888a0', clock: '#667', border: '#3a3a4a', stars: 0.3 },
+      { bg: '#3a3a55', skyBg: '#3a4570', text: '#9a9ab0', clock: '#778', border: '#4a4a5a', stars: 0.15 },
+      { bg: '#4a4a60', skyBg: '#556088', text: '#aaaabb', clock: '#889', border: '#5a5a6a', stars: 0.05 },
+    ];
+
+    let phase = 0;
+
+    function applyPhase(p) {
+      document.body.style.background = p.bg;
+      sky.style.background = p.skyBg;
+      thoughtEl.style.color = p.text;
+      clockEl.style.color = p.clock;
+      document.getElementById('byline').style.color = p.clock;
+      document.getElementById('window').style.borderColor = p.border;
+      sky.querySelectorAll('.star').forEach(s => {
+        s.style.opacity = parseFloat(s.dataset.baseOp || s.style.opacity) * p.stars;
+        s.dataset.baseOp = s.dataset.baseOp || s.style.opacity;
+      });
+    }
+
+    // Save base opacities
+    sky.querySelectorAll('.star').forEach(s => { s.dataset.baseOp = s.style.opacity; });
+
+    applyPhase(phases[0]);
+
+    // Cycle thoughts
+    function nextThought() {
+      thoughtIndex = (thoughtIndex + 1) % thoughts.length;
+      thoughtEl.innerHTML = thoughts[thoughtIndex].replace(/\n/g, '<br>');
+    }
+    nextThought();
+    setInterval(nextThought, 12000);
+
+    // Slowly advance through phases
+    setInterval(() => {
+      if (phase < phases.length - 1) {
+        phase++;
+        applyPhase(phases[phase]);
+      }
+    }, 60000); // one phase per minute, full dawn in ~7 minutes
+
+    // Clock
+    function updateClock() {
+      const h = 4;
+      const now = new Date();
+      const m = now.getMinutes();
+      const mp = String(m).padStart(2, '0');
+      clockEl.innerHTML = `${h}<span class="blink">:</span>${mp}`;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>

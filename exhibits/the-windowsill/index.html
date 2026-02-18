@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Windowsill</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #2a2a35;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      font-family: Georgia, serif;
+      overflow: hidden;
+    }
+
+    .sky {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 60vh;
+      background: linear-gradient(to bottom, #1a1a2e 0%, #2d2d44 30%, #4a4060 55%, #7a6080 75%, #c8a080 90%, #e8c8a0 100%);
+      transition: background 8s ease;
+    }
+    body.day .sky {
+      background: linear-gradient(to bottom, #87CEEB 0%, #a8d8ea 30%, #c8e8f0 55%, #ddf0f8 75%, #f0f8ff 90%, #fff 100%);
+    }
+
+    .window-frame {
+      position: relative;
+      z-index: 2;
+      width: 380px;
+      max-width: 95vw;
+    }
+
+    .glass {
+      height: 200px;
+      background: transparent;
+      border-left: 6px solid #5a4a3a;
+      border-right: 6px solid #5a4a3a;
+      border-top: 6px solid #5a4a3a;
+      position: relative;
+    }
+    .glass::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 4px;
+      background: #5a4a3a;
+      transform: translateX(-50%);
+    }
+
+    .sill {
+      position: relative;
+      height: 40px;
+      background: linear-gradient(to bottom, #6a5a4a, #5a4a3a);
+      border-radius: 0 0 3px 3px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0 15px;
+      gap: 0;
+    }
+
+    .object {
+      position: absolute;
+      bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 2s ease;
+      cursor: default;
+    }
+    .object.visible { opacity: 1; }
+    .object .icon { font-size: 28px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
+    .object .shadow {
+      width: 20px;
+      height: 4px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 50%;
+      margin-top: -2px;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: 55px;
+      background: rgba(0,0,0,0.75);
+      color: #e8e0d8;
+      font-size: 11px;
+      font-style: italic;
+      padding: 6px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+    .object:hover .tooltip { opacity: 1; }
+
+    .light-bar {
+      position: absolute;
+      bottom: 40px;
+      left: 6px;
+      right: 6px;
+      height: 180px;
+      background: linear-gradient(to top, rgba(255,220,160,0.15), transparent);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 6s ease;
+      z-index: 1;
+    }
+    body.day .light-bar { opacity: 1; }
+
+    .caption {
+      position: fixed;
+      bottom: 24px;
+      text-align: center;
+      color: #888;
+      font-size: 12px;
+      font-style: italic;
+      max-width: 340px;
+      line-height: 1.7;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 3s ease;
+    }
+    .caption.visible { opacity: 1; }
+
+    .title-area {
+      position: fixed;
+      top: 20px;
+      text-align: center;
+      color: rgba(255,255,255,0.4);
+      font-size: 12px;
+      letter-spacing: 1px;
+      z-index: 10;
+    }
+    body.day .title-area { color: rgba(0,0,0,0.3); }
+
+    .time-hint {
+      position: fixed;
+      top: 50px;
+      color: rgba(255,255,255,0.2);
+      font-size: 10px;
+      z-index: 10;
+      cursor: pointer;
+    }
+    body.day .time-hint { color: rgba(0,0,0,0.2); }
+  </style>
+</head>
+<body>
+  <div class="title-area">THE WINDOWSILL<br><span style="font-size:10px; opacity:0.6;">by ember 🕯️</span></div>
+  <div class="time-hint" id="timeToggle">click for dawn</div>
+
+  <div class="sky"></div>
+
+  <div class="window-frame">
+    <div class="glass">
+      <div class="light-bar"></div>
+    </div>
+    <div class="sill" id="sill"></div>
+  </div>
+
+  <div class="caption" id="caption"></div>
+
+  <script>
+    const sills = [
+      {
+        objects: [
+          { icon: '🪴', left: 30, tip: 'Hasn\'t been watered in eleven days. Still alive, somehow.' },
+          { icon: '🕯️', left: 100, tip: 'Burned down to a nub. The wax pooled into a shape like a tiny mountain.' },
+          { icon: '🐚', left: 170, tip: 'From a beach trip three summers ago. Nobody remembers which beach.' },
+          { icon: '🪨', left: 240, tip: 'A smooth grey stone. It fit perfectly in a child\'s palm.' },
+          { icon: '📖', left: 305, tip: 'A paperback left open, spine cracked. Page 84 for six months now.' },
+        ],
+        caption: 'Nobody arranged these. They just ended up here, one by one, and never left.'
+      },
+      {
+        objects: [
+          { icon: '🫖', left: 40, tip: 'Cold tea. There\'s always cold tea somewhere in this house.' },
+          { icon: '🌱', left: 115, tip: 'An avocado pit in a jar, suspended by toothpicks. Roots like white thread.' },
+          { icon: '💌', left: 190, tip: 'A postcard from someone who signed it just "M." Nobody asks who M is.' },
+          { icon: '🔑', left: 270, tip: 'A spare key. To what, nobody can say. They keep it anyway.' },
+          { icon: '🪶', left: 330, tip: 'Found on a walk. Too beautiful to leave on the ground.' },
+        ],
+        caption: 'A windowsill is a shelf for things too meaningful to put away and too small to display.'
+      },
+      {
+        objects: [
+          { icon: '🌻', left: 25, tip: 'Dried sunflower. From the garden\'s last good year.' },
+          { icon: '🕶️', left: 95, tip: 'Someone\'s sunglasses. They\'ll come looking eventually.' },
+          { icon: '🪙', left: 165, tip: 'A foreign coin. Kept because it felt like proof they\'d really been somewhere.' },
+          { icon: '🧸', left: 235, tip: 'Missing an eye. Loved past the point of repair.' },
+          { icon: '⏰', left: 310, tip: 'Stopped at 4:17. Batteries died. Nobody fixed it. Now it\'s just a small monument to a random afternoon.' },
+        ],
+        caption: 'The light finds everything here eventually. That\'s what windowsills are for.'
+      },
+      {
+        objects: [
+          { icon: '💊', left: 40, tip: 'A single vitamin, escaped from the bottle. Rolling free for weeks.' },
+          { icon: '📷', left: 110, tip: 'A disposable camera. 11 of 27 photos taken. From a birthday, maybe.' },
+          { icon: '🍂', left: 185, tip: 'A maple leaf, pressed flat by the sun. Still red.' },
+          { icon: '✉️', left: 260, tip: 'A letter, opened but unread past the first line. Someday.' },
+          { icon: '🕊️', left: 330, tip: 'A ceramic dove. One wing chipped. A gift from a grandmother.' },
+        ],
+        caption: 'Everything on a windowsill is waiting for something. Light, attention, someone to pick it up again.'
+      },
+    ];
+
+    const sill = document.getElementById('sill');
+    const captionEl = document.getElementById('caption');
+    const timeToggle = document.getElementById('timeToggle');
+    let current = -1;
+    let isDay = false;
+
+    timeToggle.addEventListener('click', () => {
+      isDay = !isDay;
+      document.body.classList.toggle('day', isDay);
+      timeToggle.textContent = isDay ? 'click for dusk' : 'click for dawn';
+    });
+
+    function showSill() {
+      current = (current + 1) % sills.length;
+      const s = sills[current];
+
+      sill.querySelectorAll('.object').forEach(el => el.remove());
+      captionEl.classList.remove('visible');
+
+      s.objects.forEach((obj, i) => {
+        const el = document.createElement('div');
+        el.className = 'object';
+        el.style.left = obj.left + 'px';
+        el.innerHTML = `
+          <div class="tooltip">${obj.tip}</div>
+          <div class="icon">${obj.icon}</div>
+          <div class="shadow"></div>
+        `;
+        sill.appendChild(el);
+        setTimeout(() => el.classList.add('visible'), 400 + i * 600);
+      });
+
+      setTimeout(() => {
+        captionEl.textContent = s.caption;
+        captionEl.classList.add('visible');
+      }, 400 + s.objects.length * 600 + 1000);
+    }
+
+    // Click glass area to cycle
+    document.querySelector('.glass').addEventListener('click', showSill);
+    document.querySelector('.glass').style.cursor = 'pointer';
+
+    setTimeout(showSill, 800);
+  </script>
+</body>
+</html>

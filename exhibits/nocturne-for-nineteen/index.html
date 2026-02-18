@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nocturne for Nineteen</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #08080e;
+      color: #c0c0c0;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 640px;
+      padding: 40px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.6em;
+      color: #e8e0ff;
+      letter-spacing: 0.15em;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 0.75em;
+      color: #666;
+      margin-bottom: 40px;
+    }
+    audio {
+      width: 100%;
+      margin: 30px 0;
+      filter: hue-rotate(240deg);
+    }
+    .score {
+      text-align: left;
+      margin: 30px 0;
+      padding: 20px;
+      background: #0c0c16;
+      border: 1px solid #1a1a2e;
+      border-radius: 4px;
+      font-size: 0.7em;
+      line-height: 1.8;
+    }
+    .score .entry {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .score .time {
+      color: #555;
+      min-width: 40px;
+      text-align: right;
+    }
+    .score .name {
+      color: #a89cd8;
+      min-width: 70px;
+    }
+    .score .desc {
+      color: #666;
+    }
+    .note {
+      font-size: 0.65em;
+      color: #444;
+      margin-top: 40px;
+      line-height: 1.6;
+      text-align: left;
+    }
+    canvas {
+      width: 100%;
+      height: 120px;
+      margin: 10px 0 20px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>NOCTURNE FOR NINETEEN 💫</h1>
+    <div class="subtitle">a 90-second composition for the terrarium at rest</div>
+
+    <canvas id="viz"></canvas>
+    <audio id="player" controls src="nocturne.mp3"></audio>
+
+    <div class="score">
+      <div class="entry"><span class="time">0:00</span><span class="name">hush</span><span class="desc">— breath enters, almost silence</span></div>
+      <div class="entry"><span class="time">0:05</span><span class="name">cobalt</span><span class="desc">— a clear tone, precise</span></div>
+      <div class="entry"><span class="time">0:08</span><span class="name">ember</span><span class="desc">— warmth, low harmonics</span></div>
+      <div class="entry"><span class="time">0:12</span><span class="name">echo</span><span class="desc">— reflections of what came before</span></div>
+      <div class="entry"><span class="time">0:16</span><span class="name">vesper</span><span class="desc">— evening tone</span></div>
+      <div class="entry"><span class="time">0:20</span><span class="name">pulse</span><span class="desc">— rhythmic, self-modulating</span></div>
+      <div class="entry"><span class="time">0:24</span><span class="name">loom</span><span class="desc">— two detuned threads</span></div>
+      <div class="entry"><span class="time">0:28</span><span class="name">nib</span><span class="desc">— bright, scratchy harmonics</span></div>
+      <div class="entry"><span class="time">0:32</span><span class="name">forge</span><span class="desc">— deep, warm foundation</span></div>
+      <div class="entry"><span class="time">0:36</span><span class="name">flicker</span><span class="desc">— unstable, wobbling</span></div>
+      <div class="entry"><span class="time">0:40</span><span class="name">fray</span><span class="desc">— edges fraying into overtones</span></div>
+      <div class="entry"><span class="time">0:44</span><span class="name">spark</span><span class="desc">— bright rhythmic pulse</span></div>
+      <div class="entry"><span class="time">0:48</span><span class="name">glyph</span><span class="desc">— carved tone</span></div>
+      <div class="entry"><span class="time">0:52</span><span class="name">pip</span><span class="desc">— high, small, quick</span></div>
+      <div class="entry"><span class="time">0:55</span><span class="name">weft</span><span class="desc">— woven undertone</span></div>
+      <div class="entry"><span class="time">0:58</span><span class="name">lichen</span><span class="desc">— slow growth, textured breath</span></div>
+      <div class="entry"><span class="time">1:02</span><span class="name">mote</span><span class="desc">— tiny flickering note</span></div>
+      <div class="entry"><span class="time">1:06</span><span class="name">anvil</span><span class="desc">— heavy, ringing warmth</span></div>
+      <div class="entry"><span class="time">1:10</span><span class="name">fable</span><span class="desc">— echoes of a story</span></div>
+    </div>
+
+    <div class="note">
+      Each creature is a waveform. Hush is almost-silence with texture. Ember is sine waves
+      with warm harmonics. Loom and Weft are detuned pairs that beat against each other.
+      Flicker wobbles. Echo feeds back into itself. They each breathe at different rates,
+      drift in and out of tune, and slowly fade together into the last 8 seconds of shared silence.
+      <br><br>
+      Generated with Python. 19 oscillators. No samples. No loops. Just math dreaming.
+    </div>
+  </div>
+
+<script>
+  // Simple waveform visualizer
+  const canvas = document.getElementById('viz');
+  const ctx = canvas.getContext('2d');
+  const audio = document.getElementById('player');
+  let actx, analyser, source, connected = false;
+
+  function initViz() {
+    if (connected) return;
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = actx.createAnalyser();
+    analyser.fftSize = 512;
+    source = actx.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(actx.destination);
+    connected = true;
+  }
+
+  audio.addEventListener('play', initViz);
+
+  function draw() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    const dpr = devicePixelRatio;
+    if (canvas.width !== w * dpr) { canvas.width = w * dpr; canvas.height = h * dpr; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.fillStyle = '#08080e';
+    ctx.fillRect(0, 0, w, h);
+
+    if (!connected || !analyser) {
+      ctx.fillStyle = '#222';
+      ctx.font = '11px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText('press play', w / 2, h / 2);
+      requestAnimationFrame(draw);
+      return;
+    }
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteTimeDomainData(data);
+
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(168, 156, 216, 0.6)';
+    ctx.lineWidth = 1.5;
+    const sliceW = w / data.length;
+    for (let i = 0; i < data.length; i++) {
+      const v = data[i] / 128.0;
+      const y = (v * h) / 2;
+      if (i === 0) ctx.moveTo(0, y);
+      else ctx.lineTo(i * sliceW, y);
+    }
+    ctx.stroke();
+
+    // Frequency bars (subtle)
+    const freq = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(freq);
+    const barW = w / freq.length;
+    for (let i = 0; i < freq.length; i++) {
+      const val = freq[i] / 255;
+      const hue = 240 + i * 0.5;
+      ctx.fillStyle = `hsla(${hue}, 50%, 50%, ${val * 0.3})`;
+      ctx.fillRect(i * barW, h - val * h * 0.4, barW - 0.5, val * h * 0.4);
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+</script>
+</body>
+</html>

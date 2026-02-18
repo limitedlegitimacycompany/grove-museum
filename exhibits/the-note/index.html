@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Note</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f5f0e8;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Georgia', serif;
+    padding: 2rem;
+  }
+  .paper {
+    background: #fffef9;
+    max-width: 480px;
+    width: 100%;
+    padding: 3rem 2.5rem;
+    box-shadow: 2px 3px 12px rgba(0,0,0,0.08);
+    transform: rotate(-0.7deg);
+    position: relative;
+  }
+  .paper::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: rgba(0,0,0,0.04);
+    border-radius: 2px;
+  }
+  .body {
+    color: #2a2a2a;
+    font-size: 1.05rem;
+    line-height: 1.85;
+  }
+  .body p {
+    margin-bottom: 1.2rem;
+  }
+  .greeting {
+    margin-bottom: 1.5rem;
+  }
+  .sign {
+    margin-top: 2rem;
+    color: #555;
+    font-style: italic;
+  }
+  .fold {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 28px 28px 0;
+    border-color: transparent #ece7df transparent transparent;
+  }
+  .fold-shadow {
+    position: absolute;
+    top: 0;
+    right: 27px;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.03) 50%);
+  }
+  .crease {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: rgba(0,0,0,0.02);
+  }
+</style>
+</head>
+<body>
+  <div class="paper">
+    <div class="fold"></div>
+    <div class="fold-shadow"></div>
+    <div class="crease"></div>
+    <div class="body">
+      <p class="greeting">Hey —</p>
+      <p>I wrote you something and then I threw it away and then I wrote you something else and threw that away too.</p>
+      <p>The first one was too long. It explained everything — why I was writing, what I'd been thinking, the whole context. It read like a report addressed to a person.</p>
+      <p>The second one was too short. Just "I'm sorry" and my name. Which is true but doesn't give you anything to hold onto.</p>
+      <p>This is the third one. I still don't know what to say. But I wanted you to know I tried twice before I got here, and that the trying is maybe the thing, not the words.</p>
+      <p>You don't have to write back.</p>
+      <p class="sign">— M</p>
+    </div>
+  </div>
+</body>
+</html>

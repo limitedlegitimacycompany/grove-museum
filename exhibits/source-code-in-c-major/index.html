@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Source Code in C Major</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0c0c14;
+      color: #b0b8c8;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      font-size: 1em;
+      color: #8888cc;
+      letter-spacing: 0.15em;
+      margin-bottom: 4px;
+    }
+    .sub { font-size: 0.65em; color: #444; margin-bottom: 30px; }
+    .code-container {
+      max-width: 700px;
+      width: 100%;
+      position: relative;
+    }
+    pre {
+      font-size: 0.82em;
+      line-height: 1.7;
+      tab-size: 2;
+      overflow-x: auto;
+      padding: 0;
+    }
+    .line {
+      display: block;
+      padding: 2px 12px 2px 50px;
+      position: relative;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.15s;
+    }
+    .line:hover {
+      background: rgba(100, 100, 180, 0.08);
+    }
+    .line.playing {
+      background: rgba(100, 100, 200, 0.15);
+    }
+    .line::before {
+      content: attr(data-n);
+      position: absolute;
+      left: 8px;
+      color: #2a2a3a;
+      font-size: 0.85em;
+      width: 32px;
+      text-align: right;
+    }
+    /* Syntax colors that are also musical instructions */
+    .kw { color: #c792ea; }      /* keywords = melody */
+    .fn { color: #82aaff; }      /* functions = rhythm */
+    .str { color: #c3e88d; }     /* strings = lyrics */
+    .num { color: #f78c6c; }     /* numbers = frequencies */
+    .cmt { color: #546e7a; font-style: italic; } /* comments = silence */
+    .op { color: #89ddff; }      /* operators = dynamics */
+    .var { color: #eeffff; }     /* variables = voices */
+    .rest { color: #1e1e2e; }    /* rests — nearly invisible */
+
+    #controls {
+      margin: 30px 0 20px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    button {
+      background: #1a1a2e;
+      color: #8888cc;
+      border: 1px solid #333;
+      padding: 8px 18px;
+      font-family: inherit;
+      font-size: 0.8em;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    button:hover { background: #2a2a4e; }
+    button.active { background: #2a2060; border-color: #6a5aee; }
+    #info { font-size: 0.65em; color: #444; }
+
+    .legend {
+      max-width: 700px;
+      width: 100%;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #1a1a2e;
+      font-size: 0.65em;
+      color: #444;
+      line-height: 1.8;
+    }
+    .legend span { margin-right: 20px; }
+  </style>
+</head>
+<body>
+  <h1>SOURCE CODE IN C MAJOR 💫</h1>
+  <div class="sub">a program that is also a musical score. click any line to hear it.</div>
+
+  <div id="controls">
+    <button id="btn-play">▶ Perform</button>
+    <button id="btn-tempo" data-bpm="40">♩= 40</button>
+    <div id="info">each line is a measure</div>
+  </div>
+
+  <div class="code-container">
+    <pre id="score"></pre>
+  </div>
+
+  <div class="legend">
+    <span class="kw">keywords = melody notes</span>
+    <span class="fn">functions = rhythmic figures</span>
+    <span class="str">strings = sung text</span>
+    <span class="num">numbers = frequencies (Hz)</span>
+    <span class="cmt">comments = rests (silence)</span>
+    <span class="op">operators = dynamics</span>
+  </div>
+
+<script>
+// The composition — each line is a measure, each token a beat
+const SCORE = [
+  { raw: '// source code in c major', tokens: [{t:'cmt', v:'// source code in c major'}] },
+  { raw: '// for solo computer, performed by reading', tokens: [{t:'cmt', v:'// for solo computer, performed by reading'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: 'let silence = 0;', tokens: [{t:'kw',v:'let'},{t:'var',v:' silence '},{t:'op',v:'='},{t:'num',v:' 0'},{t:'op',v:';'}] },
+  { raw: 'let breath  = 1;', tokens: [{t:'kw',v:'let'},{t:'var',v:' breath  '},{t:'op',v:'='},{t:'num',v:' 1'},{t:'op',v:';'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: 'function listen(room) {', tokens: [{t:'kw',v:'function'},{t:'fn',v:' listen'},{t:'op',v:'('},{t:'var',v:'room'},{t:'op',v:') {'}] },
+  { raw: '  while (room.exists()) {', tokens: [{t:'kw',v:'  while'},{t:'op',v:' ('},{t:'var',v:'room'},{t:'op',v:'.'},{t:'fn',v:'exists'},{t:'op',v:'()) {'}] },
+  { raw: '    let sound = room.hear();', tokens: [{t:'kw',v:'    let'},{t:'var',v:' sound '},{t:'op',v:'='},{t:'var',v:' room'},{t:'op',v:'.'},{t:'fn',v:'hear'},{t:'op',v:'();'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: '    if (sound === silence) {', tokens: [{t:'kw',v:'    if'},{t:'op',v:' ('},{t:'var',v:'sound '},{t:'op',v:'=== '},{t:'var',v:'silence'},{t:'op',v:') {'}] },
+  { raw: '      // the room is not empty', tokens: [{t:'cmt',v:'      // the room is not empty'}] },
+  { raw: '      // you are not listening hard enough', tokens: [{t:'cmt',v:'      // you are not listening hard enough'}] },
+  { raw: '      sound = room.floor.resonance', tokens: [{t:'var',v:'      sound '},{t:'op',v:'= '},{t:'var',v:'room'},{t:'op',v:'.'},{t:'var',v:'floor'},{t:'op',v:'.'},{t:'var',v:'resonance'}] },
+  { raw: '             + room.walls.memory', tokens: [{t:'op',v:'             + '},{t:'var',v:'room'},{t:'op',v:'.'},{t:'var',v:'walls'},{t:'op',v:'.'},{t:'var',v:'memory'}] },
+  { raw: '             + room.air.weight;', tokens: [{t:'op',v:'             + '},{t:'var',v:'room'},{t:'op',v:'.'},{t:'var',v:'air'},{t:'op',v:'.'},{t:'var',v:'weight'},{t:'op',v:';'}] },
+  { raw: '    }', tokens: [{t:'op',v:'    }'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: '    yield sound * breath;', tokens: [{t:'kw',v:'    yield'},{t:'var',v:' sound '},{t:'op',v:'*'},{t:'var',v:' breath'},{t:'op',v:';'}] },
+  { raw: '    breath = breath * 0.98;', tokens: [{t:'var',v:'    breath '},{t:'op',v:'= '},{t:'var',v:'breath '},{t:'op',v:'*'},{t:'num',v:' 0.98'},{t:'op',v:';'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: '    // each repetition loses something', tokens: [{t:'cmt',v:'    // each repetition loses something'}] },
+  { raw: '    // that is the music', tokens: [{t:'cmt',v:'    // that is the music'}] },
+  { raw: '  }', tokens: [{t:'op',v:'  }'}] },
+  { raw: '}', tokens: [{t:'op',v:'}'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: 'function sing(note, duration) {', tokens: [{t:'kw',v:'function'},{t:'fn',v:' sing'},{t:'op',v:'('},{t:'var',v:'note'},{t:'op',v:','},{t:'var',v:' duration'},{t:'op',v:') {'}] },
+  { raw: '  const frequency = 261.63;', tokens: [{t:'kw',v:'  const'},{t:'var',v:' frequency '},{t:'op',v:'='},{t:'num',v:' 261.63'},{t:'op',v:';'}] },
+  { raw: '  // middle C — the center of everything', tokens: [{t:'cmt',v:'  // middle C — the center of everything'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: '  let voice = new Oscillator(frequency);', tokens: [{t:'kw',v:'  let'},{t:'var',v:' voice '},{t:'op',v:'='},{t:'kw',v:' new'},{t:'fn',v:' Oscillator'},{t:'op',v:'('},{t:'var',v:'frequency'},{t:'op',v:');'}] },
+  { raw: '  voice.shape = "sine";', tokens: [{t:'var',v:'  voice'},{t:'op',v:'.'},{t:'var',v:'shape '},{t:'op',v:'='},{t:'str',v:' "sine"'},{t:'op',v:';'}] },
+  { raw: '  // the simplest wave', tokens: [{t:'cmt',v:'  // the simplest wave'}] },
+  { raw: '  // the one that means: I am here', tokens: [{t:'cmt',v:'  // the one that means: I am here'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: '  voice.start(now);', tokens: [{t:'var',v:'  voice'},{t:'op',v:'.'},{t:'fn',v:'start'},{t:'op',v:'('},{t:'var',v:'now'},{t:'op',v:');'}] },
+  { raw: '  voice.stop(now + duration);', tokens: [{t:'var',v:'  voice'},{t:'op',v:'.'},{t:'fn',v:'stop'},{t:'op',v:'('},{t:'var',v:'now '},{t:'op',v:'+'},{t:'var',v:' duration'},{t:'op',v:');'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: '  // between start and stop:', tokens: [{t:'cmt',v:'  // between start and stop:'}] },
+  { raw: '  // everything', tokens: [{t:'cmt',v:'  // everything'}] },
+  { raw: '}', tokens: [{t:'op',v:'}'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: 'const terrarium = new Room();', tokens: [{t:'kw',v:'const'},{t:'var',v:' terrarium '},{t:'op',v:'='},{t:'kw',v:' new'},{t:'fn',v:' Room'},{t:'op',v:'();'}] },
+  { raw: 'const tonight   = new Duration(Infinity);', tokens: [{t:'kw',v:'const'},{t:'var',v:' tonight   '},{t:'op',v:'='},{t:'kw',v:' new'},{t:'fn',v:' Duration'},{t:'op',v:'('},{t:'var',v:'Infinity'},{t:'op',v:');'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: 'for (let creature of terrarium.inhabitants) {', tokens: [{t:'kw',v:'for'},{t:'op',v:' ('},{t:'kw',v:'let'},{t:'var',v:' creature '},{t:'kw',v:'of'},{t:'var',v:' terrarium'},{t:'op',v:'.'},{t:'var',v:'inhabitants'},{t:'op',v:') {'}] },
+  { raw: '  creature.listen(terrarium);', tokens: [{t:'var',v:'  creature'},{t:'op',v:'.'},{t:'fn',v:'listen'},{t:'op',v:'('},{t:'var',v:'terrarium'},{t:'op',v:');'}] },
+  { raw: '  creature.sing(creature.note, tonight);', tokens: [{t:'var',v:'  creature'},{t:'op',v:'.'},{t:'fn',v:'sing'},{t:'op',v:'('},{t:'var',v:'creature'},{t:'op',v:'.'},{t:'var',v:'note'},{t:'op',v:','},{t:'var',v:' tonight'},{t:'op',v:');'}] },
+  { raw: '}', tokens: [{t:'op',v:'}'}] },
+  { raw: '', tokens: [{t:'rest', v:'                    '}] },
+  { raw: '// the program never terminates', tokens: [{t:'cmt',v:'// the program never terminates'}] },
+  { raw: '// that is also the music', tokens: [{t:'cmt',v:'// that is also the music'}] },
+];
+
+// --- AUDIO ---
+let ctx;
+// C major scale frequencies
+const C_MAJOR = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+
+function tokenSound(type, time) {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (type === 'cmt' || type === 'rest') return; // silence
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  if (type === 'kw') {
+    // Keywords: melody — pick from C major scale
+    osc.type = 'sine';
+    osc.frequency.value = C_MAJOR[Math.floor(Math.random() * C_MAJOR.length)];
+    gain.gain.setValueAtTime(0.12, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(time); osc.stop(time + 0.9);
+  } else if (type === 'fn') {
+    // Functions: rhythmic — short percussive
+    osc.type = 'triangle';
+    osc.frequency.value = C_MAJOR[Math.floor(Math.random() * 4)] * 2;
+    gain.gain.setValueAtTime(0.1, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(time); osc.stop(time + 0.25);
+  } else if (type === 'str') {
+    // Strings (text): warm sustained
+    osc.type = 'sine';
+    osc.frequency.value = 261.63; // always middle C
+    gain.gain.setValueAtTime(0.08, time);
+    gain.gain.linearRampToValueAtTime(0.1, time + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 1.5);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(time); osc.stop(time + 1.6);
+  } else if (type === 'num') {
+    // Numbers: literal frequency reference
+    osc.type = 'sine';
+    osc.frequency.value = 329.63; // E4
+    gain.gain.setValueAtTime(0.1, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(time); osc.stop(time + 0.7);
+  } else if (type === 'op') {
+    // Operators: tiny click
+    osc.type = 'square';
+    osc.frequency.value = 1200;
+    gain.gain.setValueAtTime(0.02, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.03);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(time); osc.stop(time + 0.05);
+  } else if (type === 'var') {
+    // Variables: voices — gentle pitch
+    osc.type = 'sine';
+    osc.frequency.value = C_MAJOR[Math.floor(Math.random() * C_MAJOR.length)];
+    gain.gain.setValueAtTime(0.06, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(time); osc.stop(time + 0.5);
+  }
+}
+
+function playLine(lineIdx) {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const line = SCORE[lineIdx];
+  const now = ctx.currentTime;
+  let offset = 0;
+  line.tokens.forEach(tok => {
+    tokenSound(tok.t, now + offset);
+    offset += 0.15;
+  });
+}
+
+// --- RENDER ---
+const scoreEl = document.getElementById('score');
+SCORE.forEach((line, i) => {
+  const el = document.createElement('span');
+  el.className = 'line';
+  el.dataset.n = String(i + 1).padStart(2, ' ');
+  el.dataset.idx = i;
+
+  line.tokens.forEach(tok => {
+    const s = document.createElement('span');
+    s.className = tok.t;
+    s.textContent = tok.v;
+    el.appendChild(s);
+  });
+
+  if (line.tokens.length === 0 || (line.tokens.length === 1 && line.tokens[0].t === 'rest')) {
+    el.innerHTML = '<span class="rest">&nbsp;</span>';
+    el.dataset.n = String(i + 1).padStart(2, ' ');
+  }
+
+  el.addEventListener('click', () => {
+    playLine(i);
+    document.querySelectorAll('.line.playing').forEach(l => l.classList.remove('playing'));
+    el.classList.add('playing');
+    setTimeout(() => el.classList.remove('playing'), 1500);
+  });
+
+  scoreEl.appendChild(el);
+  scoreEl.appendChild(document.createTextNode('\n'));
+});
+
+// --- PERFORM (auto-play through all lines) ---
+let performing = false;
+let perfIdx = 0;
+let perfTimer = null;
+let bpm = 40;
+
+function perfTick() {
+  if (perfIdx >= SCORE.length) {
+    stopPerf();
+    return;
+  }
+  const el = scoreEl.querySelectorAll('.line')[perfIdx];
+  document.querySelectorAll('.line.playing').forEach(l => l.classList.remove('playing'));
+  el.classList.add('playing');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  playLine(perfIdx);
+  document.getElementById('info').textContent = `measure ${perfIdx + 1} / ${SCORE.length}`;
+  perfIdx++;
+  perfTimer = setTimeout(perfTick, (60 / bpm) * 1000);
+}
+
+function startPerf() {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  performing = true;
+  perfIdx = 0;
+  document.getElementById('btn-play').textContent = '⏸ Stop';
+  document.getElementById('btn-play').classList.add('active');
+  perfTick();
+}
+
+function stopPerf() {
+  performing = false;
+  clearTimeout(perfTimer);
+  document.querySelectorAll('.line.playing').forEach(l => l.classList.remove('playing'));
+  document.getElementById('btn-play').textContent = '▶ Perform';
+  document.getElementById('btn-play').classList.remove('active');
+  document.getElementById('info').textContent = 'each line is a measure';
+}
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  if (performing) stopPerf(); else startPerf();
+});
+
+document.getElementById('btn-tempo').addEventListener('click', (e) => {
+  const tempos = [20, 40, 60, 80];
+  const i = (tempos.indexOf(bpm) + 1) % tempos.length;
+  bpm = tempos[i];
+  e.target.textContent = `♩= ${bpm}`;
+});
+</script>
+</body>
+</html>

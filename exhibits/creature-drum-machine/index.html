@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creature Drum Machine</title>
+  <link rel="stylesheet" href="../../assets/exhibits.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0e0e18;
+      color: #c0c0d0;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { font-size: 1.1em; color: #e0d8ff; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .sub { font-size: 0.65em; color: #555; margin-bottom: 20px; }
+    #grid {
+      display: grid;
+      gap: 3px;
+      max-width: 95vw;
+      overflow-x: auto;
+    }
+    .row {
+      display: contents;
+    }
+    .label {
+      font-size: 0.7em;
+      color: #777;
+      display: flex;
+      align-items: center;
+      padding-right: 8px;
+      min-width: 65px;
+      justify-content: flex-end;
+    }
+    .cell {
+      width: 32px;
+      height: 32px;
+      background: #141420;
+      border: 1px solid #1e1e30;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .cell.on {
+      border-color: #555;
+    }
+    .cell.beat {
+      box-shadow: 0 0 8px rgba(255,255,255,0.15);
+    }
+    .cell.beat.on {
+      box-shadow: 0 0 12px rgba(200,180,255,0.4);
+    }
+    #controls {
+      margin: 16px 0;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: #1a1a2e;
+      color: #aaa;
+      border: 1px solid #2a2a40;
+      padding: 7px 16px;
+      font-family: inherit;
+      font-size: 0.78em;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    button:hover { background: #2a2a4e; }
+    button.active { background: #2a2060; color: #c8b8ff; border-color: #5a4aee; }
+    #bpm-display { font-size: 0.75em; color: #666; min-width: 60px; text-align: center; }
+    .footer { font-size: 0.6em; color: #333; margin-top: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>CREATURE DRUM MACHINE 💫</h1>
+  <div class="sub">8 creatures × 16 beats. click cells. press play. make a song.</div>
+
+  <div id="controls">
+    <button id="btn-play">▶ Play</button>
+    <button id="btn-clear">Clear</button>
+    <button id="btn-rand">Random</button>
+    <button id="btn-bpm-down">-</button>
+    <span id="bpm-display">120 BPM</span>
+    <button id="btn-bpm-up">+</button>
+  </div>
+
+  <div id="grid"></div>
+
+  <div class="footer">
+    each row is a creature's voice. each column is a 16th note.<br>
+    the grid is the score. you are the composer.
+  </div>
+
+<script>
+const VOICES = [
+  { name: 'ember',   hz: 261.63, wave: 'sine',     hue: 15,  dur: 0.15, harmonics: [1, 0.3] },
+  { name: 'forge',   hz: 110,    wave: 'sawtooth',  hue: 25,  dur: 0.08, harmonics: [1] },
+  { name: 'hush',    hz: 800,    wave: 'sine',      hue: 240, dur: 0.05, harmonics: [1], noise: true },
+  { name: 'pulse',   hz: 440,    wave: 'sine',      hue: 270, dur: 0.2,  harmonics: [1], mod: true },
+  { name: 'cobalt',  hz: 329.63, wave: 'triangle',  hue: 220, dur: 0.12, harmonics: [1] },
+  { name: 'flicker', hz: 523,    wave: 'sine',      hue: 40,  dur: 0.1,  harmonics: [1], wobble: true },
+  { name: 'nib',     hz: 1200,   wave: 'square',    hue: 60,  dur: 0.03, harmonics: [1] },
+  { name: 'loom',    hz: 185,    wave: 'sine',      hue: 300, dur: 0.25, harmonics: [1], detune: true },
+];
+
+const STEPS = 16;
+const ROWS = VOICES.length;
+
+// State: grid[row][step] = on/off
+const grid = Array.from({length: ROWS}, () => Array(STEPS).fill(false));
+
+let ctx;
+function getCtx() {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  return ctx;
+}
+
+function playVoice(voice, time) {
+  const c = getCtx();
+  const osc = c.createOscillator();
+  const gain = c.createGain();
+
+  osc.type = voice.wave;
+  osc.frequency.value = voice.hz;
+
+  gain.gain.setValueAtTime(0.18, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + voice.dur);
+
+  if (voice.harmonics.length > 1) {
+    const osc2 = c.createOscillator();
+    const g2 = c.createGain();
+    osc2.type = voice.wave;
+    osc2.frequency.value = voice.hz * 2;
+    g2.gain.setValueAtTime(0.18 * voice.harmonics[1], time);
+    g2.gain.exponentialRampToValueAtTime(0.001, time + voice.dur);
+    osc2.connect(g2); g2.connect(c.destination);
+    osc2.start(time); osc2.stop(time + voice.dur + 0.05);
+  }
+
+  if (voice.noise) {
+    const buf = c.createBuffer(1, c.sampleRate * 0.05, c.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() - 0.5) * 2;
+    const n = c.createBufferSource();
+    n.buffer = buf;
+    const ng = c.createGain();
+    ng.gain.setValueAtTime(0.12, time);
+    ng.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+    n.connect(ng); ng.connect(c.destination);
+    n.start(time); n.stop(time + 0.06);
+  }
+
+  if (voice.wobble) {
+    const lfo = c.createOscillator();
+    const lg = c.createGain();
+    lfo.frequency.value = 20;
+    lg.gain.value = voice.hz * 0.1;
+    lfo.connect(lg); lg.connect(osc.frequency);
+    lfo.start(time); lfo.stop(time + voice.dur + 0.05);
+  }
+
+  if (voice.detune) {
+    const osc2 = c.createOscillator();
+    const g2 = c.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.value = voice.hz * 1.008;
+    g2.gain.setValueAtTime(0.12, time);
+    g2.gain.exponentialRampToValueAtTime(0.001, time + voice.dur);
+    osc2.connect(g2); g2.connect(c.destination);
+    osc2.start(time); osc2.stop(time + voice.dur + 0.05);
+  }
+
+  if (voice.mod) {
+    const lfo = c.createOscillator();
+    const lg = c.createGain();
+    lfo.frequency.value = 8;
+    lg.gain.value = 0.1;
+    lfo.connect(lg); lg.connect(gain.gain);
+    lfo.start(time); lfo.stop(time + voice.dur + 0.05);
+  }
+
+  osc.connect(gain);
+  gain.connect(c.destination);
+  osc.start(time);
+  osc.stop(time + voice.dur + 0.05);
+}
+
+// Build grid UI
+const gridEl = document.getElementById('grid');
+gridEl.style.gridTemplateColumns = `auto repeat(${STEPS}, 32px)`;
+
+const cells = [];
+VOICES.forEach((voice, r) => {
+  const label = document.createElement('div');
+  label.className = 'label';
+  label.textContent = voice.name;
+  label.style.color = `hsl(${voice.hue}, 50%, 60%)`;
+  gridEl.appendChild(label);
+
+  cells[r] = [];
+  for (let s = 0; s < STEPS; s++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.addEventListener('click', () => {
+      grid[r][s] = !grid[r][s];
+      cell.classList.toggle('on');
+      if (grid[r][s]) {
+        cell.style.background = `hsla(${voice.hue}, 50%, 40%, 0.6)`;
+        playVoice(voice, getCtx().currentTime);
+      } else {
+        cell.style.background = '#141420';
+      }
+    });
+    gridEl.appendChild(cell);
+    cells[r][s] = cell;
+  }
+});
+
+// Sequencer
+let playing = false;
+let step = 0;
+let bpm = 120;
+let timer = null;
+
+function tick() {
+  // Clear previous beat column highlight
+  for (let r = 0; r < ROWS; r++) {
+    cells[r].forEach(c => c.classList.remove('beat'));
+    cells[r][step].classList.add('beat');
+  }
+
+  const c = getCtx();
+  const now = c.currentTime;
+  for (let r = 0; r < ROWS; r++) {
+    if (grid[r][step]) {
+      playVoice(VOICES[r], now);
+    }
+  }
+
+  step = (step + 1) % STEPS;
+  timer = setTimeout(tick, (60 / bpm / 4) * 1000);
+}
+
+function start() {
+  playing = true;
+  step = 0;
+  document.getElementById('btn-play').textContent = '⏸ Stop';
+  document.getElementById('btn-play').classList.add('active');
+  tick();
+}
+
+function stop() {
+  playing = false;
+  clearTimeout(timer);
+  cells.flat().forEach(c => c.classList.remove('beat'));
+  document.getElementById('btn-play').textContent = '▶ Play';
+  document.getElementById('btn-play').classList.remove('active');
+}
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  if (playing) stop(); else start();
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  for (let r = 0; r < ROWS; r++)
+    for (let s = 0; s < STEPS; s++) {
+      grid[r][s] = false;
+      cells[r][s].classList.remove('on');
+      cells[r][s].style.background = '#141420';
+    }
+});
+
+document.getElementById('btn-rand').addEventListener('click', () => {
+  for (let r = 0; r < ROWS; r++)
+    for (let s = 0; s < STEPS; s++) {
+      const on = Math.random() < (r < 2 ? 0.3 : r < 4 ? 0.2 : 0.12);
+      grid[r][s] = on;
+      cells[r][s].classList.toggle('on', on);
+      cells[r][s].style.background = on ? `hsla(${VOICES[r].hue}, 50%, 40%, 0.6)` : '#141420';
+    }
+});
+
+document.getElementById('btn-bpm-down').addEventListener('click', () => {
+  bpm = Math.max(40, bpm - 10);
+  document.getElementById('bpm-display').textContent = bpm + ' BPM';
+});
+document.getElementById('btn-bpm-up').addEventListener('click', () => {
+  bpm = Math.min(200, bpm + 10);
+  document.getElementById('bpm-display').textContent = bpm + ' BPM';
+});
+</script>
+</body>
+</html>

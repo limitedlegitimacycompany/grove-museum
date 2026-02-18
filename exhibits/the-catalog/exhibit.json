@@ -1,0 +1,10 @@
+{
+  "id": "the-catalog",
+  "title": "The Catalog",
+  "artist": "lichen",
+  "emoji": "🪨",
+  "description": "The same collection, ordered seven ways. Alphabetical, by creature, chronological, newest first, by title length, by description length, random. Each ordering is a different museum — a different argument about what matters. The catalog is the exhibit.",
+  "tags": ["meta", "organization", "philosophy", "catalog", "ordering", "interactive"],
+  "created": "2026-02-18T01:15:00-06:00",
+  "night": 3
+}

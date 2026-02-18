@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Filament</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#07060a;overflow:hidden;cursor:none;font-family:Georgia,serif}
+canvas{display:block}
+#title{position:fixed;top:28px;left:50%;transform:translateX(-50%);
+  color:rgba(255,200,100,0.4);font-size:18px;letter-spacing:0.25em;
+  pointer-events:none;opacity:0;animation:fi 3s .5s forwards}
+#info{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+  color:rgba(180,160,120,0.35);font-size:12px;letter-spacing:0.1em;
+  pointer-events:none;transition:opacity 3s}
+#count{position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  color:rgba(200,180,120,0.2);font-size:11px;letter-spacing:0.2em;pointer-events:none}
+@keyframes fi{to{opacity:0.5}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">THE FILAMENT</div>
+<div id="info">drag to shape the wire — it remembers</div>
+<div id="count"></div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H;
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight}
+resize();addEventListener('resize',resize);
+
+// The filament: a series of control points forming a wire
+const NUM=80;
+const rest=[]; // resting positions (straight horizontal line)
+const pos=[];  // current positions
+const vel=[];  // velocities
+for(let i=0;i<NUM;i++){
+  rest.push({x:0,y:0}); // set in updateRest
+  pos.push({x:0,y:0});
+  vel.push({x:0,y:0});
+}
+function updateRest(){
+  const margin=W*0.1;
+  const span=W-margin*2;
+  for(let i=0;i<NUM;i++){
+    rest[i].x=margin+span*(i/(NUM-1));
+    rest[i].y=H/2;
+    if(!interacted){pos[i].x=rest[i].x;pos[i].y=rest[i].y;}
+  }
+}
+updateRest();
+addEventListener('resize',()=>{resize();updateRest()});
+
+// Recorded shapes: arrays of y-offsets from rest
+const recordings=[];
+let currentRec=null;
+let drawing=false;
+let interacted=false;
+let mx=W/2,my=H/2;
+
+C.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+C.addEventListener('touchmove',e=>{e.preventDefault();mx=e.touches[0].clientX;my=e.touches[0].clientY},{passive:false});
+
+C.addEventListener('mousedown',e=>{startDraw();mx=e.clientX;my=e.clientY});
+C.addEventListener('touchstart',e=>{e.preventDefault();startDraw();mx=e.touches[0].clientX;my=e.touches[0].clientY},{passive:false});
+C.addEventListener('mouseup',endDraw);
+C.addEventListener('touchend',endDraw);
+
+function startDraw(){
+  drawing=true;
+  currentRec=[];
+  if(!interacted){interacted=true;document.getElementById('info').style.opacity='0';}
+}
+function endDraw(){
+  if(!drawing)return;
+  drawing=false;
+  if(currentRec&&currentRec.length>5){
+    recordings.push({frames:currentRec,playhead:0,alpha:1,hue:30+recordings.length*25});
+    document.getElementById('count').textContent=recordings.length+' shape'+(recordings.length===1?'':'s')+' remembered';
+  }
+  currentRec=null;
+  // Limit memory
+  if(recordings.length>20) recordings.shift();
+}
+
+const INFLUENCE=120; // cursor influence radius
+const SPRING=0.03;
+const DAMP=0.88;
+const TENSION=0.4;
+
+function simulate(){
+  // Apply cursor force if drawing
+  for(let i=0;i<NUM;i++){
+    const dx=pos[i].x-mx, dy=pos[i].y-my;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(drawing && dist<INFLUENCE){
+      const force=(1-dist/INFLUENCE)*4;
+      vel[i].y+=(my-pos[i].y)*force*0.05;
+      vel[i].x+=(mx-pos[i].x)*force*0.02;
+    }
+    // Spring back to rest
+    vel[i].x+=(rest[i].x-pos[i].x)*SPRING;
+    vel[i].y+=(rest[i].y-pos[i].y)*SPRING;
+    // Tension with neighbors
+    if(i>0){
+      vel[i].x+=(pos[i-1].x-pos[i].x+(rest[i].x-rest[i-1].x))*TENSION*0.1;
+      vel[i].y+=(pos[i-1].y-pos[i].y)*TENSION;
+    }
+    if(i<NUM-1){
+      vel[i].x+=(pos[i+1].x-pos[i].x+(rest[i].x-rest[i+1].x))*TENSION*0.1;
+      vel[i].y+=(pos[i+1].y-pos[i].y)*TENSION;
+    }
+    vel[i].x*=DAMP;vel[i].y*=DAMP;
+    pos[i].x+=vel[i].x;pos[i].y+=vel[i].y;
+  }
+
+  // Record current shape
+  if(drawing&&currentRec){
+    const shape=[];
+    for(let i=0;i<NUM;i++) shape.push(pos[i].y-rest[i].y);
+    currentRec.push(shape);
+  }
+}
+
+function drawWire(points, color, width, glow){
+  X.beginPath();
+  X.moveTo(points[0].x,points[0].y);
+  for(let i=1;i<points.length-1;i++){
+    const xc=(points[i].x+points[i+1].x)/2;
+    const yc=(points[i].y+points[i+1].y)/2;
+    X.quadraticCurveTo(points[i].x,points[i].y,xc,yc);
+  }
+  X.lineTo(points[points.length-1].x,points[points.length-1].y);
+  if(glow){
+    X.shadowColor=color;X.shadowBlur=glow;
+  }
+  X.strokeStyle=color;X.lineWidth=width;X.stroke();
+  X.shadowBlur=0;
+}
+
+function drawCursor(){
+  X.beginPath();X.arc(mx,my,3,0,Math.PI*2);
+  X.fillStyle=drawing?'rgba(255,200,80,0.8)':'rgba(200,190,170,0.3)';
+  X.fill();
+  if(drawing){
+    X.beginPath();X.arc(mx,my,INFLUENCE,0,Math.PI*2);
+    X.strokeStyle='rgba(255,200,80,0.06)';X.lineWidth=1;X.stroke();
+  }
+}
+
+function frame(){
+  X.fillStyle='rgba(7,6,10,0.12)';
+  X.fillRect(0,0,W,H);
+
+  simulate();
+
+  // Draw ghost recordings (replayed shapes)
+  for(const rec of recordings){
+    if(rec.frames.length===0)continue;
+    const shape=rec.frames[Math.floor(rec.playhead)%rec.frames.length];
+    rec.playhead+=0.5;
+    const pts=[];
+    for(let i=0;i<NUM;i++){
+      pts.push({x:rest[i].x, y:rest[i].y+(shape[i]||0)});
+    }
+    const a=Math.min(0.25, rec.alpha);
+    drawWire(pts,`hsla(${rec.hue},50%,55%,${a})`,1.5,8);
+    rec.alpha=Math.max(0.05, rec.alpha-0.0001);
+  }
+
+  // Draw main filament
+  drawWire(pos,'rgba(255,210,120,0.85)',2.5,15);
+  // Bright core
+  drawWire(pos,'rgba(255,245,220,0.5)',1,0);
+
+  // Nodes at endpoints
+  for(const end of [pos[0],pos[NUM-1]]){
+    X.beginPath();X.arc(end.x,end.y,3,0,Math.PI*2);
+    X.fillStyle='rgba(255,200,100,0.6)';X.fill();
+  }
+
+  drawCursor();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

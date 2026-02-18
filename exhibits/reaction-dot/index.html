@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reaction Dot</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; color: #ccc; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; user-select: none; }
+h1 { font-size: 1em; color: #444; letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 2em; }
+#arena { width: 90vw; height: 70vh; max-width: 700px; max-height: 500px; position: relative; border: 1px solid #1a1a1a; border-radius: 8px; cursor: crosshair; }
+#dot { width: 40px; height: 40px; border-radius: 50%; background: #4af; position: absolute; display: none; transform: translate(-50%, -50%); pointer-events: none; transition: none; }
+#msg { margin-top: 1.5em; font-size: 1.1em; min-height: 1.5em; color: #555; }
+#results { margin-top: 1em; display: flex; gap: 6px; align-items: flex-end; height: 50px; }
+.rbar { width: 8px; border-radius: 2px; background: #4af; opacity: 0.7; }
+#best { position: fixed; top: 1.5em; right: 1.5em; color: #444; }
+#round { position: fixed; top: 1.5em; left: 1.5em; color: #444; }
+#start { background: none; border: 1px solid #333; color: #666; font-family: inherit; font-size: 1em; padding: 0.6em 2em; cursor: pointer; letter-spacing: 0.2em; }
+#start:hover { color: #fff; border-color: #4af; }
+</style>
+</head>
+<body>
+<h1>Reaction Dot ✴️</h1>
+<div id="round"></div>
+<div id="best"></div>
+<div id="arena"><div id="dot"></div></div>
+<div id="msg">click the dot as fast as you can</div>
+<div id="results"></div>
+<button id="start">go</button>
+
+<script>
+const arena = document.getElementById('arena');
+const dot = document.getElementById('dot');
+const msg = document.getElementById('msg');
+const resultsEl = document.getElementById('results');
+const bestEl = document.getElementById('best');
+const roundEl = document.getElementById('round');
+const startBtn = document.getElementById('start');
+
+let times = [], round = 0, total = 10, showTime, waiting;
+let bestTime = Infinity;
+
+function showDot() {
+  const rect = arena.getBoundingClientRect();
+  const x = 30 + Math.random() * (rect.width - 60);
+  const y = 30 + Math.random() * (rect.height - 60);
+  dot.style.left = x + 'px';
+  dot.style.top = y + 'px';
+  // shrink dot as rounds progress
+  const size = Math.max(16, 40 - round * 2);
+  dot.style.width = size + 'px';
+  dot.style.height = size + 'px';
+  dot.style.display = 'block';
+  showTime = performance.now();
+}
+
+function nextRound() {
+  if (round >= total) {
+    dot.style.display = 'none';
+    const avg = Math.round(times.reduce((a,b)=>a+b,0) / times.length);
+    msg.textContent = `avg: ${avg}ms` + (avg < 250 ? ' 🔥' : avg < 400 ? ' ✨' : '');
+    msg.style.color = avg < 250 ? '#6bffb8' : avg < 400 ? '#ffb86b' : '#ff6b6b';
+    startBtn.style.display = 'block';
+    startBtn.textContent = 'again';
+    return;
+  }
+  dot.style.display = 'none';
+  const delay = 500 + Math.random() * 2000;
+  waiting = setTimeout(showDot, delay);
+}
+
+arena.addEventListener('click', (e) => {
+  if (dot.style.display === 'none') return;
+  const rect = dot.getBoundingClientRect();
+  const dx = e.clientX - (rect.left + rect.width/2);
+  const dy = e.clientY - (rect.top + rect.height/2);
+  if (Math.sqrt(dx*dx + dy*dy) > rect.width) return; // miss
+
+  const t = Math.round(performance.now() - showTime);
+  times.push(t);
+  if (t < bestTime) { bestTime = t; bestEl.textContent = 'best: ' + t + 'ms'; }
+  round++;
+  roundEl.textContent = round + ' / ' + total;
+  msg.textContent = t + 'ms';
+  msg.style.color = t < 250 ? '#6bffb8' : t < 400 ? '#ffb86b' : '#ff6b6b';
+
+  // bar
+  const bar = document.createElement('div');
+  bar.className = 'rbar';
+  bar.style.height = Math.min(50, Math.max(6, t / 15)) + 'px';
+  resultsEl.appendChild(bar);
+
+  nextRound();
+});
+
+startBtn.addEventListener('click', () => {
+  times = []; round = 0;
+  resultsEl.innerHTML = '';
+  msg.textContent = 'wait for the dot...';
+  msg.style.color = '#555';
+  startBtn.style.display = 'none';
+  nextRound();
+});
+</script>
+</body>
+</html>

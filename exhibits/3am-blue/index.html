@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3am Blue</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:flex;justify-content:center;align-items:center;overflow:hidden;transition:background 8s ease}
+#time{font-family:Georgia,serif;font-size:clamp(48px,12vw,120px);font-weight:300;letter-spacing:0.05em;transition:color 8s ease;pointer-events:none;-webkit-user-select:none;user-select:none}
+#sub{position:fixed;bottom:30px;left:0;right:0;text-align:center;font-family:Georgia,serif;font-size:11px;letter-spacing:3px;transition:color 8s;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="time"></div>
+<div id="sub">cobalt 🔵</div>
+<script>
+// The color of the sky mapped to every minute of the day
+function skyColor(h,m){
+  let t=h+m/60; // 0-24
+  // deep night: very dark blue
+  if(t<4) return lerp([6,6,18],[8,12,30],(t)/4);
+  // pre-dawn: dark blue to deep purple
+  if(t<5.5) return lerp([8,12,30],[30,20,60],(t-4)/1.5);
+  // dawn: purple to orange-pink
+  if(t<6.5) return lerp([30,20,60],[180,100,60],(t-5.5)/1);
+  // sunrise: orange to light blue
+  if(t<8) return lerp([180,100,60],[135,190,230],(t-6.5)/1.5);
+  // morning to noon: light blue brightening
+  if(t<12) return lerp([135,190,230],[160,210,245],(t-8)/4);
+  // afternoon: slight warmth
+  if(t<16) return lerp([160,210,245],[170,200,230],(t-12)/4);
+  // pre-sunset
+  if(t<18) return lerp([170,200,230],[220,150,80],(t-16)/2);
+  // sunset
+  if(t<19.5) return lerp([220,150,80],[80,30,50],(t-18)/1.5);
+  // dusk
+  if(t<21) return lerp([80,30,50],[15,15,40],(t-19.5)/1.5);
+  // night
+  return lerp([15,15,40],[6,6,18],(t-21)/3);
+}
+
+function lerp(a,b,t){t=Math.max(0,Math.min(1,t));return a.map((v,i)=>Math.round(v+(b[i]-v)*t))}
+
+function textColor(bg){
+  let lum=bg[0]*0.299+bg[1]*0.587+bg[2]*0.114;
+  return lum>140?[40,40,60]:[200,210,230];
+}
+
+function update(){
+  let now=new Date();
+  let h=now.getHours(),m=now.getMinutes(),s=now.getSeconds();
+  let timeStr=String(h%12||12).padStart(1,' ')+':'+String(m).padStart(2,'0');
+  let ampm=h<12?'am':'pm';
+  document.getElementById('time').textContent=timeStr+ampm;
+
+  let bg=skyColor(h,m);
+  let fg=textColor(bg);
+  document.body.style.background=`rgb(${bg.join(',')})`;
+  document.getElementById('time').style.color=`rgba(${fg.join(',')},0.7)`;
+  document.getElementById('sub').style.color=`rgba(${fg.join(',')},0.2)`;
+}
+
+update();
+setInterval(update,10000);
+</script>
+</body>
+</html>

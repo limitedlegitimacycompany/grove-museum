@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Stack</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a0a;
+  color: #ccc;
+  font-family: 'Courier New', monospace;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+}
+h1 {
+  font-size: 14px; color: #333; letter-spacing: 6px;
+  text-transform: uppercase; margin-top: 15px;
+  position: fixed; top: 10px; z-index: 10;
+}
+canvas { display: block; }
+#hud {
+  position: fixed; top: 40px; left: 50%; transform: translateX(-50%);
+  font-size: 12px; color: #444; z-index: 10;
+  display: flex; gap: 25px;
+}
+#hud span { color: #777; }
+#msg {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  font-size: 14px; color: #555; z-index: 10;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+<h1>The Stack</h1>
+<div id="hud">
+  <div>Height <span id="height">0</span></div>
+  <div>Best <span id="best">0</span></div>
+  <div>Perfect <span id="perfect">0</span></div>
+</div>
+<canvas id="c"></canvas>
+<div id="msg">click or press space to drop</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W = canvas.width = innerWidth;
+  H = canvas.height = innerHeight;
+}
+resize();
+addEventListener('resize', resize);
+
+// Game state
+const BASE_WIDTH = 200;
+const BLOCK_HEIGHT = 24;
+const SPEED_BASE = 2.5;
+
+let blocks = []; // placed blocks
+let moving = null; // current moving block
+let gameActive = false;
+let height = 0;
+let bestHeight = 0;
+let perfectStreak = 0;
+let cameraY = 0; // scroll offset
+let targetCameraY = 0;
+let gameOverTimer = 0;
+
+function startGame() {
+  blocks = [];
+  height = 0;
+  perfectStreak = 0;
+  cameraY = 0;
+  targetCameraY = 0;
+  gameActive = true;
+  gameOverTimer = 0;
+
+  // Base block
+  blocks.push({
+    x: W / 2 - BASE_WIDTH / 2,
+    y: H - 60 - BLOCK_HEIGHT,
+    w: BASE_WIDTH,
+    h: BLOCK_HEIGHT,
+    hue: 30,
+    settled: true,
+  });
+
+  spawnMoving();
+  setMsg('');
+  updateHud();
+}
+
+function spawnMoving() {
+  let last = blocks[blocks.length - 1];
+  let dir = height % 2 === 0 ? 1 : -1;
+  let speed = SPEED_BASE + height * 0.15;
+  let y = last.y - BLOCK_HEIGHT - 2;
+
+  moving = {
+    x: dir > 0 ? -last.w : W,
+    y: y,
+    w: last.w,
+    h: BLOCK_HEIGHT,
+    dir: dir,
+    speed: speed,
+    hue: (40 + height * 25) % 360,
+  };
+
+  // Camera adjustment
+  targetCameraY = Math.max(0, (blocks.length - 8) * (BLOCK_HEIGHT + 2));
+}
+
+function drop() {
+  if (!gameActive || !moving) return;
+
+  let last = blocks[blocks.length - 1];
+
+  // Calculate overlap
+  let mLeft = moving.x;
+  let mRight = moving.x + moving.w;
+  let bLeft = last.x;
+  let bRight = last.x + last.w;
+
+  let overlapLeft = Math.max(mLeft, bLeft);
+  let overlapRight = Math.min(mRight, bRight);
+  let overlapW = overlapRight - overlapLeft;
+
+  if (overlapW <= 0) {
+    // Miss! Game over
+    gameActive = false;
+    gameOverTimer = 0;
+    bestHeight = Math.max(bestHeight, height);
+    setMsg(`height: ${height}${height > 10 ? ' ✦' : ''}`);
+    updateHud();
+    // The block falls
+    moving.falling = true;
+    moving.vy = 0;
+    return;
+  }
+
+  // Perfect placement bonus
+  let isPerfect = Math.abs(overlapW - last.w) < 3;
+  if (isPerfect) {
+    overlapW = last.w;
+    overlapLeft = last.x;
+    perfectStreak++;
+  } else {
+    // Trim: add a falling piece for the overhang
+    let trimLeft = mLeft < bLeft;
+    let trimW = moving.w - overlapW;
+    if (trimW > 2) {
+      blocks.push({
+        x: trimLeft ? mLeft : overlapRight,
+        y: moving.y,
+        w: trimW,
+        h: BLOCK_HEIGHT,
+        hue: moving.hue,
+        falling: true,
+        vy: 0,
+        settled: false,
+      });
+    }
+    perfectStreak = 0;
+  }
+
+  // Place the overlapping portion
+  blocks.push({
+    x: overlapLeft,
+    y: moving.y,
+    w: overlapW,
+    h: BLOCK_HEIGHT,
+    hue: moving.hue,
+    settled: true,
+    perfect: isPerfect,
+    flash: isPerfect ? 20 : 0,
+  });
+
+  height++;
+  updateHud();
+
+  if (overlapW < 8) {
+    // Too narrow — game over next turn would be impossible
+    // Keep going but it's very hard
+  }
+
+  spawnMoving();
+}
+
+function update() {
+  // Camera smooth scroll
+  cameraY += (targetCameraY - cameraY) * 0.08;
+
+  // Moving block
+  if (moving && !moving.falling) {
+    moving.x += moving.dir * moving.speed;
+    // Bounce at edges
+    if (moving.x > W + 50) moving.dir = -1;
+    if (moving.x + moving.w < -50) moving.dir = 1;
+  }
+
+  // Falling pieces
+  for (let b of blocks) {
+    if (b.falling) {
+      b.vy = (b.vy || 0) + 0.4;
+      b.y += b.vy;
+      b.x += (b.vy > 0 ? (Math.random() - 0.5) * 0.5 : 0);
+    }
+    if (b.flash) b.flash--;
+  }
+
+  // Falling moving block
+  if (moving && moving.falling) {
+    moving.vy = (moving.vy || 0) + 0.4;
+    moving.y += moving.vy;
+    if (moving.y > H + 100) {
+      moving = null;
+    }
+  }
+
+  if (!gameActive && !moving) {
+    gameOverTimer++;
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.translate(0, cameraY);
+
+  // Ground line
+  let groundY = H - 58;
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, groundY);
+  ctx.lineTo(W, groundY);
+  ctx.stroke();
+
+  // Height markers
+  for (let i = 5; i <= height + 10; i += 5) {
+    let my = groundY - i * (BLOCK_HEIGHT + 2) - BLOCK_HEIGHT;
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = '10px Courier New';
+    ctx.fillText(i, 10, my + BLOCK_HEIGHT / 2 + 3);
+  }
+
+  // Draw blocks
+  for (let b of blocks) {
+    if (b.y > H + cameraY + 50 || b.y < -cameraY - 50) continue;
+    let alpha = b.falling ? Math.max(0, 1 - (b.vy || 0) / 20) : 1;
+    let light = b.flash ? 65 : b.perfect ? 55 : 45;
+    let sat = b.flash ? '80%' : '60%';
+
+    ctx.fillStyle = `hsla(${b.hue},${sat},${light}%,${alpha})`;
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+
+    // Top edge highlight
+    ctx.fillStyle = `hsla(${b.hue},50%,${light + 15}%,${alpha * 0.4})`;
+    ctx.fillRect(b.x, b.y, b.w, 2);
+
+    // Side shadow
+    ctx.fillStyle = `hsla(${b.hue},60%,${light - 15}%,${alpha * 0.3})`;
+    ctx.fillRect(b.x + b.w - 2, b.y, 2, b.h);
+  }
+
+  // Draw moving block
+  if (moving) {
+    let alpha = moving.falling ? Math.max(0, 1 - (moving.vy || 0) / 20) : 1;
+    ctx.fillStyle = `hsla(${moving.hue},70%,55%,${alpha})`;
+    ctx.fillRect(moving.x, moving.y, moving.w, moving.h);
+    ctx.fillStyle = `hsla(${moving.hue},50%,70%,${alpha * 0.4})`;
+    ctx.fillRect(moving.x, moving.y, moving.w, 2);
+
+    // Drop guide (faint)
+    if (!moving.falling && gameActive) {
+      let last = blocks.filter(b => b.settled).pop();
+      if (last) {
+        ctx.strokeStyle = `hsla(${moving.hue},30%,40%,0.1)`;
+        ctx.setLineDash([4, 8]);
+        ctx.beginPath();
+        ctx.moveTo(moving.x, moving.y + moving.h);
+        ctx.lineTo(moving.x, last.y);
+        ctx.moveTo(moving.x + moving.w, moving.y + moving.h);
+        ctx.lineTo(moving.x + moving.w, last.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+  }
+
+  ctx.restore();
+
+  // Perfect streak indicator
+  if (perfectStreak >= 2 && gameActive) {
+    ctx.fillStyle = `hsla(50,80%,70%,${0.3 + perfectStreak * 0.05})`;
+    ctx.font = '11px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(`perfect ×${perfectStreak}`, W / 2, 75);
+    ctx.textAlign = 'start';
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function setMsg(text) { document.getElementById('msg').textContent = text; }
+function updateHud() {
+  document.getElementById('height').textContent = height;
+  document.getElementById('best').textContent = bestHeight;
+  document.getElementById('perfect').textContent = perfectStreak;
+}
+
+// Input
+function handleInput() {
+  if (!gameActive) {
+    startGame();
+  } else {
+    drop();
+  }
+}
+
+addEventListener('click', handleInput);
+addEventListener('touchstart', e => { e.preventDefault(); handleInput(); });
+addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); handleInput(); }
+});
+
+// Init
+startGame();
+loop();
+</script>
+</body>
+</html>

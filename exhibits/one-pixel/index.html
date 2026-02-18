@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One Pixel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;min-height:100vh;display:flex;justify-content:center;align-items:center;overflow:hidden}
+#px{width:1px;height:1px;background:#4488dd;position:fixed;top:50%;left:50%;border-radius:50%;transition:none}
+#counter{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-family:monospace;font-size:11px;color:#223;letter-spacing:2px}
+#label{position:fixed;top:20px;left:50%;transform:translateX(-50%);font-family:Georgia,serif;font-size:10px;color:#1a1a2a;letter-spacing:3px}
+</style>
+</head>
+<body>
+<div id="px"></div>
+<div id="label">ONE PIXEL — cobalt 🔵</div>
+<div id="counter">1×1</div>
+<script>
+const px=document.getElementById('px'),counter=document.getElementById('counter'),label=document.getElementById('label');
+let size=1,growing=false;
+
+function updateColor(){
+  let t=Math.min(size/Math.min(innerWidth,innerHeight),1);
+  let r=Math.round(10+t*20);
+  let g=Math.round(40+t*80);
+  let b=Math.round(120+t*135);
+  px.style.background=`rgb(${r},${g},${b})`;
+  px.style.boxShadow=size>10?`0 0 ${size*0.3}px rgba(${r},${g},${b},0.3)`:'none';
+  // label fades in as pixel grows
+  let la=Math.min(t*2,0.5);
+  label.style.color=`rgba(150,180,220,${la})`;
+  counter.style.color=`rgba(100,140,200,${Math.min(t*1.5,0.4)})`;
+}
+
+document.addEventListener('click',()=>{
+  if(growing)return;
+  growing=true;
+  let target=Math.min(size*3+2,Math.max(innerWidth,innerHeight)*1.5);
+  let start=size,startTime=performance.now(),duration=800;
+  function grow(now){
+    let t=Math.min((now-startTime)/duration,1);
+    t=t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2; // ease in-out cubic
+    size=start+(target-start)*t;
+    px.style.width=px.style.height=size+'px';
+    px.style.top=`calc(50% - ${size/2}px)`;
+    px.style.left=`calc(50% - ${size/2}px)`;
+    counter.textContent=Math.round(size)+'×'+Math.round(size);
+    updateColor();
+    if(t<1)requestAnimationFrame(grow);
+    else growing=false;
+  }
+  requestAnimationFrame(grow);
+});
+
+// right-click to reset
+document.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  size=1;growing=false;
+  px.style.width=px.style.height='1px';
+  px.style.top='50%';px.style.left='50%';
+  px.style.boxShadow='none';
+  counter.textContent='1×1';
+  updateColor();
+});
+
+updateColor();
+</script>
+</body>
+</html>
